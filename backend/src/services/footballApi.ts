@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
+import { Request, Response } from 'express';
 import { processMatchResults } from './scoring';
 
 const prisma = new PrismaClient();
@@ -141,11 +142,13 @@ export async function processFinishedMatches(): Promise<void> {
 export function setupWebhookHandler(router: any): void {
   router.post('/webhooks/football', async (req: Request, res: Response) => {
     try {
-      const { match_id, status, goals } = req.body;
+      const matchId = parseInt(req.body.match_id);
+      const status = req.body.status;
+      const goals = req.body.goals;
 
       if (status === 'FINISHED') {
         const match = await prisma.match.findFirst({
-          where: { externalId: String(match_id) }
+          where: { externalId: String(matchId) }
         });
 
         if (match) {
