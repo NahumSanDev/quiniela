@@ -4,9 +4,22 @@ import helmet from 'helmet';
 import { PrismaClient } from '@prisma/client';
 import matchesRouter from './routes/matches';
 import { syncMatches, processFinishedMatches } from './services/footballApi';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execAsync = promisify(exec);
 const prisma = new PrismaClient();
 const app = express();
+
+async function runMigrations() {
+  try {
+    console.log('Running database migrations...');
+    await execAsync('npx prisma migrate deploy');
+    console.log('Migrations completed successfully');
+  } catch (error) {
+    console.error('Migration failed:', error);
+  }
+}
 
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
@@ -36,8 +49,13 @@ setInterval(async () => {
 }, 60000);
 
 const PORT = parseInt(process.env.PORT || '3001');
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
-export { prisma };
+async function start() {
+  await runMigrations();
+  
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+start();
