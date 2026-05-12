@@ -149,7 +149,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setHomeScore(String(Math.max(0, (parseInt(homeScore) || 0) - 1)))}
+                  onClick={() => setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1)))}
                   className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white font-bold"
                 >
                   -
@@ -163,7 +163,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
                   max="20"
                 />
                 <button
-                  onClick={() => setHomeScore(String((parseInt(homeScore) || 0) + 1))}
+                  onClick={() => setHomeScore(String((parseInt(String(homeScore)) || 0) + 1))}
                   className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white font-bold"
                 >
                   +
@@ -174,7 +174,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
 
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setAwayScore(String(Math.max(0, (parseInt(awayScore) || 0) - 1)))}
+                  onClick={() => setAwayScore(String(Math.max(0, (parseInt(String(awayScore)) || 0) - 1)))}
                   className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white font-bold"
                 >
                   -
@@ -188,7 +188,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
                   max="20"
                 />
                 <button
-                  onClick={() => setAwayScore(String((parseInt(awayScore) || 0) + 1))}
+                  onClick={() => setAwayScore(String((parseInt(String(awayScore)) || 0) + 1))}
                   className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white font-bold"
                 >
                   +
