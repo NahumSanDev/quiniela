@@ -45,8 +45,8 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   async function handleSubmit() {
     if (isLocked) return;
 
-    const home = parseInt(homeScore);
-    const away = parseInt(awayScore);
+    const home = parseInt(String(homeScore));
+    const away = parseInt(String(awayScore));
 
     if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return;
 
