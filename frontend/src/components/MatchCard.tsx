@@ -98,7 +98,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
             >
               <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-md" />
               <img
-                src={`${FLAG_BASE_URL}/${match.homeFlag}`}
+                src={`${FLAG_BASE_URL}/${match.homeFlag}.png`}
                 alt={match.homeTeam}
                 className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
                 loading="lazy"
@@ -132,7 +132,7 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
             >
               <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-md" />
               <img
-                src={`${FLAG_BASE_URL}/${match.awayFlag}`}
+                src={`${FLAG_BASE_URL}/${match.awayFlag}.png`}
                 alt={match.awayTeam}
                 className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
                 loading="lazy"

@@ -148,6 +148,32 @@ router.get('/stats', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.get('/test-api', adminAuth, async (req: Request, res: Response) => {
+  if (!process.env.API_FOOTBALL_KEY) {
+    res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
+    return;
+  }
+
+  try {
+    console.log('Testing API with league: 1, season: 2026');
+    const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
+      params: { league: 1, season: 2026 },
+      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
+    });
+    
+    res.json({ 
+      status: response.status,
+      results: response.data.results,
+      matchesCount: response.data.response?.length || 0,
+      firstMatch: response.data.response?.[0] || null,
+      fullData: response.data
+    });
+  } catch (error: any) {
+    console.error('API Test error:', error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data || error.message });
+  }
+});
+
 router.post('/sync', adminAuth, async (req: Request, res: Response) => {
   if (!process.env.API_FOOTBALL_KEY) {
     res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
@@ -155,10 +181,34 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
   }
 
   try {
+    console.log('Attempting sync with league: 1, season: 2026');
     const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
       params: { league: 1, season: 2026 },
       headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
     });
+
+router.post('/sync', adminAuth, async (req: Request, res: Response) => {
+  if (!process.env.API_FOOTBALL_KEY) {
+    res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
+    return;
+  }
+
+  try {
+    console.log('Attempting sync with league: 1, season: 2026');
+    const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
+      params: { league: 1, season: 2026 },
+      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
+    });
+    
+    console.log('API Response status:', response.status);
+    console.log('Results count:', response.data.results);
+    console.log('Matches count:', response.data.response?.length || 0);
+    
+    if (!response.data.response || response.data.response.length === 0) {
+      console.log('No matches found in API response');
+      res.json({ message: 'No matches found', total: 0, synced: 0 });
+      return;
+    }
 
     const countryFlags: Record<string, string> = {
       'Argentina': 'ar', 'Brazil': 'br', 'France': 'fr', 'Germany': 'de',
@@ -210,6 +260,7 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
       }
     }
 
+    console.log('Response matches count:', response.data.response?.length || 0);
     res.json({ message: `Synced ${synced} matches`, total: response.data.response.length });
   } catch (error) {
     console.error('Sync error:', error);
