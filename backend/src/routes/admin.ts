@@ -148,16 +148,18 @@ router.get('/stats', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.get('/test-api', adminAuth, async (req: Request, res: Response) => {
+router.get('/test-api', async (req: Request, res: Response) => {
   if (!process.env.API_FOOTBALL_KEY) {
     res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
     return;
   }
 
+  const { league, season } = req.query;
+  
   try {
-    console.log('Testing API with league: 1, season: 2026');
+    console.log(`Testing API with league: ${league}, season: ${season}`);
     const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
-      params: { league: 1, season: 2026 },
+      params: { league: league || 1, season: season || 2026 },
       headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
     });
     
@@ -166,7 +168,7 @@ router.get('/test-api', adminAuth, async (req: Request, res: Response) => {
       results: response.data.results,
       matchesCount: response.data.response?.length || 0,
       firstMatch: response.data.response?.[0] || null,
-      fullData: response.data
+      errors: response.data.errors
     });
   } catch (error: any) {
     console.error('API Test error:', error.response?.data || error.message);
