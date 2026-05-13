@@ -96,6 +96,12 @@ export default function Home() {
           <div className="flex items-center gap-4">
             {user ? (
               <>
+                <a
+                  href="/dashboard"
+                  className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 transition-colors flex items-center gap-2"
+                >
+                  <span>📊</span> Dashboard
+                </a>
                 <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5">
                   {user.avatarUrl && (
                     <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />

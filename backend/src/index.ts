@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { PrismaClient } from '@prisma/client';
 import matchesRouter from './routes/matches';
 import authRouter from './routes/auth';
+import userRouter from './routes/user';
 import { syncMatches, processFinishedMatches } from './services/footballApi';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/matches', matchesRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter);
 
 app.post('/api/sync', async (req, res) => {
   try {
