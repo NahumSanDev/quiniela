@@ -30,6 +30,20 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/ranking', async (req: Request, res: Response) => {
+  try {
+    console.log('Ranking endpoint called');
+    const limit = parseInt(req.query.limit as string) || 10;
+    const ranking = await getRanking(limit);
+    console.log('Ranking fetched:', ranking.length, 'users');
+
+    res.json(ranking);
+  } catch (error) {
+    console.error('Error fetching ranking:', error);
+    res.status(500).json({ error: 'Failed to fetch ranking' });
+  }
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const match = await prisma.match.findUnique({
