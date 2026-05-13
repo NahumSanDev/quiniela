@@ -35,6 +35,7 @@ router.get('/profile', authMiddleware, async (req: Request, res: Response) => {
         email: true,
         image: true,
         points: true,
+        isAdmin: true,
         createdAt: true
       }
     });

@@ -52,6 +52,7 @@ router.post('/register', async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         points: user.points,
+        isAdmin: user.isAdmin,
         avatarUrl: user.image
       }
     });
@@ -95,6 +96,7 @@ router.post('/login', async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         points: user.points,
+        isAdmin: user.isAdmin,
         avatarUrl: user.image
       }
     });

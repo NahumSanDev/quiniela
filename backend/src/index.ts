@@ -6,6 +6,7 @@ import matchesRouter from './routes/matches';
 import authRouter from './routes/auth';
 import userRouter from './routes/user';
 import adminRouter from './routes/admin';
+import seedRouter from './routes/seed';
 import { syncMatches, processFinishedMatches } from './services/footballApi';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -36,6 +37,7 @@ app.use('/api/matches', matchesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/seed', seedRouter);
 
 app.post('/api/sync', async (req, res) => {
   try {
