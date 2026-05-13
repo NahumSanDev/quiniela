@@ -299,4 +299,129 @@ router.post('/sync-live', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => {
+  const worldCupMatches = [
+    { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'Brazil', awayFlag: 'br', startTime: new Date('2026-06-11T21:00:00Z'), groupStage: 'Group A', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'USA', awayFlag: 'us', startTime: new Date('2026-06-12T01:00:00Z'), groupStage: 'Group A', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'Canada', homeFlag: 'ca', awayTeam: 'Uruguay', awayFlag: 'uy', startTime: new Date('2026-06-12T21:00:00Z'), groupStage: 'Group B', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Spain', homeFlag: 'es', awayTeam: 'Germany', awayFlag: 'de', startTime: new Date('2026-06-13T01:00:00Z'), groupStage: 'Group C', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'France', homeFlag: 'fr', awayTeam: 'England', awayFlag: 'gb', startTime: new Date('2026-06-13T21:00:00Z'), groupStage: 'Group D', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Netherlands', awayFlag: 'nl', startTime: new Date('2026-06-14T01:00:00Z'), groupStage: 'Group E', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'Italy', homeFlag: 'it', awayTeam: 'Belgium', awayFlag: 'be', startTime: new Date('2026-06-14T21:00:00Z'), groupStage: 'Group F', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'Japan', homeFlag: 'jp', awayTeam: 'South Korea', awayFlag: 'kr', startTime: new Date('2026-06-15T01:00:00Z'), groupStage: 'Group G', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Qatar', awayFlag: 'qa', startTime: new Date('2026-06-15T21:00:00Z'), groupStage: 'Group H', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
+    { homeTeam: 'Morocco', homeFlag: 'ma', awayTeam: 'Argentina', awayFlag: 'ar', startTime: new Date('2026-06-17T21:00:00Z'), groupStage: 'Group A', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-18T01:00:00Z'), groupStage: 'Group A', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Mexico', awayFlag: 'mx', startTime: new Date('2026-06-18T21:00:00Z'), groupStage: 'Group B', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'France', awayFlag: 'fr', startTime: new Date('2026-06-19T01:00:00Z'), groupStage: 'Group C', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'England', homeFlag: 'gb', awayTeam: 'Spain', awayFlag: 'es', startTime: new Date('2026-06-19T21:00:00Z'), groupStage: 'Group D', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Portugal', awayFlag: 'pt', startTime: new Date('2026-06-20T01:00:00Z'), groupStage: 'Group E', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'Belgium', homeFlag: 'be', awayTeam: 'Italy', awayFlag: 'it', startTime: new Date('2026-06-20T21:00:00Z'), groupStage: 'Group F', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'South Korea', homeFlag: 'kr', awayTeam: 'Japan', awayFlag: 'jp', startTime: new Date('2026-06-21T01:00:00Z'), groupStage: 'Group G', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Qatar', homeFlag: 'qa', awayTeam: 'Australia', awayFlag: 'au', startTime: new Date('2026-06-21T21:00:00Z'), groupStage: 'Group H', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
+    { homeTeam: 'Uruguay', homeFlag: 'uy', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-22T21:00:00Z'), groupStage: 'Group B', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-23T01:00:00Z'), groupStage: 'Group A', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'Uruguay', awayFlag: 'uy', startTime: new Date('2026-06-23T21:00:00Z'), groupStage: 'Group A', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Brazil', awayFlag: 'br', startTime: new Date('2026-06-24T01:00:00Z'), groupStage: 'Group A', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'France', homeFlag: 'fr', awayTeam: 'Spain', awayFlag: 'es', startTime: new Date('2026-06-24T21:00:00Z'), groupStage: 'Group C', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'England', awayFlag: 'gb', startTime: new Date('2026-06-25T01:00:00Z'), groupStage: 'Group C', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Italy', awayFlag: 'it', startTime: new Date('2026-06-25T21:00:00Z'), groupStage: 'Group E', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Belgium', awayFlag: 'be', startTime: new Date('2026-06-26T01:00:00Z'), groupStage: 'Group E', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Japan', homeFlag: 'jp', awayTeam: 'Australia', awayFlag: 'au', startTime: new Date('2026-06-26T21:00:00Z'), groupStage: 'Group G', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'South Korea', homeFlag: 'kr', awayTeam: 'Qatar', awayFlag: 'qa', startTime: new Date('2026-06-27T01:00:00Z'), groupStage: 'Group G', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Morocco', homeFlag: 'ma', awayTeam: 'Mexico', awayFlag: 'mx', startTime: new Date('2026-06-27T21:00:00Z'), groupStage: 'Group A', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'USA', awayFlag: 'us', startTime: new Date('2026-06-28T01:00:00Z'), groupStage: 'Group A', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-28T21:00:00Z'), groupStage: 'Group A', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'Uruguay', homeFlag: 'uy', awayTeam: 'Mexico', awayFlag: 'mx', startTime: new Date('2026-06-29T01:00:00Z'), groupStage: 'Group A', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'England', homeFlag: 'gb', awayTeam: 'Germany', awayFlag: 'de', startTime: new Date('2026-06-29T21:00:00Z'), groupStage: 'Group C', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Spain', homeFlag: 'es', awayTeam: 'France', awayFlag: 'fr', startTime: new Date('2026-06-30T01:00:00Z'), groupStage: 'Group C', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
+    { homeTeam: 'Italy', homeFlag: 'it', awayTeam: 'Portugal', awayFlag: 'pt', startTime: new Date('2026-06-30T21:00:00Z'), groupStage: 'Group E', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'Belgium', homeFlag: 'be', awayTeam: 'Netherlands', awayFlag: 'nl', startTime: new Date('2026-07-01T01:00:00Z'), groupStage: 'Group E', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Japan', awayFlag: 'jp', startTime: new Date('2026-07-01T21:00:00Z'), groupStage: 'Group G', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'Qatar', homeFlag: 'qa', awayTeam: 'South Korea', awayFlag: 'kr', startTime: new Date('2026-07-02T01:00:00Z'), groupStage: 'Group G', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'Morocco', homeFlag: 'ma', awayTeam: 'Uruguay', awayFlag: 'uy', startTime: new Date('2026-07-02T21:00:00Z'), groupStage: 'Group A', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'Canada', homeFlag: 'ca', awayTeam: 'Mexico', awayFlag: 'mx', startTime: new Date('2026-07-03T01:00:00Z'), groupStage: 'Group A', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Argentina', awayFlag: 'ar', startTime: new Date('2026-07-03T21:00:00Z'), groupStage: 'Group A', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-07-04T01:00:00Z'), groupStage: 'Group A', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Belgium', awayFlag: 'be', startTime: new Date('2026-07-04T21:00:00Z'), groupStage: 'Group E', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
+    { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Italy', awayFlag: 'it', startTime: new Date('2026-07-05T01:00:00Z'), groupStage: 'Group E', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'France', awayFlag: 'fr', startTime: new Date('2026-07-05T21:00:00Z'), groupStage: 'Group C', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'England', homeFlag: 'gb', awayTeam: 'Spain', awayFlag: 'es', startTime: new Date('2026-07-06T01:00:00Z'), groupStage: 'Group C', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'Japan', homeFlag: 'jp', awayTeam: 'Qatar', awayFlag: 'qa', startTime: new Date('2026-07-06T21:00:00Z'), groupStage: 'Group G', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'South Korea', homeFlag: 'kr', awayTeam: 'Australia', awayFlag: 'au', startTime: new Date('2026-07-07T01:00:00Z'), groupStage: 'Group G', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: '1A', homeFlag: 'br', awayTeam: '3C', awayFlag: 'es', startTime: new Date('2026-07-05T21:00:00Z'), groupStage: 'Round of 16', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: '1C', homeFlag: 'fr', awayTeam: '3D', awayFlag: 'gb', startTime: new Date('2026-07-05T01:00:00Z'), groupStage: 'Round of 16', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: '1E', homeFlag: 'pt', awayTeam: '3A', awayFlag: 'ar', startTime: new Date('2026-07-06T21:00:00Z'), groupStage: 'Round of 16', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: '1G', homeFlag: 'jp', awayTeam: '2H', awayFlag: 'ma', startTime: new Date('2026-07-06T01:00:00Z'), groupStage: 'Round of 16', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: '1B', homeFlag: 'de', awayTeam: '3F', awayFlag: 'it', startTime: new Date('2026-07-07T21:00:00Z'), groupStage: 'Round of 16', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: '1D', homeFlag: 'nl', awayTeam: '2E', awayFlag: 'be', startTime: new Date('2026-07-07T01:00:00Z'), groupStage: 'Round of 16', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: '1F', homeFlag: 'kr', awayTeam: '2A', awayFlag: 'uy', startTime: new Date('2026-07-08T21:00:00Z'), groupStage: 'Round of 16', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: '1H', homeFlag: 'au', awayTeam: '2B', awayFlag: 'mx', startTime: new Date('2026-07-08T01:00:00Z'), groupStage: 'Round of 16', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
+    { homeTeam: 'W49', homeFlag: 'br', awayTeam: 'W50', awayFlag: 'fr', startTime: new Date('2026-07-10T21:00:00Z'), groupStage: 'Quarter-final', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'W53', homeFlag: 'pt', awayTeam: 'W54', awayFlag: 'jp', startTime: new Date('2026-07-10T01:00:00Z'), groupStage: 'Quarter-final', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'W51', homeFlag: 'de', awayTeam: 'W52', awayFlag: 'nl', startTime: new Date('2026-07-11T21:00:00Z'), groupStage: 'Quarter-final', venueName: 'AT&T Stadium', venueCity: 'Dallas', venueCountry: 'USA' },
+    { homeTeam: 'W55', homeFlag: 'kr', awayTeam: 'W56', awayFlag: 'au', startTime: new Date('2026-07-11T01:00:00Z'), groupStage: 'Quarter-final', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'W57', homeFlag: 'br', awayTeam: 'W58', awayFlag: 'pt', startTime: new Date('2026-07-14T21:00:00Z'), groupStage: 'Semi-final', venueName: 'SoFi Stadium', venueCity: 'Los Angeles', venueCountry: 'USA' },
+    { homeTeam: 'W59', homeFlag: 'de', awayTeam: 'W60', awayFlag: 'kr', startTime: new Date('2026-07-15T01:00:00Z'), groupStage: 'Semi-final', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'W61', homeFlag: 'br', awayTeam: 'W62', awayFlag: 'de', startTime: new Date('2026-07-19T01:00:00Z'), groupStage: 'Final', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+  ];
+
+  try {
+    let created = 0;
+    let updated = 0;
+
+    for (let i = 0; i < worldCupMatches.length; i++) {
+      const match = worldCupMatches[i];
+      const externalId = `wc2026-${i + 1}`;
+
+      const existing = await prisma.match.findFirst({
+        where: { externalId }
+      });
+
+      if (existing) {
+        await prisma.match.update({
+          where: { id: existing.id },
+          data: {
+            homeTeam: match.homeTeam,
+            homeFlag: match.homeFlag,
+            awayTeam: match.awayTeam,
+            awayFlag: match.awayFlag,
+            startTime: match.startTime,
+            groupStage: match.groupStage,
+            venueName: match.venueName,
+            venueCity: match.venueCity,
+            venueCountry: match.venueCountry,
+            status: 'SCHEDULED',
+            homeScore: null,
+            awayScore: null
+          }
+        });
+        updated++;
+      } else {
+        await prisma.match.create({
+          data: {
+            externalId,
+            homeTeam: match.homeTeam,
+            homeFlag: match.homeFlag,
+            awayTeam: match.awayTeam,
+            awayFlag: match.awayFlag,
+            startTime: match.startTime,
+            groupStage: match.groupStage,
+            venueName: match.venueName,
+            venueCity: match.venueCity,
+            venueCountry: match.venueCountry,
+            status: 'SCHEDULED'
+          }
+        });
+        created++;
+      }
+    }
+
+    res.json({ message: `World Cup 2026 seeded successfully`, created, updated, total: worldCupMatches.length });
+  } catch (error) {
+    console.error('Seed error:', error);
+    res.status(500).json({ error: 'Seeding failed' });
+  }
+});
+
 export default router;
