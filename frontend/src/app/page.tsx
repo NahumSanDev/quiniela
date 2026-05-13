@@ -39,7 +39,7 @@ export default function Home() {
 
       const [matchesRes, rankingRes] = await Promise.all([
         fetch(`${API_URL}/api/matches`, { headers }),
-        fetch(`${API_URL}/api/ranking`, { headers })
+        fetch(`${API_URL}/api/matches/ranking`, { headers })
       ]);
 
       if (matchesRes.ok && rankingRes.ok) {
