@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, MatchStatus } from '@prisma/client';
+import axios from 'axios';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -154,7 +155,6 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    const axios = require('axios');
     const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
       params: { league: 1, season: 2026 },
       headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
@@ -224,7 +224,6 @@ router.post('/sync-live', adminAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    const axios = require('axios');
     const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
       params: { live: 'all' },
       headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
@@ -234,7 +233,7 @@ router.post('/sync-live', adminAuth, async (req: Request, res: Response) => {
 
     for (const match of response.data.response) {
       const status = match.fixture.status.short;
-      let dbStatus = 'SCHEDULED';
+      let dbStatus: MatchStatus = 'SCHEDULED';
       
       if (['FT', 'AET', 'PEN'].includes(status)) dbStatus = 'FINISHED';
       else if (['1H', '2H', 'HT', 'ET', 'P'].includes(status)) dbStatus = 'LIVE';
