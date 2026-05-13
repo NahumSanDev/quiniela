@@ -102,6 +102,12 @@ export default function Home() {
                 >
                   <span>📊</span> Dashboard
                 </a>
+                <a
+                  href="/admin"
+                  className="px-4 py-2 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 transition-colors flex items-center gap-2"
+                >
+                  <span>⚙️</span> Admin
+                </a>
                 <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5">
                   {user.avatarUrl && (
                     <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
