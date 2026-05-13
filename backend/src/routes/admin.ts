@@ -28,7 +28,7 @@ router.get('/matches', adminAuth, async (req: Request, res: Response) => {
 
 router.post('/matches', adminAuth, async (req: Request, res: Response) => {
   try {
-    const { externalId, homeTeam, homeFlag, awayTeam, awayFlag, startTime, groupStage } = req.body;
+    const { externalId, homeTeam, homeFlag, awayTeam, awayFlag, startTime, groupStage, venueName, venueCity, venueCountry } = req.body;
     const match = await prisma.match.create({
       data: {
         externalId,
@@ -37,7 +37,10 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
         awayTeam,
         awayFlag,
         startTime: new Date(startTime),
-        groupStage
+        groupStage,
+        venueName,
+        venueCity,
+        venueCountry
       }
     });
     res.status(201).json(match);
@@ -141,6 +144,119 @@ router.get('/stats', adminAuth, async (req: Request, res: Response) => {
     res.json({ totalUsers, totalMatches, totalPredictions, finishedMatches });
   } catch (error) {
     res.status(500).json({ error: 'Error' });
+  }
+});
+
+router.post('/sync', adminAuth, async (req: Request, res: Response) => {
+  if (!process.env.API_FOOTBALL_KEY) {
+    res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
+    return;
+  }
+
+  try {
+    const axios = require('axios');
+    const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
+      params: { league: 1, season: 2026 },
+      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
+    });
+
+    const countryFlags: Record<string, string> = {
+      'Argentina': 'ar', 'Brazil': 'br', 'France': 'fr', 'Germany': 'de',
+      'Spain': 'es', 'England': 'gb', 'Italy': 'it', 'Portugal': 'pt',
+      'Netherlands': 'nl', 'Belgium': 'be', 'Uruguay': 'uy', 'Mexico': 'mx',
+      'USA': 'us', 'Canada': 'ca', 'Japan': 'jp', 'South Korea': 'kr',
+      'Australia': 'au', 'Qatar': 'qa', 'Morocco': 'ma'
+    };
+
+    let synced = 0;
+
+    for (const match of response.data.response) {
+      const homeTeamName = match.teams.home.name;
+      const awayTeamName = match.teams.away.name;
+      const homeFlag = countryFlags[homeTeamName] || homeTeamName.substring(0, 2).toLowerCase();
+      const awayFlag = countryFlags[awayTeamName] || awayTeamName.substring(0, 2).toLowerCase();
+
+      const venue = match.fixture.venue;
+
+      try {
+        await prisma.match.upsert({
+          where: { externalId: String(match.fixture.id) },
+          update: {
+            homeTeam: homeTeamName,
+            homeFlag,
+            awayTeam: awayTeamName,
+            awayFlag,
+            startTime: new Date(match.fixture.date),
+            venueName: venue?.name || null,
+            venueCity: venue?.city || null,
+            venueCountry: venue?.country || null
+          },
+          create: {
+            externalId: String(match.fixture.id),
+            homeTeam: homeTeamName,
+            homeFlag,
+            awayTeam: awayTeamName,
+            awayFlag,
+            startTime: new Date(match.fixture.date),
+            groupStage: match.league?.name || 'World Cup 2026',
+            venueName: venue?.name || null,
+            venueCity: venue?.city || null,
+            venueCountry: venue?.country || null
+          }
+        });
+        synced++;
+      } catch (e) {
+        console.error(`Error syncing match ${match.fixture.id}:`, e);
+      }
+    }
+
+    res.json({ message: `Synced ${synced} matches`, total: response.data.response.length });
+  } catch (error) {
+    console.error('Sync error:', error);
+    res.status(500).json({ error: 'Sync failed' });
+  }
+});
+
+router.post('/sync-live', adminAuth, async (req: Request, res: Response) => {
+  if (!process.env.API_FOOTBALL_KEY) {
+    res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
+    return;
+  }
+
+  try {
+    const axios = require('axios');
+    const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
+      params: { live: 'all' },
+      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
+    });
+
+    let updated = 0;
+
+    for (const match of response.data.response) {
+      const status = match.fixture.status.short;
+      let dbStatus = 'SCHEDULED';
+      
+      if (['FT', 'AET', 'PEN'].includes(status)) dbStatus = 'FINISHED';
+      else if (['1H', '2H', 'HT', 'ET', 'P'].includes(status)) dbStatus = 'LIVE';
+
+      try {
+        const result = await prisma.match.updateMany({
+          where: { externalId: String(match.fixture.id) },
+          data: {
+            homeScore: match.goals.home,
+            awayScore: match.goals.away,
+            status: dbStatus
+          }
+        });
+        if (result.count > 0) updated++;
+      } catch (e) {
+        console.error(`Error updating match ${match.fixture.id}:`, e);
+      }
+    }
+
+    res.json({ message: `Updated ${updated} matches` });
+  } catch (error) {
+    res.status(500).json({ error: 'Live sync failed' });
   }
 });
 

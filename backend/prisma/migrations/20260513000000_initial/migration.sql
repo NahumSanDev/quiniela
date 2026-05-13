@@ -26,6 +26,9 @@ CREATE TABLE "Match" (
     "awayScore" INTEGER,
     "status" "MatchStatus" NOT NULL DEFAULT 'SCHEDULED',
     "groupStage" TEXT,
+    "venueName" TEXT,
+    "venueCity" TEXT,
+    "venueCountry" TEXT,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

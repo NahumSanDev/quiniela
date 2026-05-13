@@ -35,6 +35,9 @@ model Match {
   awayScore    Int?
   status       MatchStatus @default(SCHEDULED)
   groupStage   String?
+  venueName    String?
+  venueCity    String?
+  venueCountry String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

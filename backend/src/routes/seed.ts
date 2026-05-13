@@ -49,7 +49,10 @@ router.post('/matches', async (req: Request, res: Response) => {
         awayTeam: 'Brazil',
         awayFlag: 'br',
         startTime: new Date(Date.now() + 86400000),
-        groupStage: 'Final'
+        groupStage: 'Final - World Cup 2026',
+        venueName: 'MetLife Stadium',
+        venueCity: 'East Rutherford',
+        venueCountry: 'USA'
       },
       {
         externalId: 'match-002',
@@ -58,7 +61,10 @@ router.post('/matches', async (req: Request, res: Response) => {
         awayTeam: 'Germany',
         awayFlag: 'de',
         startTime: new Date(Date.now() + 172800000),
-        groupStage: 'Semifinal'
+        groupStage: 'Semifinal',
+        venueName: 'SoFi Stadium',
+        venueCity: 'Inglewood',
+        venueCountry: 'USA'
       },
       {
         externalId: 'match-003',
@@ -67,7 +73,10 @@ router.post('/matches', async (req: Request, res: Response) => {
         awayTeam: 'England',
         awayFlag: 'gb',
         startTime: new Date(Date.now() + 259200000),
-        groupStage: 'Cuartos'
+        groupStage: 'Quarter Final',
+        venueName: 'AT&T Stadium',
+        venueCity: 'Arlington',
+        venueCountry: 'USA'
       }
     ];
 
@@ -79,7 +88,7 @@ router.post('/matches', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ message: `${matches.length} matches created` });
+    res.json({ message: `${matches.length} matches created with venue info` });
   } catch (error) {
     res.status(500).json({ error: 'Seed matches failed' });
   }
