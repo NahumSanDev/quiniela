@@ -4,10 +4,10 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post('/seed', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const adminEmail = req.body.email || 'admin@quiniela.com';
-    const adminPassword = req.body.password || 'Mundial#2026';
+    const adminEmail = 'admin@quiniela.com';
+    const adminPassword = 'Mundial#2026';
 
     const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
     
@@ -39,7 +39,7 @@ router.post('/seed', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/seed-matches', async (req: Request, res: Response) => {
+router.post('/matches', async (req: Request, res: Response) => {
   try {
     const matches = [
       {
