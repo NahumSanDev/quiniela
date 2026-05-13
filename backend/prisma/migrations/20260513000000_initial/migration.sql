@@ -1,5 +1,7 @@
 BEGIN;
 
+CREATE TYPE "MatchStatus" AS ENUM ('SCHEDULED', 'LIVE', 'FINISHED', 'POSTPONED', 'CANCELLED');
+
 CREATE TABLE "User" (
     "id" TEXT PRIMARY KEY DEFAULT (now()::text || gen_random_uuid()::text),
     "name" TEXT,
@@ -7,6 +9,7 @@ CREATE TABLE "User" (
     "password" TEXT,
     "image" TEXT,
     "points" INTEGER NOT NULL DEFAULT 0,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -21,7 +24,7 @@ CREATE TABLE "Match" (
     "startTime" TIMESTAMP NOT NULL,
     "homeScore" INTEGER,
     "awayScore" INTEGER,
-    "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
+    "status" "MatchStatus" NOT NULL DEFAULT 'SCHEDULED',
     "groupStage" TEXT,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
