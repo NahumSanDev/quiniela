@@ -77,11 +77,10 @@ export async function processMatchResults(matchId: number): Promise<void> {
 
 export interface RankingEntry {
   rank: number;
-  userId: number;
-  name: string;
+  userId: string;
+  name: string | null;
   avatarUrl: string | null;
   points: number;
-  updatedAt: Date;
 }
 
 export async function getRanking(limit: number = 10): Promise<RankingEntry[]> {
@@ -94,9 +93,8 @@ export async function getRanking(limit: number = 10): Promise<RankingEntry[]> {
     select: {
       id: true,
       name: true,
-      avatarUrl: true,
-      points: true,
-      updatedAt: true
+      image: true,
+      points: true
     }
   });
 
@@ -104,13 +102,12 @@ export async function getRanking(limit: number = 10): Promise<RankingEntry[]> {
     rank: index + 1,
     userId: user.id,
     name: user.name,
-    avatarUrl: user.avatarUrl,
-    points: user.points,
-    updatedAt: user.updatedAt
+    avatarUrl: user.image,
+    points: user.points
   }));
 }
 
-export async function getUserPosition(userId: number): Promise<number> {
+export async function getUserPosition(userId: string): Promise<number> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   
   if (!user) return -1;

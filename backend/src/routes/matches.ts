@@ -38,7 +38,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         predictions: {
           include: {
             user: {
-              select: { id: true, name: true, avatarUrl: true }
+              select: { id: true, name: true, image: true }
             }
           }
         }
@@ -59,7 +59,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 router.post('/:matchId/prediction', requireAuth, validatePredictionTime, validatePredictionData, async (req: PredictionRequest, res: Response) => {
   try {
-    const userId = parseInt(req.headers['x-user-id'] as string);
+    const userId = req.headers['x-user-id'] as string;
     const { matchId } = req.params;
     const { homeScore, awayScore } = req.body;
 
@@ -99,7 +99,7 @@ router.post('/:matchId/prediction', requireAuth, validatePredictionTime, validat
 
 router.get('/user/:userId', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
 
     const predictions = await prisma.prediction.findMany({
       where: { userId },
