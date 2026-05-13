@@ -186,19 +186,6 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
       params: { league: 1, season: 2026 },
       headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
     });
-
-router.post('/sync', adminAuth, async (req: Request, res: Response) => {
-  if (!process.env.API_FOOTBALL_KEY) {
-    res.status(500).json({ error: 'API_FOOTBALL_KEY not configured' });
-    return;
-  }
-
-  try {
-    console.log('Attempting sync with league: 1, season: 2026');
-    const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
-      params: { league: 1, season: 2026 },
-      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
-    });
     
     console.log('API Response status:', response.status);
     console.log('Results count:', response.data.results);
