@@ -42,6 +42,20 @@ app.post('/api/sync', async (req, res) => {
   }
 });
 
+app.post('/api/reset-db', async (req, res) => {
+  try {
+    console.log('Resetting database...');
+    await execAsync('npx prisma migrate reset --force --skip-generate');
+    await execAsync('npx prisma migrate deploy');
+    await execAsync('npx prisma generate');
+    console.log('Database reset complete');
+    res.json({ message: 'Database reset complete' });
+  } catch (error) {
+    console.error('Reset failed:', error);
+    res.status(500).json({ error: 'Reset failed', details: String(error) });
+  }
+});
+
 setInterval(async () => {
   try {
     await processFinishedMatches();
