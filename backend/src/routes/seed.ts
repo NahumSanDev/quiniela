@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 router.post('/seed', async (req: Request, res: Response) => {
   try {
     const adminEmail = req.body.email || 'admin@quiniela.com';
-    const adminPassword = req.body.password || 'admin123';
+    const adminPassword = req.body.password || 'Mundial#2026';
 
     const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
     
