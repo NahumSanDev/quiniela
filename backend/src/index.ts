@@ -87,8 +87,25 @@ setInterval(async () => {
         data: { users, matches, predictions }
       };
 
-      console.log(`[BACKUP] ${now.toISOString()} - Users: ${users.length}, Matches: ${matches.length}, Predictions: ${predictions.length}`);
-      console.log('[BACKUP] Backup data:', JSON.stringify(backup).substring(0, 200) + '...');
+      const fs = require('fs');
+      const date = now.toISOString().split('T')[0];
+      const dir = '/app/backups';
+
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      const filePath = `${dir}/quiniela-${date}.json`;
+      fs.writeFileSync(filePath, JSON.stringify(backup, null, 2));
+
+      console.log(`[BACKUP] Saved to ${filePath} - Users: ${users.length}, Matches: ${matches.length}, Predictions: ${predictions.length}`);
+
+      const files = fs.readdirSync(dir);
+      if (files.length > 7) {
+        const oldest = files.sort()[0];
+        fs.unlinkSync(`${dir}/${oldest}`);
+        console.log(`[BACKUP] Deleted old backup: ${oldest}`);
+      }
     } catch (error) {
       console.error('[BACKUP] Error:', error);
     }

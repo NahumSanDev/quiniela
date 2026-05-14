@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient, MatchStatus } from '@prisma/client';
-import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as nodemailer from 'nodemailer';
-import archiver from 'archiver';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const execAsync = promisify(exec);
 
 const router = Router();
 const prisma = new PrismaClient();
+const BACKUP_DIR = '/app/backups';
 
 export function adminAuth(req: Request, res: Response, next: Function) {
   const adminKey = req.headers['x-admin-key'];
@@ -587,58 +587,48 @@ router.post('/restore', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/backup-email', adminAuth, async (req: Request, res: Response) => {
+router.get('/backups', adminAuth, async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
-    if (!email) {
-      res.status(400).json({ error: 'Email requerido' });
+    if (!fs.existsSync(BACKUP_DIR)) {
+      res.json([]);
       return;
     }
 
-    const [users, matches, predictions] = await Promise.all([
-      prisma.user.findMany({ select: { id: true, name: true, email: true, image: true, points: true, isAdmin: true, createdAt: true } }),
-      prisma.match.findMany(),
-      prisma.prediction.findMany({ select: { id: true, userId: true, matchId: true, homeScore: true, awayScore: true, points: true, bonus: true, createdAt: true } })
-    ]);
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.endsWith('.json'))
+      .sort()
+      .reverse()
+      .map(f => {
+        const stats = fs.statSync(path.join(BACKUP_DIR, f));
+        return {
+          name: f,
+          date: stats.mtime.toISOString(),
+          size: stats.size
+        };
+      });
 
-    const backup = {
-      version: '1.0',
-      timestamp: new Date().toISOString(),
-      data: { users, matches, predictions }
-    };
-
-    const backupJson = JSON.stringify(backup, null, 2);
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-
-    const date = new Date().toISOString().split('T')[0];
-    const filename = `quiniela-backup-${date}.json`;
-
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'quiniela@backup.com',
-      to: email,
-      subject: `Quiniela Backup - ${date}`,
-      text: `Backup de la base de datos de Quiniela.\nFecha: ${new Date().toISOString()}\n\nUsuarios: ${users.length}\nPartidos: ${matches.length}\nPredicciones: ${predictions.length}`,
-      attachments: [
-        {
-          filename,
-          content: backupJson
-        }
-      ]
-    });
-
-    res.json({ message: `Backup enviado a ${email}` });
+    res.json(files);
   } catch (error) {
-    console.error('Backup email error:', error);
-    res.status(500).json({ error: 'Error al enviar backup por email' });
+    console.error('List backups error:', error);
+    res.status(500).json({ error: 'Error listing backups' });
+  }
+});
+
+router.get('/backups/:filename', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { filename } = req.params;
+    const filePath = path.join(BACKUP_DIR, filename);
+
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ error: 'Backup not found' });
+      return;
+    }
+
+    const content = fs.readFileSync(filePath, 'utf-8');
+    res.json(JSON.parse(content));
+  } catch (error) {
+    console.error('Download backup error:', error);
+    res.status(500).json({ error: 'Error downloading backup' });
   }
 });
 
