@@ -16,6 +16,8 @@ interface User {
 }
 
 interface Stats {
+  position: number;
+  totalUsers: number;
   totalPredictions: number;
   finishedMatches: number;
   pendingMatches: number;
@@ -46,7 +48,17 @@ interface Prediction {
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<Stats>({
+    position: 0,
+    totalUsers: 0,
+    totalPredictions: 0,
+    finishedMatches: 0,
+    pendingMatches: 0,
+    correctPredictions: 0,
+    exactScores: 0,
+    totalPoints: 0,
+    accuracy: 0
+  });
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'predictions'>('overview');
@@ -81,6 +93,9 @@ export default function Dashboard() {
       if (profileRes.ok) {
         const data = await profileRes.json();
         setUser(data.user);
+        if (data.stats) {
+          setStats((prev) => prev ? { ...prev, ...data.stats } : data.stats);
+        }
       }
 
       if (predictionsRes.ok) {
@@ -88,7 +103,8 @@ export default function Dashboard() {
       }
 
       if (statsRes.ok) {
-        setStats(await statsRes.json());
+        const matchStats = await statsRes.json();
+        setStats((prev) => prev ? { ...prev, ...matchStats } : matchStats);
       }
     } catch (error) {
       console.error('Error fetching dashboard:', error);
@@ -168,9 +184,9 @@ export default function Dashboard() {
               <div className="text-right">
                 <div className="text-4xl font-bold text-emerald-400">{user?.points}</div>
                 <div className="text-white/60">puntos</div>
-                {stats && (
+                {stats.position > 0 && (
                   <div className="mt-2 px-3 py-1 bg-amber-500/20 rounded-full inline-block">
-                    <span className="text-amber-400 font-semibold">#{1}</span>
+                    <span className="text-amber-400 font-semibold">#{stats.position}</span>
                     <span className="text-white/60 text-sm"> de {stats.totalUsers}</span>
                   </div>
                 )}
@@ -179,7 +195,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {stats && (
+        {stats.totalPredictions > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
