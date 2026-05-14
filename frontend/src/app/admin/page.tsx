@@ -351,6 +351,45 @@ export default function AdminPanel() {
                       <div className="text-white font-bold">{user.name || 'Sin nombre'}</div>
                       <div className="text-white/60 text-sm">{user.email}</div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        defaultValue={user.points}
+                        className="w-20 text-center bg-white/10 text-white rounded-lg px-2 py-1"
+                        min="0"
+                        id={`points-${user.id}`}
+                      />
+                      <button
+                        onClick={async () => {
+                          const points = parseInt((document.getElementById(`points-${user.id}`) as HTMLInputElement).value);
+                          await fetch(`${API_URL}/api/admin/users/${user.id}`, {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'x-admin-key': adminKey
+                            },
+                            body: JSON.stringify({ points })
+                          });
+                          fetchData();
+                        }}
+                        className="px-3 py-1 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 text-sm"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm('¿Eliminar este usuario y todas sus predicciones?')) return;
+                          await fetch(`${API_URL}/api/admin/users/${user.id}`, {
+                            method: 'DELETE',
+                            headers: { 'x-admin-key': adminKey }
+                          });
+                          fetchData();
+                        }}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-sm"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-emerald-400">{user.points} pts</div>
                       <div className="text-white/40 text-sm">{user._count.predictions} predicciones</div>

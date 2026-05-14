@@ -134,6 +134,32 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.delete('/users/:id', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.prediction.deleteMany({ where: { userId: id } });
+    await prisma.user.delete({ where: { id } });
+    res.json({ message: 'Usuario eliminado' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar usuario' });
+  }
+});
+
+router.put('/users/:id', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { points } = req.body;
+    const user = await prisma.user.update({
+      where: { id },
+      data: { points: points ?? undefined },
+      select: { id: true, name: true, email: true, points: true }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar usuario' });
+  }
+});
+
 router.get('/stats', adminAuth, async (req: Request, res: Response) => {
   try {
     const [totalUsers, totalMatches, totalPredictions, finishedMatches] = await Promise.all([
