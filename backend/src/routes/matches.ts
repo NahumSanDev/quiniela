@@ -231,4 +231,42 @@ router.get('/ranking', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/user/:userId/stats', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const predictions = await prisma.prediction.findMany({
+      where: { userId },
+      include: {
+        match: {
+          select: { homeScore: true, awayScore: true, status: true }
+        }
+      }
+    });
+
+    const totalPredictions = predictions.length;
+    const finishedPredictions = predictions.filter(p => p.match.status === 'FINISHED');
+    const correctPredictions = finishedPredictions.filter(p => p.points > 0);
+    const exactScores = finishedPredictions.filter(p => p.bonus);
+    const totalPoints = finishedPredictions.reduce((sum, p) => sum + p.points, 0);
+
+    const accuracy = finishedPredictions.length > 0
+      ? Math.round((correctPredictions.length / finishedPredictions.length) * 100)
+      : 0;
+
+    res.json({
+      totalPredictions,
+      finishedMatches: finishedPredictions.length,
+      pendingMatches: totalPredictions - finishedPredictions.length,
+      correctPredictions: correctPredictions.length,
+      exactScores: exactScores.length,
+      totalPoints,
+      accuracy
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
 export default router;

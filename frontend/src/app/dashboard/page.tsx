@@ -16,10 +16,12 @@ interface User {
 }
 
 interface Stats {
-  position: number;
-  totalUsers: number;
   totalPredictions: number;
+  finishedMatches: number;
+  pendingMatches: number;
   correctPredictions: number;
+  exactScores: number;
+  totalPoints: number;
   accuracy: number;
 }
 
@@ -55,17 +57,23 @@ export default function Dashboard() {
 
   async function fetchDashboard() {
     const token = localStorage.getItem('token');
-    if (!token) {
+    const storedUser = localStorage.getItem('user');
+    if (!token || !storedUser) {
       window.location.href = '/auth/signin';
       return;
     }
 
+    const userData = JSON.parse(storedUser);
+
     try {
-      const [profileRes, predictionsRes] = await Promise.all([
+      const [profileRes, predictionsRes, statsRes] = await Promise.all([
         fetch(`${API_URL}/api/user/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`${API_URL}/api/user/predictions`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/api/matches/user/${userData.id}/stats`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -73,11 +81,14 @@ export default function Dashboard() {
       if (profileRes.ok) {
         const data = await profileRes.json();
         setUser(data.user);
-        setStats(data.stats);
       }
 
       if (predictionsRes.ok) {
         setPredictions(await predictionsRes.json());
+      }
+
+      if (statsRes.ok) {
+        setStats(await statsRes.json());
       }
     } catch (error) {
       console.error('Error fetching dashboard:', error);
@@ -202,8 +213,17 @@ export default function Dashboard() {
               transition={{ delay: 0.3 }}
               className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 text-center"
             >
-              <div className="text-3xl font-bold text-purple-400">#{stats.position}</div>
-              <div className="text-white/60 text-sm">Posición</div>
+              <div className="text-3xl font-bold text-yellow-400">{stats.exactScores}</div>
+              <div className="text-white/60 text-sm">Marcadores Exactos</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 text-center"
+            >
+              <div className="text-3xl font-bold text-blue-400">{stats.pendingMatches}</div>
+              <div className="text-white/60 text-sm">Pendientes</div>
             </motion.div>
           </div>
         )}

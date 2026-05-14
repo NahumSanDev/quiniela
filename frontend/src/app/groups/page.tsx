@@ -14,6 +14,17 @@ interface Group {
   members: { id: string; user: { id: string; name: string | null; image: string | null; points: number } }[];
 }
 
+interface RankingEntry {
+  rank: number;
+  userId: string;
+  name: string | null;
+  avatarUrl: string | null;
+  points: number;
+  predictionsCount: number;
+  correctPredictions: number;
+  exactScores: number;
+}
+
 export default function GroupsPage() {
   const [user, setUser] = useState<any>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -23,6 +34,9 @@ export default function GroupsPage() {
   const [newGroupName, setNewGroupName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [loadingRanking, setLoadingRanking] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -140,6 +154,29 @@ export default function GroupsPage() {
     setMessage('Codigo copiado!');
   }
 
+  async function viewGroupRanking(groupId: string) {
+    const token = localStorage.getItem('token');
+    setLoadingRanking(true);
+    setSelectedGroup(groupId);
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${groupId}/ranking`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setRanking(await res.json());
+      }
+    } catch (error) {
+      setMessage('Error al cargar ranking');
+    } finally {
+      setLoadingRanking(false);
+    }
+  }
+
+  function closeRanking() {
+    setSelectedGroup(null);
+    setRanking([]);
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -234,13 +271,16 @@ export default function GroupsPage() {
                 </div>
 
                 <div className="flex gap-2">
+                  <button onClick={() => viewGroupRanking(group.id)} className="flex-1 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 text-sm font-semibold">
+                    Ver Ranking
+                  </button>
                   {group.isOwner ? (
-                    <button onClick={() => deleteGroup(group.id)} className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm">
-                      Eliminar Grupo
+                    <button onClick={() => deleteGroup(group.id)} className="py-2 px-4 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   ) : (
-                    <button onClick={() => leaveGroup(group.id)} className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm">
-                      Salir del Grupo
+                    <button onClick={() => leaveGroup(group.id)} className="py-2 px-4 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                     </button>
                   )}
                 </div>
@@ -249,6 +289,48 @@ export default function GroupsPage() {
           )}
         </div>
       </div>
+
+      {selectedGroup && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">Ranking del Grupo</h2>
+              <button onClick={closeRanking} className="text-white/60 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {loadingRanking ? (
+              <div className="flex justify-center py-8">
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {ranking.map((entry, index) => (
+                  <div key={entry.userId} className={`flex items-center gap-4 p-4 rounded-xl ${index === 0 ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-white/5'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500 text-black' : index === 1 ? 'bg-gray-400 text-black' : index === 2 ? 'bg-amber-700 text-white' : 'bg-white/10 text-white/60'}`}>
+                      {entry.rank}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{entry.name || 'Sin nombre'}</span>
+                      </div>
+                      <div className="flex gap-4 text-xs text-white/50 mt-1">
+                        <span> {entry.correctPredictions} predicciones</span>
+                        <span className="text-amber-400">{entry.exactScores} exacto</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-emerald-400">{entry.points}</div>
+                      <div className="text-xs text-white/50">puntos</div>
+                    </div>
+                  </div>
+                ))}
+                {ranking.length === 0 && <p className="text-center text-white/40 py-8">No hay miembros en este grupo</p>}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }

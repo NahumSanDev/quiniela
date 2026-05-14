@@ -157,7 +157,7 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
             image: true,
             points: true,
             predictions: {
-              where: { userId: id }
+              select: { points: true, bonus: true }
             }
           }
         }
@@ -165,14 +165,20 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
       orderBy: { user: { points: 'desc' } }
     });
 
-    const ranking = members.map((m, index) => ({
-      rank: index + 1,
-      userId: m.user.id,
-      name: m.user.name || 'Sin nombre',
-      avatarUrl: m.user.image,
-      points: m.user.points,
-      predictionsCount: m.user.predictions.length
-    }));
+    const ranking = members.map((m, index) => {
+      const correct = m.user.predictions.filter(p => p.points > 0).length;
+      const exact = m.user.predictions.filter(p => p.bonus).length;
+      return {
+        rank: index + 1,
+        userId: m.user.id,
+        name: m.user.name || 'Sin nombre',
+        avatarUrl: m.user.image,
+        points: m.user.points,
+        predictionsCount: m.user.predictions.length,
+        correctPredictions: correct,
+        exactScores: exact
+      };
+    });
 
     res.json(ranking);
   } catch (error) {
