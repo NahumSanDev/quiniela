@@ -116,19 +116,32 @@ router.delete('/matches/:id', adminAuth, async (req: Request, res: Response) => 
 
 router.get('/users', adminAuth, async (req: Request, res: Response) => {
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { points: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        points: true,
-        createdAt: true,
-        _count: { select: { predictions: true } }
-      }
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: { points: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          points: true,
+          createdAt: true,
+          _count: { select: { predictions: true } }
+        }
+      }),
+      prisma.user.count()
+    ]);
+    
+    res.json({
+      data: users,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     });
-    res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Error' });
   }

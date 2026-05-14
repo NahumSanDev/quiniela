@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Match, Prediction } from '../types';
 
+const FLAG_BASE_URL = 'https://flagcdn.com/w160';
+
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
   onPredict: (matchId: number, homeScore: number, awayScore: number) => void;
+  onDelete?: (matchId: number) => void;
 }
-
-const FLAG_BASE_URL = 'https://flagcdn.com/w160';
 
 export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
@@ -218,6 +219,15 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
           >
             {isSubmitting ? 'Guardando...' : prediction ? 'Actualizar' : 'Guardar'}
           </motion.button>
+        )}
+
+        {prediction && !isLocked && onDelete && (
+          <button
+            onClick={() => onDelete(match.id)}
+            className="w-full mt-2 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-medium transition-colors text-sm"
+          >
+            Eliminar prediccion
+          </button>
         )}
       </div>
     </motion.div>

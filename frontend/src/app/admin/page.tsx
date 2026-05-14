@@ -29,6 +29,13 @@ interface User {
   _count: { predictions: number };
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 interface Stats {
   totalUsers: number;
   totalMatches: number;
@@ -46,21 +53,25 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPagination, setUsersPagination] = useState<Pagination | null>(null);
 
   async function fetchData() {
     setLoading(true);
     try {
       const headers = { 'x-admin-key': adminKey };
 
-      const [statsRes, matchesRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/stats`, { headers }),
-        fetch(`${API_URL}/api/admin/matches`, { headers }),
-        fetch(`${API_URL}/api/admin/users`, { headers })
+        fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20`, { headers })
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
-      if (matchesRes.ok) setMatches(await matchesRes.json());
-      if (usersRes.ok) setUsers(await usersRes.json());
+      if (usersRes.ok) {
+        const data = await usersRes.json();
+        setUsers(data.data || data);
+        if (data.pagination) setUsersPagination(data.pagination);
+      }
 
       setIsAuthenticated(true);
     } catch (error) {
@@ -338,7 +349,7 @@ export default function AdminPanel() {
                     className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 flex items-center justify-center text-white font-bold">
-                      #{index + 1}
+                      #{index + 1 + (usersPage - 1) * 20}
                     </div>
                     <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
                       {user.image ? (
@@ -396,6 +407,28 @@ export default function AdminPanel() {
                     </div>
                   </div>
                 ))}
+
+                {usersPagination && usersPagination.totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                      disabled={usersPage === 1}
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg disabled:opacity-50 hover:bg-white/20"
+                    >
+                      Anterior
+                    </button>
+                    <span className="px-4 py-2 text-white/60">
+                      {usersPage} / {usersPagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setUsersPage(p => Math.min(usersPagination.totalPages, p + 1))}
+                      disabled={usersPage === usersPagination.totalPages}
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg disabled:opacity-50 hover:bg-white/20"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

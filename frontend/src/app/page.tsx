@@ -38,12 +38,15 @@ export default function Home() {
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
       const [matchesRes, rankingRes] = await Promise.all([
-        fetch(`${API_URL}/api/matches`, { headers }),
+        fetch(`${API_URL}/api/matches?limit=100`, { headers }),
         fetch(`${API_URL}/api/matches/ranking`, { headers })
       ]);
 
-      if (matchesRes.ok && rankingRes.ok) {
-        setMatches(await matchesRes.json());
+      if (matchesRes.ok) {
+        const data = await matchesRes.json();
+        setMatches(data.data || data);
+      }
+      if (rankingRes.ok) {
         setRanking(await rankingRes.json());
       }
     } catch (error) {
@@ -75,6 +78,28 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error saving prediction:', error);
+    }
+  }
+
+  async function handleDeletePrediction(matchId: number) {
+    if (!confirm('¿Eliminar esta prediccion?')) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Error deleting prediction:', error);
     }
   }
 
@@ -193,16 +218,26 @@ export default function Home() {
                 No hay partidos disponibles
               </p>
             ) : (
-              matches.map((match, index) => (
-                <motion.div
-                  key={match.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <MatchCard match={match} onPredict={handlePredict} />
-                </motion.div>
-              ))
+              matches.map((match, index) => {
+                  const userPrediction = match.predictions?.find(
+                    (p: any) => p.userId === user?.id
+                  );
+                  return (
+                    <motion.div
+                      key={match.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <MatchCard
+                        match={match}
+                        prediction={userPrediction}
+                        onPredict={handlePredict}
+                        onDelete={user ? handleDeletePrediction : undefined}
+                      />
+                    </motion.div>
+                  );
+                })
             )}
           </motion.div>
         ) : (

@@ -8,22 +8,40 @@ const prisma = new PrismaClient();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const matches = await prisma.match.findMany({
-      orderBy: { startTime: 'asc' },
-      include: {
-        predictions: {
-          select: {
-            id: true,
-            homeScore: true,
-            awayScore: true,
-            points: true,
-            bonus: true
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [matches, total] = await Promise.all([
+      prisma.match.findMany({
+        orderBy: { startTime: 'asc' },
+        skip,
+        take: limit,
+        include: {
+          predictions: {
+            select: {
+              id: true,
+              homeScore: true,
+              awayScore: true,
+              points: true,
+              bonus: true,
+              userId: true
+            }
           }
         }
+      }),
+      prisma.match.count()
+    ]);
+
+    res.json({
+      data: matches,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     });
-
-    res.json(matches);
   } catch (error) {
     console.error('Error fetching matches:', error);
     res.status(500).json({ error: 'Failed to fetch matches' });
@@ -108,6 +126,40 @@ router.post('/:matchId/prediction', requireAuth, validatePredictionTime, validat
   } catch (error) {
     console.error('Error saving prediction:', error);
     res.status(500).json({ error: 'Failed to save prediction' });
+  }
+});
+
+router.delete('/:matchId/prediction', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.headers['x-user-id'] as string;
+    const { matchId } = req.params;
+
+    const match = await prisma.match.findUnique({
+      where: { id: parseInt(matchId) },
+      select: { status: true, startTime: true }
+    });
+
+    if (!match) {
+      res.status(404).json({ error: 'Match not found' });
+      return;
+    }
+
+    if (match.status === 'LIVE' || match.status === 'FINISHED' || new Date() >= match.startTime) {
+      res.status(403).json({ error: 'Cannot delete prediction after match has started' });
+      return;
+    }
+
+    await prisma.prediction.deleteMany({
+      where: {
+        userId,
+        matchId: parseInt(matchId)
+      }
+    });
+
+    res.json({ message: 'Prediction deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting prediction:', error);
+    res.status(500).json({ error: 'Failed to delete prediction' });
   }
 });
 
