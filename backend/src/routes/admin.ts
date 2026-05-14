@@ -3,6 +3,8 @@ import { PrismaClient, MatchStatus } from '@prisma/client';
 import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as nodemailer from 'nodemailer';
+import archiver from 'archiver';
 
 const execAsync = promisify(exec);
 
@@ -582,6 +584,61 @@ router.post('/restore', adminAuth, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Restore error:', error);
     res.status(500).json({ error: 'Restore failed' });
+  }
+});
+
+router.post('/backup-email', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'Email requerido' });
+      return;
+    }
+
+    const [users, matches, predictions] = await Promise.all([
+      prisma.user.findMany({ select: { id: true, name: true, email: true, image: true, points: true, isAdmin: true, createdAt: true } }),
+      prisma.match.findMany(),
+      prisma.prediction.findMany({ select: { id: true, userId: true, matchId: true, homeScore: true, awayScore: true, points: true, bonus: true, createdAt: true } })
+    ]);
+
+    const backup = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      data: { users, matches, predictions }
+    };
+
+    const backupJson = JSON.stringify(backup, null, 2);
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `quiniela-backup-${date}.json`;
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'quiniela@backup.com',
+      to: email,
+      subject: `Quiniela Backup - ${date}`,
+      text: `Backup de la base de datos de Quiniela.\nFecha: ${new Date().toISOString()}\n\nUsuarios: ${users.length}\nPartidos: ${matches.length}\nPredicciones: ${predictions.length}`,
+      attachments: [
+        {
+          filename,
+          content: backupJson
+        }
+      ]
+    });
+
+    res.json({ message: `Backup enviado a ${email}` });
+  } catch (error) {
+    console.error('Backup email error:', error);
+    res.status(500).json({ error: 'Error al enviar backup por email' });
   }
 });
 
