@@ -251,20 +251,20 @@ export default function AdminPanel() {
             </div>
             <div className="mb-4">
               <label className="block text-white/60 text-sm mb-1">Fase/Grupo</label>
-              <input name="groupStage" defaultValue={match?.groupStage} placeholder="Grupo A, Octavos, Final..." className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <input name="groupStage" defaultValue={match?.groupStage || ''} placeholder="Grupo A, Octavos, Final..." className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-white/60 text-sm mb-1">Estadio</label>
-                <input name="venueName" defaultValue={match?.venueName} placeholder="Nombre" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input name="venueName" defaultValue={match?.venueName || ''} placeholder="Nombre" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
               <div>
                 <label className="block text-white/60 text-sm mb-1">Ciudad</label>
-                <input name="venueCity" defaultValue={match?.venueCity} placeholder="Ciudad" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input name="venueCity" defaultValue={match?.venueCity || ''} placeholder="Ciudad" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
               <div>
                 <label className="block text-white/60 text-sm mb-1">Pais</label>
-                <input name="venueCountry" defaultValue={match?.venueCountry} placeholder="Pais" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input name="venueCountry" defaultValue={match?.venueCountry || ''} placeholder="Pais" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
             </div>
             {isEdit && (
