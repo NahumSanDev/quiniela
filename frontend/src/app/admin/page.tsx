@@ -17,6 +17,9 @@ interface Match {
   awayScore: number | null;
   status: string;
   groupStage: string | null;
+  venueName: string | null;
+  venueCity: string | null;
+  venueCountry: string | null;
 }
 
 interface User {
