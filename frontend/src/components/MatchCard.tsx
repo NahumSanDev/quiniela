@@ -10,7 +10,7 @@ interface MatchCardProps {
   onPredict: (matchId: number, homeScore: number, awayScore: number) => void;
 }
 
-export function MatchCard({ match, prediction, onPredict, onDelete }: MatchCardProps) {
+export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
