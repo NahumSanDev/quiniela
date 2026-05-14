@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const FLAG_BASE_URL = 'https://flagcdn.com/w80';
 
 interface User {
   id: string;
@@ -245,7 +246,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <img src={prediction.match.homeFlag} alt="" className="w-8 h-8 rounded-full" />
+                      <img src={`${FLAG_BASE_URL}/${prediction.match.homeFlag}.png`} alt="" className="w-8 h-8 rounded-full" />
                       <span className="text-white font-medium">{prediction.match.homeTeam}</span>
                     </div>
                     <div className="px-4 py-2 bg-black/30 rounded-xl">
@@ -255,7 +256,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-white font-medium">{prediction.match.awayTeam}</span>
-                      <img src={prediction.match.awayFlag} alt="" className="w-8 h-8 rounded-full" />
+                      <img src={`${FLAG_BASE_URL}/${prediction.match.awayFlag}.png`} alt="" className="w-8 h-8 rounded-full" />
                     </div>
                   </div>
                   <div className="text-right">
