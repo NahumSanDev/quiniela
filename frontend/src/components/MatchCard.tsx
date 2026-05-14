@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Match, Prediction } from '../types';
 
-const FLAG_BASE_URL = 'https://flagcdn.com/w160';
-
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
@@ -96,13 +94,11 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
               whileHover={{ scale: 1.05 }}
               className="relative inline-block"
             >
-              <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-md" />
-              <img
-                src={`${FLAG_BASE_URL}/${match.homeFlag}.png`}
-                alt={match.homeTeam}
-                className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
-                loading="lazy"
-              />
+              <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
+                {match.homeFlag.split(',').map((color, i) => (
+                  <div key={i} style={{ backgroundColor: color, flex: 1 }} />
+                ))}
+              </div>
             </motion.div>
             <p className="mt-3 text-sm font-semibold text-white/90">{match.homeTeam}</p>
           </div>
@@ -130,13 +126,11 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
               whileHover={{ scale: 1.05 }}
               className="relative inline-block"
             >
-              <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-md" />
-              <img
-                src={`${FLAG_BASE_URL}/${match.awayFlag}.png`}
-                alt={match.awayTeam}
-                className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
-                loading="lazy"
-              />
+              <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
+                {match.awayFlag.split(',').map((color, i) => (
+                  <div key={i} style={{ backgroundColor: color, flex: 1 }} />
+                ))}
+              </div>
             </motion.div>
             <p className="mt-3 text-sm font-semibold text-white/90">{match.awayTeam}</p>
           </div>

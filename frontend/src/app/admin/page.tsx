@@ -142,8 +142,8 @@ export default function AdminPanel() {
       const body = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
-        homeFlag: formData.get('homeFlag'),
-        awayFlag: formData.get('awayFlag'),
+        homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
+        awayFlag: `${formData.get('awayFlag1')},${formData.get('awayFlag2')}`,
         startTime: formData.get('startTime'),
         groupStage: formData.get('groupStage'),
         venueName: formData.get('venueName'),
@@ -176,8 +176,8 @@ export default function AdminPanel() {
       const body = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
-        homeFlag: formData.get('homeFlag'),
-        awayFlag: formData.get('awayFlag'),
+        homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
+        awayFlag: `${formData.get('awayFlag1')},${formData.get('awayFlag2')}`,
         startTime: formData.get('startTime'),
         homeScore: formData.get('homeScore') ? parseInt(formData.get('homeScore') as string) : null,
         awayScore: formData.get('awayScore') ? parseInt(formData.get('awayScore') as string) : null,
@@ -240,12 +240,18 @@ export default function AdminPanel() {
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-white/60 text-sm mb-1">Flag Local (codigo pais)</label>
-                <input name="homeFlag" defaultValue={match?.homeFlag} required placeholder="mx" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <label className="block text-white/60 text-sm mb-1">Color 1 Local</label>
+                <div className="flex gap-2">
+                  <input name="homeFlag1" type="color" defaultValue={match?.homeFlag?.split(',')[0] || '#00ff00'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                  <input name="homeFlag2" type="color" defaultValue={match?.homeFlag?.split(',')[1] || '#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                </div>
               </div>
               <div>
-                <label className="block text-white/60 text-sm mb-1">Flag Visitante (codigo pais)</label>
-                <input name="awayFlag" defaultValue={match?.awayFlag} required placeholder="us" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <label className="block text-white/60 text-sm mb-1">Color 1 Visitante</label>
+                <div className="flex gap-2">
+                  <input name="awayFlag1" type="color" defaultValue={match?.awayFlag?.split(',')[0] || '#ff0000'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                  <input name="awayFlag2" type="color" defaultValue={match?.awayFlag?.split(',')[1] || '#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                </div>
               </div>
             </div>
             <div className="mb-4">
