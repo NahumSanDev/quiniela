@@ -626,8 +626,8 @@ export default function AdminPanel() {
                   {syncing ? 'Sincronizando...' : 'Sincronizar ahora'}
                 </button>
               </div>
-)}
-          </div>
+            )}
+          </>
         )}
       </div>
 
