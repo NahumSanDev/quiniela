@@ -91,8 +91,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
 router.post('/:matchId/prediction', validatePredictionTime, validatePredictionData, async (req: PredictionRequest, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
