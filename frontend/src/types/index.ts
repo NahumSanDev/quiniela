@@ -19,7 +19,7 @@ export interface Prediction {
   awayScore: number;
   points: number;
   bonus: boolean;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface User {
