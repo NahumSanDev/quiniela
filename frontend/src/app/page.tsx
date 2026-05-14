@@ -58,23 +58,31 @@ export default function Home() {
 
   async function handlePredict(matchId: number, homeScore: number, awayScore: number) {
     const token = localStorage.getItem('token');
-    if (!token) {
+    const storedUser = localStorage.getItem('user');
+    if (!token || !storedUser) {
       window.location.href = '/auth/signin';
       return;
     }
+
+    const userData = JSON.parse(storedUser);
 
     try {
       const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'x-user-id': userData.id
         },
         body: JSON.stringify({ homeScore, awayScore })
       });
 
       if (res.ok) {
         fetchData();
+      } else {
+        const error = await res.json();
+        console.error('Error saving prediction:', error);
+        alert(error.error || 'Error al guardar prediccion');
       }
     } catch (error) {
       console.error('Error saving prediction:', error);
@@ -85,13 +93,17 @@ export default function Home() {
     if (!confirm('¿Eliminar esta prediccion?')) return;
 
     const token = localStorage.getItem('token');
-    if (!token) return;
+    const storedUser = localStorage.getItem('user');
+    if (!token || !storedUser) return;
+
+    const userData = JSON.parse(storedUser);
 
     try {
       const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'x-user-id': userData.id
         }
       });
 

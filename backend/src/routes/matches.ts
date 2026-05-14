@@ -2,9 +2,11 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { validatePredictionTime, validatePredictionData, requireAuth, PredictionRequest } from '../middleware/prediction';
 import { calculatePoints, processMatchResults, getRanking, getUserPosition } from '../services/scoring';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -89,9 +91,20 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/:matchId/prediction', requireAuth, validatePredictionTime, validatePredictionData, async (req: PredictionRequest, res: Response) => {
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+router.post('/:matchId/prediction', validatePredictionTime, validatePredictionData, async (req: PredictionRequest, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization required' });
+      return;
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const userId = decoded.userId;
+    
     const { matchId } = req.params;
     const { homeScore, awayScore } = req.body;
 
@@ -129,9 +142,18 @@ router.post('/:matchId/prediction', requireAuth, validatePredictionTime, validat
   }
 });
 
-router.delete('/:matchId/prediction', requireAuth, async (req: Request, res: Response) => {
+router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization required' });
+      return;
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const userId = decoded.userId;
+
     const { matchId } = req.params;
 
     const match = await prisma.match.findUnique({
