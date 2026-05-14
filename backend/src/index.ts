@@ -70,6 +70,31 @@ setInterval(async () => {
   }
 }, 60000);
 
+setInterval(async () => {
+  const now = new Date();
+  const hour = now.getUTCHours();
+  if (hour === 0) {
+    try {
+      const [users, matches, predictions] = await Promise.all([
+        prisma.user.findMany({ select: { id: true, name: true, email: true, image: true, points: true, isAdmin: true, createdAt: true } }),
+        prisma.match.findMany(),
+        prisma.prediction.findMany({ select: { id: true, userId: true, matchId: true, homeScore: true, awayScore: true, points: true, bonus: true, createdAt: true } })
+      ]);
+
+      const backup = {
+        version: '1.0',
+        timestamp: now.toISOString(),
+        data: { users, matches, predictions }
+      };
+
+      console.log(`[BACKUP] ${now.toISOString()} - Users: ${users.length}, Matches: ${matches.length}, Predictions: ${predictions.length}`);
+      console.log('[BACKUP] Backup data:', JSON.stringify(backup).substring(0, 200) + '...');
+    } catch (error) {
+      console.error('[BACKUP] Error:', error);
+    }
+  }
+}, 3600000);
+
 const PORT = parseInt(process.env.PORT || '3001');
 
 async function start() {
