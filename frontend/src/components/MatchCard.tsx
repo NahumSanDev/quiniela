@@ -8,7 +8,6 @@ interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
   onPredict: (matchId: number, homeScore: number, awayScore: number) => void;
-  onDelete?: (matchId: number) => void;
 }
 
 export function MatchCard({ match, prediction, onPredict, onDelete }: MatchCardProps) {
@@ -219,15 +218,6 @@ export function MatchCard({ match, prediction, onPredict, onDelete }: MatchCardP
           >
             {isSubmitting ? 'Guardando...' : prediction ? 'Actualizar' : 'Guardar'}
           </motion.button>
-        )}
-
-        {prediction && !isLocked && onDelete && (
-          <button
-            onClick={() => onDelete(match.id)}
-            className="w-full mt-2 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-medium transition-colors text-sm"
-          >
-            Eliminar prediccion
-          </button>
         )}
       </div>
     </motion.div>

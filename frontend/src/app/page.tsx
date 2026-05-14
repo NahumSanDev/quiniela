@@ -241,12 +241,11 @@ export default function Home() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <MatchCard
-                        match={match}
-                        prediction={userPrediction}
-                        onPredict={handlePredict}
-                        onDelete={user ? handleDeletePrediction : undefined}
-                      />
+<MatchCard
+                          match={match}
+                          prediction={userPrediction}
+                          onPredict={handlePredict}
+                        />
                     </motion.div>
                   );
                 })
