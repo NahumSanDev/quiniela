@@ -60,14 +60,23 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
 router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { homeScore, awayScore, status } = req.body;
+    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry } = req.body;
 
     const match = await prisma.match.update({
       where: { id: parseInt(id) },
       data: {
-        homeScore: homeScore ?? undefined,
-        awayScore: awayScore ?? undefined,
-        status: status ?? undefined
+        ...(homeTeam && { homeTeam }),
+        ...(homeFlag && { homeFlag }),
+        ...(awayTeam && { awayTeam }),
+        ...(awayFlag && { awayFlag }),
+        ...(startTime && { startTime: new Date(startTime) }),
+        ...(homeScore !== undefined && { homeScore }),
+        ...(awayScore !== undefined && { awayScore }),
+        ...(status && { status }),
+        ...(groupStage !== undefined && { groupStage }),
+        ...(venueName !== undefined && { venueName }),
+        ...(venueCity !== undefined && { venueCity }),
+        ...(venueCountry !== undefined && { venueCountry })
       }
     });
 
