@@ -19,8 +19,31 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   predictions   Prediction[]
+  groupMemberships GroupMember[]
 
   @@index([points, updatedAt])
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  ownerId     String
+  createdAt   DateTime @default(now())
+
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  joinedAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
 }
 
 model Match {

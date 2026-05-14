@@ -148,6 +148,12 @@ export default function Home() {
                 >
                   <span>📊</span> Dashboard
                 </a>
+                <a
+                  href="/groups"
+                  className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-xl hover:bg-purple-500/30 transition-colors flex items-center gap-2"
+                >
+                  <span>👥</span> Grupos
+                </a>
                 {user?.isAdmin && (
                   <a
                     href="/admin"

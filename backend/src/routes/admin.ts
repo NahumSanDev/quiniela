@@ -1,6 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient, MatchStatus } from '@prisma/client';
 import axios from 'axios';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -529,6 +533,55 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
   } catch (error) {
     console.error('Seed error:', error);
     res.status(500).json({ error: 'Seeding failed' });
+  }
+});
+
+router.get('/backup', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const [users, matches, predictions] = await Promise.all([
+      prisma.user.findMany({ select: { id: true, name: true, email: true, image: true, points: true, isAdmin: true, createdAt: true } }),
+      prisma.match.findMany(),
+      prisma.prediction.findMany({ select: { id: true, userId: true, matchId: true, homeScore: true, awayScore: true, points: true, bonus: true, createdAt: true } })
+    ]);
+
+    const backup = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      data: { users, matches, predictions }
+    };
+
+    res.json(backup);
+  } catch (error) {
+    console.error('Backup error:', error);
+    res.status(500).json({ error: 'Backup failed' });
+  }
+});
+
+router.post('/restore', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { data } = req.body;
+    
+    if (!data || !data.users || !data.matches || !data.predictions) {
+      res.status(400).json({ error: 'Formato de backup invalido' });
+      return;
+    }
+
+    await prisma.prediction.deleteMany();
+    await prisma.match.deleteMany();
+    await prisma.user.deleteMany();
+
+    await prisma.user.createMany({ data: data.users });
+    await prisma.match.createMany({ data: data.matches });
+    await prisma.prediction.createMany({ data: data.predictions });
+
+    res.json({ message: 'Restauracion completada', 
+      users: data.users.length, 
+      matches: data.matches.length, 
+      predictions: data.predictions.length 
+    });
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({ error: 'Restore failed' });
   }
 });
 
