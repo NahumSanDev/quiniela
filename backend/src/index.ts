@@ -19,7 +19,7 @@ const app = express();
 async function runMigrations() {
   try {
     console.log('Running database migrations...');
-    await execAsync('npx prisma migrate deploy');
+    await execAsync('npx prisma db push --accept-data-loss');
     console.log('Migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
