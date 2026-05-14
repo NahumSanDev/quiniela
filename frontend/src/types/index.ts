@@ -10,6 +10,7 @@ export interface Match {
   awayScore: number | null;
   status: 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'CANCELLED';
   groupStage: string | null;
+  predictions?: { id: number; homeScore: number; awayScore: number; points: number; bonus: boolean; userId: string }[];
 }
 
 export interface Prediction {
