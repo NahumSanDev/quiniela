@@ -495,11 +495,15 @@ export default function AdminPanel() {
                   >
                     <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 rounded-full overflow-hidden">
-                          {match.homeFlag.split(',').map((color, i) => (
-                            <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
-                          ))}
-                        </div>
+                        {match.homeFlag.includes(',') ? (
+                          <div className="flex items-center gap-2 rounded-full overflow-hidden">
+                            {match.homeFlag.split(',').map((color, i) => (
+                              <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
+                            ))}
+                          </div>
+                        ) : (
+                          <img src={`https://flagcdn.com/w160/${match.homeFlag}.png`} alt="" className="w-10 h-10 rounded-full" />
+                        )}
                         <div>
                           <div className="text-white font-bold">{match.homeTeam}</div>
                           <div className="text-white/40 text-sm">{match.groupStage || 'World Cup'}</div>
@@ -526,11 +530,15 @@ export default function AdminPanel() {
 
                       <div className="flex items-center gap-4">
                           <div className="text-white font-bold">{match.awayTeam}</div>
-                          <div className="flex items-center gap-2 rounded-full overflow-hidden">
-                            {match.awayFlag.split(',').map((color, i) => (
-                              <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
-                            ))}
-                          </div>
+                          {match.awayFlag.includes(',') ? (
+                            <div className="flex items-center gap-2 rounded-full overflow-hidden">
+                              {match.awayFlag.split(',').map((color, i) => (
+                                <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
+                              ))}
+                            </div>
+                          ) : (
+                            <img src={`https://flagcdn.com/w160/${match.awayFlag}.png`} alt="" className="w-10 h-10 rounded-full" />
+                          )}
                         </div>
 
                       <div className="flex items-center gap-2">
