@@ -66,9 +66,10 @@ export default function AdminPanel() {
     try {
       const headers = { 'x-admin-key': adminKey };
 
-      const [statsRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes, matchesRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/stats`, { headers }),
-        fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20`, { headers })
+        fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20`, { headers }),
+        fetch(`${API_URL}/api/admin/matches`, { headers })
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
@@ -77,6 +78,7 @@ export default function AdminPanel() {
         setUsers(data.data || data);
         if (data.pagination) setUsersPagination(data.pagination);
       }
+      if (matchesRes.ok) setMatches(await matchesRes.json());
 
       setIsAuthenticated(true);
     } catch (error) {
