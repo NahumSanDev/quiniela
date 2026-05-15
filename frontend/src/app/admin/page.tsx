@@ -139,12 +139,16 @@ export default function AdminPanel() {
 
   async function handleCreateMatch(formData: FormData) {
     try {
+      const startTimeInput = formData.get('startTime') as string;
+      const localDate = new Date(startTimeInput);
+      const isoWithTimezone = localDate.toISOString();
+
       const body = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
         homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
         awayFlag: `${formData.get('awayFlag1')},${formData.get('awayFlag2')}`,
-        startTime: formData.get('startTime'),
+        startTime: isoWithTimezone,
         groupStage: formData.get('groupStage'),
         venueName: formData.get('venueName'),
         venueCity: formData.get('venueCity'),
@@ -173,12 +177,16 @@ export default function AdminPanel() {
 
   async function handleUpdateMatchFull(id: number, formData: FormData) {
     try {
+      const startTimeInput = formData.get('startTime') as string;
+      const localDate = new Date(startTimeInput);
+      const isoWithTimezone = localDate.toISOString();
+
       const body = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
         homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
         awayFlag: `${formData.get('awayFlag1')},${formData.get('awayFlag2')}`,
-        startTime: formData.get('startTime'),
+        startTime: isoWithTimezone,
         homeScore: formData.get('homeScore') ? parseInt(formData.get('homeScore') as string) : null,
         awayScore: formData.get('awayScore') ? parseInt(formData.get('awayScore') as string) : null,
         status: formData.get('status'),

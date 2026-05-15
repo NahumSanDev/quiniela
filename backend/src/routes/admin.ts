@@ -43,8 +43,8 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const parsedDate = new Date(startTime);
-    if (isNaN(parsedDate.getTime())) {
+    const localDate = new Date(startTime);
+    if (isNaN(localDate.getTime())) {
       res.status(400).json({ error: 'Formato de fecha invalido' });
       return;
     }
@@ -56,7 +56,7 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
         homeFlag,
         awayTeam,
         awayFlag,
-        startTime: parsedDate,
+        startTime: localDate,
         groupStage,
         venueName,
         venueCity,
@@ -82,12 +82,12 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     if (awayTeam) updateData.awayTeam = awayTeam;
     if (awayFlag) updateData.awayFlag = awayFlag;
     if (startTime) {
-      const parsedDate = new Date(startTime);
-      if (isNaN(parsedDate.getTime())) {
+      const localDate = new Date(startTime);
+      if (isNaN(localDate.getTime())) {
         res.status(400).json({ error: 'Formato de fecha invalido' });
         return;
       }
-      updateData.startTime = parsedDate;
+      updateData.startTime = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
     }
     if (homeScore !== undefined && homeScore !== null) updateData.homeScore = homeScore;
     if (awayScore !== undefined && awayScore !== null) updateData.awayScore = awayScore;
