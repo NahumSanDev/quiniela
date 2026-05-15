@@ -37,6 +37,18 @@ router.get('/matches', adminAuth, async (req: Request, res: Response) => {
 router.post('/matches', adminAuth, async (req: Request, res: Response) => {
   try {
     const { externalId, homeTeam, homeFlag, awayTeam, awayFlag, startTime, groupStage, venueName, venueCity, venueCountry } = req.body;
+    
+    if (!startTime) {
+      res.status(400).json({ error: 'La fecha y hora son requeridas' });
+      return;
+    }
+
+    const parsedDate = new Date(startTime);
+    if (isNaN(parsedDate.getTime())) {
+      res.status(400).json({ error: 'Formato de fecha invalido' });
+      return;
+    }
+
     const match = await prisma.match.create({
       data: {
         externalId,
@@ -44,7 +56,7 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
         homeFlag,
         awayTeam,
         awayFlag,
-        startTime: new Date(startTime),
+        startTime: parsedDate,
         groupStage,
         venueName,
         venueCity,
@@ -53,7 +65,8 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
     });
     res.status(201).json(match);
   } catch (error) {
-    res.status(500).json({ error: 'Error' });
+    console.error('Error creating match:', error);
+    res.status(500).json({ error: 'Error al crear el partido' });
   }
 });
 
@@ -62,22 +75,31 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry } = req.body;
 
+    const updateData: any = {};
+    
+    if (homeTeam) updateData.homeTeam = homeTeam;
+    if (homeFlag) updateData.homeFlag = homeFlag;
+    if (awayTeam) updateData.awayTeam = awayTeam;
+    if (awayFlag) updateData.awayFlag = awayFlag;
+    if (startTime) {
+      const parsedDate = new Date(startTime);
+      if (isNaN(parsedDate.getTime())) {
+        res.status(400).json({ error: 'Formato de fecha invalido' });
+        return;
+      }
+      updateData.startTime = parsedDate;
+    }
+    if (homeScore !== undefined && homeScore !== null) updateData.homeScore = homeScore;
+    if (awayScore !== undefined && awayScore !== null) updateData.awayScore = awayScore;
+    if (status) updateData.status = status;
+    if (groupStage !== undefined) updateData.groupStage = groupStage;
+    if (venueName !== undefined) updateData.venueName = venueName;
+    if (venueCity !== undefined) updateData.venueCity = venueCity;
+    if (venueCountry !== undefined) updateData.venueCountry = venueCountry;
+
     const match = await prisma.match.update({
       where: { id: parseInt(id) },
-      data: {
-        ...(homeTeam && { homeTeam }),
-        ...(homeFlag && { homeFlag }),
-        ...(awayTeam && { awayTeam }),
-        ...(awayFlag && { awayFlag }),
-        ...(startTime && { startTime: new Date(startTime) }),
-        ...(homeScore !== undefined && { homeScore }),
-        ...(awayScore !== undefined && { awayScore }),
-        ...(status && { status }),
-        ...(groupStage !== undefined && { groupStage }),
-        ...(venueName !== undefined && { venueName }),
-        ...(venueCity !== undefined && { venueCity }),
-        ...(venueCountry !== undefined && { venueCountry })
-      }
+      data: updateData
     });
 
     if (status === 'FINISHED' && homeScore !== undefined && awayScore !== undefined) {
