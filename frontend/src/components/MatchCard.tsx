@@ -13,14 +13,20 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isLocked = match.status === 'LIVE' || match.status === 'FINISHED' || isMatchStarted();
   const isFinished = match.status === 'FINISHED';
-
-  function isMatchStarted(): boolean {
+  const isLive = match.status === 'LIVE';
+  const isMatchStarted = () => {
     const now = new Date();
     const startTime = new Date(match.startTime);
     return now >= startTime;
-  }
+  };
+  const hasPassedByTime = () => {
+    const now = new Date();
+    const startTime = new Date(match.startTime);
+    const threeHoursAfter = new Date(startTime.getTime() + 3 * 60 * 60 * 1000);
+    return now >= threeHoursAfter;
+  };
+  const isLocked = isLive || isFinished || isMatchStarted();
 
   function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -71,13 +77,13 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
         transition-all duration-300 hover:border-white/20
         ${isLocked ? 'opacity-75' : ''}
       `}>
-        {isLocked && (
+        {(isLocked || hasPassedByTime()) && (
           <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 rounded-full">
             <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
             </svg>
             <span className="text-xs font-semibold text-amber-400">
-              {isFinished ? 'Finalizado' : 'En juego'}
+              {isFinished ? 'Finalizado' : isLive ? 'En juego' : 'Cerrado'}
             </span>
           </div>
         )}
@@ -94,11 +100,20 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
               whileHover={{ scale: 1.05 }}
               className="relative inline-block"
             >
-              <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
-                {match.homeFlag.split(',').map((color, i) => (
-                  <div key={i} style={{ backgroundColor: color, flex: 1 }} />
-                ))}
-              </div>
+              {match.homeFlag.includes(',') ? (
+                <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
+                  {match.homeFlag.split(',').map((color, i) => (
+                    <div key={i} style={{ backgroundColor: color, flex: 1 }} />
+                  ))}
+                </div>
+              ) : (
+                <img
+                  src={`https://flagcdn.com/w160/${match.homeFlag}.png`}
+                  alt={match.homeTeam}
+                  className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
+                  loading="lazy"
+                />
+              )}
             </motion.div>
             <p className="mt-3 text-sm font-semibold text-white/90">{match.homeTeam}</p>
           </div>
@@ -126,11 +141,20 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
               whileHover={{ scale: 1.05 }}
               className="relative inline-block"
             >
-              <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
-                {match.awayFlag.split(',').map((color, i) => (
-                  <div key={i} style={{ backgroundColor: color, flex: 1 }} />
-                ))}
-              </div>
+              {match.awayFlag.includes(',') ? (
+                <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/20 flex">
+                  {match.awayFlag.split(',').map((color, i) => (
+                    <div key={i} style={{ backgroundColor: color, flex: 1 }} />
+                  ))}
+                </div>
+              ) : (
+                <img
+                  src={`https://flagcdn.com/w160/${match.awayFlag}.png`}
+                  alt={match.awayTeam}
+                  className="relative w-16 h-16 rounded-full object-cover ring-2 ring-white/20"
+                  loading="lazy"
+                />
+              )}
             </motion.div>
             <p className="mt-3 text-sm font-semibold text-white/90">{match.awayTeam}</p>
           </div>
