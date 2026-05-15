@@ -60,6 +60,7 @@ export default function AdminPanel() {
   const [usersPagination, setUsersPagination] = useState<Pagination | null>(null);
   const [showCreateMatch, setShowCreateMatch] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [matchesTab, setMatchesTab] = useState<'upcoming' | 'finished'>('upcoming');
 
   async function fetchData() {
     setLoading(true);
@@ -448,7 +449,29 @@ export default function AdminPanel() {
 
             {activeTab === 'matches' && (
               <div className="space-y-4">
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setMatchesTab('upcoming')}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                        matchesTab === 'upcoming'
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      Por Jugar ({matches.filter(m => m.status !== 'FINISHED').length})
+                    </button>
+                    <button
+                      onClick={() => setMatchesTab('finished')}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                        matchesTab === 'finished'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      Finalizados ({matches.filter(m => m.status === 'FINISHED').length})
+                    </button>
+                  </div>
                   <button
                     onClick={() => { setShowCreateMatch(true); setEditingMatch(null); }}
                     className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 flex items-center gap-2"
@@ -457,14 +480,26 @@ export default function AdminPanel() {
                     Crear Partido
                   </button>
                 </div>
-                {matches.map((match) => (
+                {matches
+                  .filter(match => matchesTab === 'upcoming' ? match.status !== 'FINISHED' : match.status === 'FINISHED')
+                  .sort((a, b) => {
+                    if (matchesTab === 'upcoming') {
+                      return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+                    }
+                    return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                  })
+                  .map((match) => (
                   <div
                     key={match.id}
                     className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4"
                   >
                     <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="flex items-center gap-4">
-                        <img src={match.homeFlag} alt="" className="w-10 h-10 rounded-full" />
+                        <div className="flex items-center gap-2 rounded-full overflow-hidden">
+                          {match.homeFlag.split(',').map((color, i) => (
+                            <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
+                          ))}
+                        </div>
                         <div>
                           <div className="text-white font-bold">{match.homeTeam}</div>
                           <div className="text-white/40 text-sm">{match.groupStage || 'World Cup'}</div>
@@ -490,11 +525,13 @@ export default function AdminPanel() {
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-4">
                           <div className="text-white font-bold">{match.awayTeam}</div>
-                          <img src={match.awayFlag} alt="" className="w-10 h-10 rounded-full" />
+                          <div className="flex items-center gap-2 rounded-full overflow-hidden">
+                            {match.awayFlag.split(',').map((color, i) => (
+                              <div key={i} style={{ backgroundColor: color, width: 20, height: 40 }} />
+                            ))}
+                          </div>
                         </div>
-                      </div>
 
                       <div className="flex items-center gap-2">
                         <select
