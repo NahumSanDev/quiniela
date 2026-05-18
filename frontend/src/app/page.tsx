@@ -103,11 +103,14 @@ export default function Home() {
       fetchGroups();
     }
     fetchData();
+    fetchGeneralRanking();
   }, []);
 
   useEffect(() => {
     if (selectedGroup) {
       fetchGroupRanking();
+    } else {
+      fetchGeneralRanking();
     }
   }, [selectedGroup]);
 
@@ -120,10 +123,6 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setGroups(data);
-        if (data.length > 0) {
-          const stored = localStorage.getItem('selectedGroup');
-          setSelectedGroup(stored || data[0].id);
-        }
       }
     } catch (error) {
       console.error('Error fetching groups:', error);
@@ -148,6 +147,20 @@ export default function Home() {
     }
   }
 
+  async function fetchGeneralRanking() {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/matches/ranking?limit=50`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setRanking(await res.json());
+      }
+    } catch (error) {
+      console.error('Error fetching general ranking:', error);
+    }
+  }
+
   async function fetchGroupRanking() {
     if (!selectedGroup) return;
     const token = localStorage.getItem('token');
@@ -163,10 +176,13 @@ export default function Home() {
     }
   }
 
-  function selectGroup(groupId: string) {
+  function selectGroup(groupId: string | null) {
     setSelectedGroup(groupId);
-    localStorage.setItem('selectedGroup', groupId);
-    fetchGroupRanking();
+    if (groupId) {
+      localStorage.setItem('selectedGroup', groupId);
+    } else {
+      localStorage.removeItem('selectedGroup');
+    }
   }
 
   async function handlePredict(matchId: number, homeScore: number, awayScore: number) {
@@ -178,7 +194,7 @@ export default function Home() {
     }
 
     if (!selectedGroup) {
-      alert('Selecciona un grupo primero');
+      alert('Debes unirte a un grupo para hacer predicciones. Ve a la seccion de Grupos para crear o unirte a uno.');
       return;
     }
 
@@ -339,8 +355,18 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mb-6 flex gap-2 flex-wrap"
+            className="mb-6 flex gap-2 flex-wrap items-center"
           >
+            <button
+              onClick={() => selectGroup(null)}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                selectedGroup === null
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+              }`}
+            >
+              🌍 General
+            </button>
             {groups.map((group) => (
               <button
                 key={group.id}
@@ -354,6 +380,19 @@ export default function Home() {
                 {group.name} {group.myRole === 'ADMIN' ? '👑' : ''}
               </button>
             ))}
+          </motion.div>
+        )}
+
+        {user && groups.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-purple-500/20 border border-purple-500/30 rounded-2xl text-center"
+          >
+            <p className="text-purple-300 mb-2">🎯 Unete a un grupo para hacer predicciones y competir</p>
+            <a href="/groups" className="inline-block px-6 py-2 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-400">
+              Ir a Grupos
+            </a>
           </motion.div>
         )}
 
@@ -381,7 +420,7 @@ export default function Home() {
                 : 'bg-white/5 text-white/60 hover:bg-white/10'
             }`}
           >
-            Ranking
+            Ranking {selectedGroup ? `- ${groups.find(g => g.id === selectedGroup)?.name || ''}` : '- General'}
           </button>
         </motion.nav>
 
