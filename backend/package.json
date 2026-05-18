@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "postinstall": "prisma generate && prisma db push"
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma && prisma db push --schema=./prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
