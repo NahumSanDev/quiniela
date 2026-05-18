@@ -19,6 +19,8 @@ const app = express();
 async function runMigrations() {
   try {
     console.log('Running database migrations...');
+    await prisma.$executeRaw`ALTER TABLE "Prediction" DROP CONSTRAINT IF EXISTS "Prediction_userId_matchId_key"`;
+    console.log('Dropped old constraint');
     await execAsync('npx prisma db push --accept-data-loss');
     console.log('Migrations completed successfully');
   } catch (error) {
