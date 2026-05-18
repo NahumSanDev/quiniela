@@ -61,17 +61,10 @@ export async function processMatchResults(matchId: number): Promise<void> {
       { homeScore: match.homeScore, awayScore: match.awayScore }
     );
 
-    if (points > 0) {
-      await prisma.prediction.update({
-        where: { id: prediction.id },
-        data: { points, bonus }
-      });
-
-      await prisma.user.update({
-        where: { id: prediction.userId },
-        data: { points: { increment: points } }
-      });
-    }
+    await prisma.prediction.update({
+      where: { id: prediction.id },
+      data: { points, bonus }
+    });
   }
 }
 

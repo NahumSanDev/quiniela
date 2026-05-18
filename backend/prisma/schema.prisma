@@ -15,6 +15,7 @@ model User {
   image         String?
   points        Int       @default(0)
   isAdmin       Boolean   @default(false)
+  isGeneralAdmin Boolean  @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -22,6 +23,89 @@ model User {
   groupMemberships GroupMember[]
 
   @@index([points, updatedAt])
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  ownerId     String
+  createdAt   DateTime @default(now())
+
+  members     GroupMember[]
+  predictions Prediction[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  userId    String
+  groupId   String
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model Match {
+  id           Int      @id @default(autoincrement())
+  externalId   String   @unique
+  homeTeam     String
+  homeFlag     String
+  awayTeam     String
+  awayFlag     String
+  startTime    DateTime
+  homeScore    Int?
+  awayScore    Int?
+  status       MatchStatus @default(SCHEDULED)
+  groupStage   String?
+  venueName    String?
+  venueCity    String?
+  venueCountry String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  predictions Prediction[]
+
+  @@index([startTime])
+  @@index([status])
+}
+
+model Prediction {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  matchId    Int
+  groupId    String
+  homeScore  Int
+  awayScore  Int
+  points     Int      @default(0)
+  bonus      Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, matchId, groupId])
+  @@index([userId, matchId])
+  @@index([groupId])
+  @@index([updatedAt])
+}
+
+enum GroupRole {
+  MEMBER
+  ADMIN
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELLED
 }
 
 model Group {

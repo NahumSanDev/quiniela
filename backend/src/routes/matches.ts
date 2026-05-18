@@ -104,13 +104,19 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore } = req.body;
+    const { homeScore, awayScore, groupId } = req.body;
+
+    if (!groupId) {
+      res.status(400).json({ error: 'Group ID is required' });
+      return;
+    }
 
     const prediction = await prisma.prediction.upsert({
       where: {
-        userId_matchId: {
+        userId_matchId_groupId: {
           userId,
-          matchId: parseInt(matchId)
+          matchId: parseInt(matchId),
+          groupId
         }
       },
       update: {
@@ -120,6 +126,7 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
       create: {
         userId,
         matchId: parseInt(matchId),
+        groupId,
         homeScore,
         awayScore
       }
@@ -153,6 +160,7 @@ router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
     const userId = decoded.userId;
 
     const { matchId } = req.params;
+    const { groupId } = req.body;
 
     const match = await prisma.match.findUnique({
       where: { id: parseInt(matchId) },
@@ -172,7 +180,8 @@ router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
     await prisma.prediction.deleteMany({
       where: {
         userId,
-        matchId: parseInt(matchId)
+        matchId: parseInt(matchId),
+        ...(groupId && { groupId })
       }
     });
 

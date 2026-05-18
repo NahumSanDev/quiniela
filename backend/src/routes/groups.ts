@@ -44,7 +44,7 @@ router.post('/', async (req: Request, res: Response) => {
         code,
         ownerId: userId,
         members: {
-          create: { userId }
+          create: { userId, role: 'ADMIN' }
         }
       },
       include: { members: true }
@@ -81,7 +81,7 @@ router.get('/my', async (req: Request, res: Response) => {
     const groups = memberships.map(m => ({
       ...m.group,
       isOwner: m.group.ownerId === userId,
-      myRole: m.group.ownerId === userId ? 'owner' : 'member'
+      myRole: m.role
     }));
 
     res.json(groups);
@@ -121,7 +121,7 @@ router.post('/join', async (req: Request, res: Response) => {
     }
 
     await prisma.groupMember.create({
-      data: { userId, groupId: group.id }
+      data: { userId, groupId: group.id, role: 'MEMBER' }
     });
 
     res.json({ message: 'Te uniste al grupo exitosamente', group });
@@ -155,30 +155,33 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
             id: true,
             name: true,
             image: true,
-            points: true,
             predictions: {
+              where: { groupId: id },
               select: { points: true, bonus: true }
             }
           }
         }
-      },
-      orderBy: { user: { points: 'desc' } }
+      }
     });
 
-    const ranking = members.map((m, index) => {
-      const correct = m.user.predictions.filter(p => p.points > 0).length;
-      const exact = m.user.predictions.filter(p => p.bonus).length;
-      return {
-        rank: index + 1,
-        userId: m.user.id,
-        name: m.user.name || 'Sin nombre',
-        avatarUrl: m.user.image,
-        points: m.user.points,
-        predictionsCount: m.user.predictions.length,
-        correctPredictions: correct,
-        exactScores: exact
-      };
-    });
+    const ranking = members
+      .map(m => {
+        const totalPoints = m.user.predictions.reduce((sum, p) => sum + p.points, 0);
+        const correct = m.user.predictions.filter(p => p.points > 0).length;
+        const exact = m.user.predictions.filter(p => p.bonus).length;
+        return {
+          userId: m.user.id,
+          name: m.user.name || 'Sin nombre',
+          avatarUrl: m.user.image,
+          points: totalPoints,
+          predictionsCount: m.user.predictions.length,
+          correctPredictions: correct,
+          exactScores: exact,
+          role: m.role
+        };
+      })
+      .sort((a, b) => b.points - a.points)
+      .map((m, index) => ({ ...m, rank: index + 1 }));
 
     res.json(ranking);
   } catch (error) {
@@ -234,6 +237,41 @@ router.delete('/:id/leave', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error leaving group:', error);
     res.status(500).json({ error: 'Error al salir del grupo' });
+  }
+});
+
+router.put('/:id/members/:memberId/role', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id, memberId } = req.params;
+    const { role } = req.body;
+
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
+
+    const requester = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!requester || (requester.role !== 'ADMIN' && group.ownerId !== userId)) {
+      res.status(403).json({ error: 'No tienes permiso' });
+      return;
+    }
+
+    await prisma.groupMember.update({
+      where: { userId_groupId: { userId: memberId, groupId: id } },
+      data: { role: role === 'ADMIN' ? 'ADMIN' : 'MEMBER' }
+    });
+
+    res.json({ message: `Rol actualizado a ${role}` });
+  } catch (error) {
+    console.error('Error updating member role:', error);
+    res.status(500).json({ error: 'Error al actualizar rol' });
   }
 });
 
