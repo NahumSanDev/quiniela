@@ -17,6 +17,14 @@ interface User {
   isAdmin: boolean;
 }
 
+interface Group {
+  id: string;
+  name: string;
+  code: string;
+  isOwner: boolean;
+  myRole: string;
+}
+
 function HowItWorksModal({ onClose }: { onClose: () => void }) {
   return (
     <motion.div
@@ -80,6 +88,8 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,26 +100,46 @@ export default function Home() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      fetchGroups();
     }
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchGroupRanking();
+    }
+  }, [selectedGroup]);
+
+  async function fetchGroups() {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/groups/my`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data);
+        if (data.length > 0) {
+          const stored = localStorage.getItem('selectedGroup');
+          setSelectedGroup(stored || data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  }
 
   async function fetchData() {
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const [matchesRes, rankingRes] = await Promise.all([
-        fetch(`${API_URL}/api/matches?limit=100`, { headers }),
-        fetch(`${API_URL}/api/matches/ranking`, { headers })
-      ]);
+      const matchesRes = await fetch(`${API_URL}/api/matches?limit=100`, { headers });
 
       if (matchesRes.ok) {
         const data = await matchesRes.json();
         setMatches(data.data || data);
-      }
-      if (rankingRes.ok) {
-        setRanking(await rankingRes.json());
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -118,11 +148,37 @@ export default function Home() {
     }
   }
 
+  async function fetchGroupRanking() {
+    if (!selectedGroup) return;
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${selectedGroup}/ranking`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setRanking(await res.json());
+      }
+    } catch (error) {
+      console.error('Error fetching group ranking:', error);
+    }
+  }
+
+  function selectGroup(groupId: string) {
+    setSelectedGroup(groupId);
+    localStorage.setItem('selectedGroup', groupId);
+    fetchGroupRanking();
+  }
+
   async function handlePredict(matchId: number, homeScore: number, awayScore: number) {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (!token || !storedUser) {
       window.location.href = '/auth/signin';
+      return;
+    }
+
+    if (!selectedGroup) {
+      alert('Selecciona un grupo primero');
       return;
     }
 
@@ -136,7 +192,7 @@ export default function Home() {
           'Authorization': `Bearer ${token}`,
           'x-user-id': userData.id
         },
-        body: JSON.stringify({ homeScore, awayScore })
+        body: JSON.stringify({ homeScore, awayScore, groupId: selectedGroup })
       });
 
       if (res.ok) {
@@ -278,6 +334,28 @@ export default function Home() {
             )}
           </div>
         </motion.header>
+
+        {user && groups.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 flex gap-2 flex-wrap"
+          >
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => selectGroup(group.id)}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                  selectedGroup === group.id
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                {group.name} {group.myRole === 'ADMIN' ? '👑' : ''}
+              </button>
+            ))}
+          </motion.div>
+        )}
 
         <motion.nav
           initial={{ opacity: 0 }}
