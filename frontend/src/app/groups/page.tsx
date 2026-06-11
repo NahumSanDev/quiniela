@@ -254,19 +254,20 @@ export default function GroupsPage() {
 
                 <div className="mb-4">
                   <h4 className="text-white/60 text-sm mb-2">Miembros ({group.members?.length || 0})</h4>
-                  <div className="space-y-2">
-                    {group.members?.slice(0, 5).map((m) => (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {group.members
+                      ?.slice()
+                      .sort((a, b) => b.user.points - a.user.points)
+                      .map((m, i) => (
                       <div key={m.id} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm">
+                        <span className="w-5 text-white/40 text-sm text-right">{i + 1}.</span>
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm shrink-0">
                           {m.user.name?.[0]?.toUpperCase() || '?'}
                         </div>
-                        <span className="text-white">{m.user.name || 'Sin nombre'}</span>
-                        <span className="text-emerald-400 ml-auto">{m.user.points} pts</span>
+                        <span className="text-white truncate">{m.user.name || 'Sin nombre'}</span>
+                        <span className="text-emerald-400 ml-auto font-semibold">{m.user.points} pts</span>
                       </div>
                     ))}
-                    {(group.members?.length || 0) > 5 && (
-                      <p className="text-white/40 text-sm">+{(group.members?.length || 0) - 5} mas</p>
-                    )}
                   </div>
                 </div>
 
@@ -292,7 +293,7 @@ export default function GroupsPage() {
 
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white">Ranking del Grupo</h2>
               <button onClick={closeRanking} className="text-white/60 hover:text-white">
@@ -304,7 +305,7 @@ export default function GroupsPage() {
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                 {ranking.map((entry, index) => (
                   <div key={entry.userId} className={`flex items-center gap-4 p-4 rounded-xl ${index === 0 ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-white/5'}`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500 text-black' : index === 1 ? 'bg-gray-400 text-black' : index === 2 ? 'bg-amber-700 text-white' : 'bg-white/10 text-white/60'}`}>
