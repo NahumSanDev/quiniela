@@ -184,9 +184,19 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
+    const q = (req.query.q as string) || '';
+
+    const where: any = {};
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } }
+      ];
+    }
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
+        where,
         orderBy: [
           { points: 'desc' },
           { createdAt: 'asc' }
@@ -211,13 +221,59 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
           }
         }
       }),
-      prisma.user.count()
+      prisma.user.count({ where })
     ]);
     
     res.json({
       data: users,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
     });
+  } catch (error) {
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
+router.get('/users/:id', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        points: true,
+        isAdmin: true,
+        createdAt: true,
+        _count: { select: { predictions: true } },
+        groupMemberships: {
+          include: {
+            group: { select: { id: true, name: true, code: true } }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
+router.get('/users/:id/predictions', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const predictions = await prisma.prediction.findMany({
+      where: { userId: req.params.id },
+      include: { match: true },
+      orderBy: { match: { startTime: 'desc' } }
+    });
+
+    res.json(predictions);
   } catch (error) {
     res.status(500).json({ error: 'Error' });
   }

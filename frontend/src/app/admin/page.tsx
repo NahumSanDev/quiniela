@@ -93,6 +93,9 @@ export default function AdminPanel() {
   const [showCreateMatch, setShowCreateMatch] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [matchesTab, setMatchesTab] = useState<'upcoming' | 'finished'>('upcoming');
+  const [userSearch, setUserSearch] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userPredictions, setUserPredictions] = useState<any[]>([]);
 
   async function fetchData() {
     setLoading(true);
@@ -101,7 +104,7 @@ export default function AdminPanel() {
 
       const [statsRes, usersRes, matchesRes, logsRes, backupsRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/stats`, { headers }),
-        fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20`, { headers }),
+        fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20${userSearch ? `&q=${encodeURIComponent(userSearch)}` : ''}`, { headers }),
         fetch(`${API_URL}/api/admin/matches`, { headers }),
         fetch(`${API_URL}/api/admin/logs?page=${logsPage}&limit=50`, { headers }),
         fetch(`${API_URL}/api/admin/backups`, { headers })
@@ -640,10 +643,37 @@ export default function AdminPanel() {
 
             {activeTab === 'users' && (
               <div className="space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Buscar por nombre o email..."
+                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    onClick={() => { setUsersPage(1); fetchData(); }}
+                    className="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400"
+                  >
+                    Buscar
+                  </button>
+                  <button
+                    onClick={() => { setUserSearch(''); setUsersPage(1); fetchData(); }}
+                    className="px-4 py-2 bg-white/10 text-white rounded-xl hover:bg-white/20"
+                  >
+                    Limpiar
+                  </button>
+                </div>
                 {users.map((user, index) => (
                   <div
                     key={user.id}
-                    className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4"
+                    className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      fetch(`${API_URL}/api/admin/users/${user.id}/predictions`, {
+                        headers: { 'x-admin-key': adminKey }
+                      }).then(r => r.json()).then(setUserPredictions);
+                    }}
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-amber-500 flex items-center justify-center text-white font-bold">
                       #{index + 1 + (usersPage - 1) * 20}
@@ -898,6 +928,62 @@ export default function AdminPanel() {
           </>
         )}
       </div>
+
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setSelectedUser(null)}>
+          <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">{selectedUser.name || 'Sin nombre'}</h2>
+                <p className="text-white/60 text-sm">{selectedUser.email}</p>
+              </div>
+              <button onClick={() => setSelectedUser(null)} className="text-white/60 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white/5 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-emerald-400">{selectedUser.points}</div>
+                <div className="text-white/40 text-sm">Puntos</div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-white">{selectedUser._count.predictions}</div>
+                <div className="text-white/40 text-sm">Pronósticos</div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400">{selectedUser.groupMemberships?.length || 0}</div>
+                <div className="text-white/40 text-sm">Grupos</div>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-bold text-white mb-3">Pronósticos</h3>
+            {userPredictions.length === 0 ? (
+              <p className="text-white/40 text-center py-4">No hay pronósticos</p>
+            ) : (
+              <div className="space-y-2">
+                {userPredictions.map((p: any) => (
+                  <div key={p.id} className="bg-white/5 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-medium">{p.match?.homeTeam}</span>
+                      <span className="text-white/40">vs</span>
+                      <span className="text-white font-medium">{p.match?.awayTeam}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 bg-black/30 rounded-lg text-white font-bold">
+                        {p.homeScore}-{p.awayScore}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${p.points > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/40'}`}>
+                        {p.points} pts
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {(showCreateMatch || editingMatch) && (
         <MatchFormModal
