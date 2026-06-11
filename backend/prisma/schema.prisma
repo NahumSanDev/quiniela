@@ -68,6 +68,7 @@ model Match {
   updatedAt    DateTime  @updatedAt
 
   predictions Prediction[]
+  matchLogs   MatchLog[]
 
   @@index([startTime])
   @@index([status])
