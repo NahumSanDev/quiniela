@@ -95,6 +95,22 @@ model Prediction {
   @@index([updatedAt])
 }
 
+model MatchLog {
+  id          Int      @id @default(autoincrement())
+  matchId     Int
+  homeTeam    String?
+  awayTeam    String?
+  adminId     String?
+  action      String
+  changes     Json
+  createdAt   DateTime @default(now())
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@index([createdAt])
+}
+
 enum GroupRole {
   MEMBER
   ADMIN

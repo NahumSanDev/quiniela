@@ -75,6 +75,17 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     const { id } = req.params;
     const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry } = req.body;
 
+    const matchId = parseInt(id);
+    const before = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { homeTeam: true, awayTeam: true, homeScore: true, awayScore: true, status: true }
+    });
+
+    if (!before) {
+      res.status(404).json({ error: 'Partido no encontrado' });
+      return;
+    }
+
     const updateData: any = {};
     
     if (homeTeam) updateData.homeTeam = homeTeam;
@@ -98,13 +109,29 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     if (venueCountry !== undefined) updateData.venueCountry = venueCountry;
 
     const match = await prisma.match.update({
-      where: { id: parseInt(id) },
+      where: { id: matchId },
       data: updateData
+    });
+
+    const after = {
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+      status: match.status
+    };
+
+    await prisma.matchLog.create({
+      data: {
+        matchId,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        action: 'SCORE_UPDATE',
+        changes: { before, after }
+      }
     });
 
     if (status === 'FINISHED' && homeScore !== undefined && awayScore !== undefined) {
       const predictions = await prisma.prediction.findMany({
-        where: { matchId: parseInt(id), points: 0 }
+        where: { matchId, points: 0 }
       });
 
       for (const prediction of predictions) {
@@ -672,6 +699,31 @@ router.get('/backups/:filename', adminAuth, async (req: Request, res: Response) 
   } catch (error) {
     console.error('Download backup error:', error);
     res.status(500).json({ error: 'Error downloading backup' });
+  }
+});
+
+router.get('/logs', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await Promise.all([
+      prisma.matchLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.matchLog.count()
+    ]);
+
+    res.json({
+      data: logs,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    res.status(500).json({ error: 'Error al obtener logs' });
   }
 });
 

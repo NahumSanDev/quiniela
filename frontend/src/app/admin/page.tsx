@@ -58,17 +58,37 @@ interface Stats {
   finishedMatches: number;
 }
 
+interface MatchLog {
+  id: number;
+  matchId: number;
+  homeTeam: string | null;
+  awayTeam: string | null;
+  action: string;
+  changes: { before: any; after: any };
+  createdAt: string;
+}
+
+interface BackupFile {
+  name: string;
+  date: string;
+  size: number;
+}
+
 export default function AdminPanel() {
   const [adminKey, setAdminKey] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'matches' | 'users' | 'sync' | 'create-match'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'matches' | 'users' | 'logs' | 'backups' | 'sync'>('stats');
   const [matches, setMatches] = useState<Match[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [logs, setLogs] = useState<MatchLog[]>([]);
+  const [backups, setBackups] = useState<BackupFile[]>([]);
+  const [logsPagination, setLogsPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
   const [usersPage, setUsersPage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
   const [usersPagination, setUsersPagination] = useState<Pagination | null>(null);
   const [showCreateMatch, setShowCreateMatch] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
@@ -79,10 +99,12 @@ export default function AdminPanel() {
     try {
       const headers = { 'x-admin-key': adminKey };
 
-      const [statsRes, usersRes, matchesRes] = await Promise.all([
+      const [statsRes, usersRes, matchesRes, logsRes, backupsRes] = await Promise.all([
         fetch(`${API_URL}/api/admin/stats`, { headers }),
         fetch(`${API_URL}/api/admin/users?page=${usersPage}&limit=20`, { headers }),
-        fetch(`${API_URL}/api/admin/matches`, { headers })
+        fetch(`${API_URL}/api/admin/matches`, { headers }),
+        fetch(`${API_URL}/api/admin/logs?page=${logsPage}&limit=50`, { headers }),
+        fetch(`${API_URL}/api/admin/backups`, { headers })
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
@@ -92,6 +114,12 @@ export default function AdminPanel() {
         if (data.pagination) setUsersPagination(data.pagination);
       }
       if (matchesRes.ok) setMatches(await matchesRes.json());
+      if (logsRes.ok) {
+        const data = await logsRes.json();
+        setLogs(data.data || data);
+        if (data.pagination) setLogsPagination(data.pagination);
+      }
+      if (backupsRes.ok) setBackups(await backupsRes.json());
 
       setIsAuthenticated(true);
     } catch (error) {
@@ -106,6 +134,12 @@ export default function AdminPanel() {
       fetchData();
     }
   }, [usersPage]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [logsPage]);
 
   async function handleSync() {
     setSyncing(true);
@@ -416,7 +450,7 @@ export default function AdminPanel() {
         )}
 
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['stats', 'matches', 'users', 'sync'].map((tab) => (
+          {['stats', 'matches', 'users', 'logs', 'backups', 'sync'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -429,6 +463,8 @@ export default function AdminPanel() {
               {tab === 'stats' && '📊 Estadísticas'}
               {tab === 'matches' && '⚽ Partidos'}
               {tab === 'users' && '👥 Usuarios'}
+              {tab === 'logs' && '📋 Historial'}
+              {tab === 'backups' && '💾 Respaldos'}
               {tab === 'sync' && '🔄 Sincronizar API'}
             </button>
           ))}
@@ -700,6 +736,144 @@ export default function AdminPanel() {
                     >
                       Siguiente
                     </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'logs' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-white">Historial de Cambios</h3>
+                </div>
+                {logs.length === 0 ? (
+                  <p className="text-center text-white/40 py-10">No hay cambios registrados</p>
+                ) : (
+                  <div className="space-y-3">
+                    {logs.map((log) => {
+                      const before = log.changes?.before || {};
+                      const after = log.changes?.after || {};
+                      const scoreChanged = before.homeScore !== after.homeScore || before.awayScore !== after.awayScore;
+                      const statusChanged = before.status !== after.status;
+                      return (
+                        <div key={log.id} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-white font-bold">{log.homeTeam || '?'}</span>
+                              <span className="text-white/40 mx-2">vs</span>
+                              <span className="text-white font-bold">{log.awayTeam || '?'}</span>
+                            </div>
+                            <span className="text-white/40 text-sm">{new Date(log.createdAt).toLocaleString('es-ES')}</span>
+                          </div>
+                          <div className="flex gap-4 mt-2 text-sm">
+                            {scoreChanged && (
+                              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">
+                                Marcador: {before.homeScore ?? '?'}-{before.awayScore ?? '?'} → {after.homeScore ?? '?'}-{after.awayScore ?? '?'}
+                              </span>
+                            )}
+                            {statusChanged && (
+                              <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full">
+                                Estado: {before.status || '?'} → {after.status || '?'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {logsPagination && logsPagination.totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => setLogsPage(p => Math.max(1, p - 1))}
+                      disabled={logsPage === 1}
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg disabled:opacity-50 hover:bg-white/20"
+                    >
+                      Anterior
+                    </button>
+                    <span className="px-4 py-2 text-white/60">
+                      {logsPage} / {logsPagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setLogsPage(p => Math.min(logsPagination.totalPages, p + 1))}
+                      disabled={logsPage === logsPagination.totalPages}
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg disabled:opacity-50 hover:bg-white/20"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'backups' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-white">Respaldos</h3>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`${API_URL}/api/admin/backup`, {
+                          headers: { 'x-admin-key': adminKey }
+                        });
+                        if (res.ok) {
+                          const blob = await res.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `quiniela-backup-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          setMessage('Respaldo descargado');
+                        }
+                      } catch (error) {
+                        setMessage('Error al descargar respaldo');
+                      }
+                    }}
+                    className="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 text-sm font-semibold"
+                  >
+                    Descargar Respaldo
+                  </button>
+                </div>
+                {backups.length === 0 ? (
+                  <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+                    <p className="text-white/40">No hay respaldos disponibles. Se generan automáticamente cada 24h.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {backups.map((backup) => (
+                      <div key={backup.name} className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                          <div className="text-white font-medium">{backup.name}</div>
+                          <div className="text-white/40 text-sm">
+                            {new Date(backup.date).toLocaleString('es-ES')} — {(backup.size / 1024).toFixed(1)} KB
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`${API_URL}/api/admin/backups/${backup.name}`, {
+                                headers: { 'x-admin-key': adminKey }
+                              });
+                              if (res.ok) {
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = backup.name;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }
+                            } catch (error) {
+                              setMessage('Error al descargar');
+                            }
+                          }}
+                          className="px-3 py-1 bg-white/10 text-white rounded-lg hover:bg-white/20 text-sm"
+                        >
+                          Descargar
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
