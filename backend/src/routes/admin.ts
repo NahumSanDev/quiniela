@@ -160,7 +160,10 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
-        orderBy: { points: 'desc' },
+        orderBy: [
+          { points: 'desc' },
+          { createdAt: 'asc' }
+        ],
         skip,
         take: limit,
         select: {
@@ -170,7 +173,15 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
           image: true,
           points: true,
           createdAt: true,
-          _count: { select: { predictions: true } }
+          _count: { select: { predictions: true } },
+          groupMemberships: {
+            select: {
+              group: {
+                select: { id: true, name: true, code: true }
+              },
+              role: true
+            }
+          }
         }
       }),
       prisma.user.count()

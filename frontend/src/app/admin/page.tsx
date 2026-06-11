@@ -22,6 +22,17 @@ interface Match {
   venueCountry: string | null;
 }
 
+interface GroupInfo {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface GroupMembership {
+  group: GroupInfo;
+  role: string;
+}
+
 interface User {
   id: string;
   name: string | null;
@@ -30,6 +41,7 @@ interface User {
   points: number;
   createdAt: string;
   _count: { predictions: number };
+  groupMemberships: GroupMembership[];
 }
 
 interface Pagination {
@@ -88,6 +100,12 @@ export default function AdminPanel() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [usersPage]);
 
   async function handleSync() {
     setSyncing(true);
@@ -604,6 +622,18 @@ export default function AdminPanel() {
                     <div className="flex-1">
                       <div className="text-white font-bold">{user.name || 'Sin nombre'}</div>
                       <div className="text-white/60 text-sm">{user.email}</div>
+                      {user.groupMemberships && user.groupMemberships.length > 0 && (
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {user.groupMemberships.map((gm) => (
+                            <span
+                              key={gm.group.id}
+                              className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full text-xs"
+                            >
+                              {gm.group.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <input
