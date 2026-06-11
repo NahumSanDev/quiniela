@@ -123,6 +123,13 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setGroups(data);
+        const savedGroup = localStorage.getItem('selectedGroup');
+        if (savedGroup && data.some((g: Group) => g.id === savedGroup)) {
+          setSelectedGroup(savedGroup);
+        } else if (data.length === 1) {
+          setSelectedGroup(data[0].id);
+          localStorage.setItem('selectedGroup', data[0].id);
+        }
       }
     } catch (error) {
       console.error('Error fetching groups:', error);
