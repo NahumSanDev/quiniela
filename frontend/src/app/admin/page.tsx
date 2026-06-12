@@ -96,6 +96,9 @@ export default function AdminPanel() {
   const [userSearch, setUserSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userPredictions, setUserPredictions] = useState<any[]>([]);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPoints, setEditPoints] = useState('');
 
   async function fetchData() {
     setLoading(true);
@@ -670,6 +673,9 @@ export default function AdminPanel() {
                     className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors"
                     onClick={() => {
                       setSelectedUser(user);
+                      setEditName(user.name || '');
+                      setEditEmail(user.email || '');
+                      setEditPoints(String(user.points));
                       fetch(`${API_URL}/api/admin/users/${user.id}/predictions`, {
                         headers: { 'x-admin-key': adminKey }
                       }).then(r => r.json()).then(setUserPredictions);
@@ -933,12 +939,58 @@ export default function AdminPanel() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setSelectedUser(null)}>
           <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">{selectedUser.name || 'Sin nombre'}</h2>
-                <p className="text-white/60 text-sm">{selectedUser.email}</p>
-              </div>
+              <h2 className="text-xl font-bold text-white">Editar Usuario</h2>
               <button onClick={() => setSelectedUser(null)} className="text-white/60 hover:text-white">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-white/60 text-sm mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-sm mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-sm mb-1">Puntos</label>
+                <input
+                  type="number"
+                  value={editPoints}
+                  onChange={(e) => setEditPoints(e.target.value)}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
+                />
+              </div>
+              <button
+                onClick={async () => {
+                  await fetch(`${API_URL}/api/admin/users/${selectedUser.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                    body: JSON.stringify({
+                      name: editName || undefined,
+                      email: editEmail || undefined,
+                      points: editPoints ? parseInt(editPoints) : undefined
+                    })
+                  });
+                  setMessage('Usuario actualizado');
+                  fetchData();
+                  setSelectedUser(null);
+                }}
+                className="w-full py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400"
+              >
+                Guardar Cambios
               </button>
             </div>
 
