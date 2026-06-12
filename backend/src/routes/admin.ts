@@ -293,11 +293,10 @@ router.delete('/users/:id', adminAuth, async (req: Request, res: Response) => {
 router.put('/users/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, points } = req.body;
+    const { name, email } = req.body;
     const data: any = {};
     if (name !== undefined) data.name = name;
     if (email !== undefined) data.email = email;
-    if (points !== undefined) data.points = points;
     const user = await prisma.user.update({
       where: { id },
       data,

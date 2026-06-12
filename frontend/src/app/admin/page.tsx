@@ -98,7 +98,6 @@ export default function AdminPanel() {
   const [userPredictions, setUserPredictions] = useState<any[]>([]);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
-  const [editPoints, setEditPoints] = useState('');
 
   async function fetchData() {
     setLoading(true);
@@ -675,7 +674,6 @@ export default function AdminPanel() {
                       setSelectedUser(user);
                       setEditName(user.name || '');
                       setEditEmail(user.email || '');
-                      setEditPoints(String(user.points));
                       fetch(`${API_URL}/api/admin/users/${user.id}/predictions`, {
                         headers: { 'x-admin-key': adminKey }
                       }).then(r => r.json()).then(setUserPredictions);
@@ -964,15 +962,6 @@ export default function AdminPanel() {
                   className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
                 />
               </div>
-              <div>
-                <label className="block text-white/60 text-sm mb-1">Puntos</label>
-                <input
-                  type="number"
-                  value={editPoints}
-                  onChange={(e) => setEditPoints(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500"
-                />
-              </div>
               <button
                 onClick={async () => {
                   await fetch(`${API_URL}/api/admin/users/${selectedUser.id}`, {
@@ -980,8 +969,7 @@ export default function AdminPanel() {
                     headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
                     body: JSON.stringify({
                       name: editName || undefined,
-                      email: editEmail || undefined,
-                      points: editPoints ? parseInt(editPoints) : undefined
+                      email: editEmail || undefined
                     })
                   });
                   setMessage('Usuario actualizado');
