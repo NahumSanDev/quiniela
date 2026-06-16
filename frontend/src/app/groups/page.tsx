@@ -37,6 +37,7 @@ export default function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loadingRanking, setLoadingRanking] = useState(false);
+  const [rankingRound, setRankingRound] = useState<string>('all');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -158,8 +159,27 @@ export default function GroupsPage() {
     const token = localStorage.getItem('token');
     setLoadingRanking(true);
     setSelectedGroup(groupId);
+    setRankingRound('all');
     try {
       const res = await fetch(`${API_URL}/api/groups/${groupId}/ranking`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setRanking(await res.json());
+      }
+    } catch (error) {
+      setMessage('Error al cargar ranking');
+    } finally {
+      setLoadingRanking(false);
+    }
+  }
+
+  async function fetchRankingRound(groupId: string, round: string) {
+    const token = localStorage.getItem('token');
+    setLoadingRanking(true);
+    setRankingRound(round);
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${groupId}/ranking?round=${round}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -294,10 +314,30 @@ export default function GroupsPage() {
       {selectedGroup && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-white">Ranking del Grupo</h2>
               <button onClick={closeRanking} className="text-white/60 hover:text-white">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => fetchRankingRound(selectedGroup!, 'all')}
+                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'all' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => fetchRankingRound(selectedGroup!, 'groups')}
+                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'groups' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              >
+                Fase de Grupos
+              </button>
+              <button
+                onClick={() => fetchRankingRound(selectedGroup!, 'knockout')}
+                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'knockout' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              >
+                Eliminatorias
               </button>
             </div>
             {loadingRanking ? (

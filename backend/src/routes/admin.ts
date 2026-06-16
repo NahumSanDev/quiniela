@@ -485,7 +485,7 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
     { homeTeam: 'Qatar', homeFlag: 'qa', awayTeam: 'Switzerland', awayFlag: 'ch', startTime: new Date('2026-06-13T19:00:00Z'), groupStage: 'Group B', venueName: "Levi's Stadium", venueCity: 'Santa Clara', venueCountry: 'USA' },
     { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-06-13T22:00:00Z'), groupStage: 'Group C', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
     { homeTeam: 'Haiti', homeFlag: 'ht', awayTeam: 'Scotland', awayFlag: 'gb', startTime: new Date('2026-06-14T01:00:00Z'), groupStage: 'Group C', venueName: 'Gillette Stadium', venueCity: 'Foxborough', venueCountry: 'USA' },
-    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Türkiye', awayFlag: 'tr', startTime: new Date('2026-06-13T04:00:00Z'), groupStage: 'Group D', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
+    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Türkiye', awayFlag: 'tr', startTime: new Date('2026-06-14T04:00:00Z'), groupStage: 'Group D', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
     // Group Stage - June 14
     { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'Curaçao', awayFlag: 'cw', startTime: new Date('2026-06-14T17:00:00Z'), groupStage: 'Group E', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
     { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Japan', awayFlag: 'jp', startTime: new Date('2026-06-14T20:00:00Z'), groupStage: 'Group F', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },

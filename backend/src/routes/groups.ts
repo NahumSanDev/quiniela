@@ -137,6 +137,7 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
 
   try {
     const { id } = req.params;
+    const round = (req.query.round as string) || 'all';
 
     const membership = await prisma.groupMember.findUnique({
       where: { userId_groupId: { userId, groupId: id } }
@@ -145,6 +146,21 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
     if (!membership) {
       res.status(403).json({ error: 'No eres miembro de este grupo' });
       return;
+    }
+
+    let roundFilter: any = {};
+    if (round === 'groups') {
+      roundFilter = {
+        match: {
+          groupStage: { startsWith: 'Group' }
+        }
+      };
+    } else if (round === 'knockout') {
+      roundFilter = {
+        match: {
+          groupStage: { not: { startsWith: 'Group' } }
+        }
+      };
     }
 
     const members = await prisma.groupMember.findMany({
@@ -156,7 +172,10 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
             name: true,
             image: true,
             predictions: {
-              where: { groupId: id },
+              where: {
+                groupId: id,
+                ...roundFilter
+              },
               select: { points: true, bonus: true }
             }
           }
