@@ -320,25 +320,22 @@ export default function GroupsPage() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={() => fetchRankingRound(selectedGroup!, 'all')}
-                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'all' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
-              >
-                General
-              </button>
-              <button
-                onClick={() => fetchRankingRound(selectedGroup!, 'groups')}
-                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'groups' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
-              >
-                Fase de Grupos
-              </button>
-              <button
-                onClick={() => fetchRankingRound(selectedGroup!, 'knockout')}
-                className={`flex-1 py-2 text-sm rounded-lg font-semibold ${rankingRound === 'knockout' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
-              >
-                Eliminatorias
-              </button>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                { key: 'all', label: 'General' },
+                { key: 'groups-j1', label: 'Jornada 1' },
+                { key: 'groups-j2', label: 'Jornada 2' },
+                { key: 'groups-j3', label: 'Jornada 3' },
+                { key: 'knockout', label: 'Eliminatorias' },
+              ].map(r => (
+                <button
+                  key={r.key}
+                  onClick={() => fetchRankingRound(selectedGroup!, r.key)}
+                  className={`px-3 py-1.5 text-sm rounded-lg font-semibold ${rankingRound === r.key ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                >
+                  {r.label}
+                </button>
+              ))}
             </div>
             {loadingRanking ? (
               <div className="flex justify-center py-8">

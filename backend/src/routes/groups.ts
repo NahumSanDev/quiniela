@@ -148,11 +148,16 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
       return;
     }
 
+    const J1_END = new Date('2026-06-18T00:00:00Z');
+    const J2_END = new Date('2026-06-24T00:00:00Z');
+
     let roundFilter: any = {};
-    if (round === 'groups') {
-      roundFilter = {
-        match: { groupStage: { startsWith: 'Group' } }
-      };
+    if (round === 'groups' || round === 'groups-j1' || round === 'groups-j2' || round === 'groups-j3') {
+      const matchFilter: any = { groupStage: { startsWith: 'Group' } };
+      if (round === 'groups-j1') matchFilter.startTime = { lt: J1_END };
+      else if (round === 'groups-j2') matchFilter.startTime = { gte: J1_END, lt: J2_END };
+      else if (round === 'groups-j3') matchFilter.startTime = { gte: J2_END };
+      roundFilter = { match: matchFilter };
     } else if (round === 'knockout') {
       roundFilter = {
         match: {
