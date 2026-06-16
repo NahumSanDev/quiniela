@@ -151,19 +151,25 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
     const J1_END = new Date('2026-06-18T00:00:00Z');
     const J2_END = new Date('2026-06-24T00:00:00Z');
 
-    let roundFilter: any = {};
+    let stageFilter: any = {};
     if (round === 'groups' || round === 'groups-j1' || round === 'groups-j2' || round === 'groups-j3') {
-      const matchFilter: any = { groupStage: { startsWith: 'Group' } };
-      if (round === 'groups-j1') matchFilter.startTime = { lt: J1_END };
-      else if (round === 'groups-j2') matchFilter.startTime = { gte: J1_END, lt: J2_END };
-      else if (round === 'groups-j3') matchFilter.startTime = { gte: J2_END };
-      roundFilter = { match: matchFilter };
+      stageFilter = { groupStage: { startsWith: 'Group' } };
+      if (round === 'groups-j1') stageFilter = { ...stageFilter, startTime: { lt: J1_END } };
+      else if (round === 'groups-j2') stageFilter = { ...stageFilter, startTime: { gte: J1_END, lt: J2_END } };
+      else if (round === 'groups-j3') stageFilter = { ...stageFilter, startTime: { gte: J2_END } };
     } else if (round === 'knockout') {
-      roundFilter = {
-        match: {
-          groupStage: { in: ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'] }
-        }
+      stageFilter = {
+        groupStage: { in: ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'] }
       };
+    }
+
+    const filteredMatchIds = round === 'all'
+      ? null
+      : (await prisma.match.findMany({ where: stageFilter, select: { id: true } })).map(m => m.id);
+
+    const predictionWhere: any = { groupId: id };
+    if (filteredMatchIds) {
+      predictionWhere.matchId = { in: filteredMatchIds };
     }
 
     const members = await prisma.groupMember.findMany({
@@ -175,10 +181,7 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
             name: true,
             image: true,
             predictions: {
-              where: {
-                groupId: id,
-                ...roundFilter
-              },
+              where: predictionWhere,
               select: { points: true, bonus: true }
             }
           }
