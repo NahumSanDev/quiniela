@@ -151,14 +151,12 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
     let roundFilter: any = {};
     if (round === 'groups') {
       roundFilter = {
-        match: {
-          groupStage: { startsWith: 'Group' }
-        }
+        match: { groupStage: { startsWith: 'Group' } }
       };
     } else if (round === 'knockout') {
       roundFilter = {
         match: {
-          groupStage: { not: { startsWith: 'Group' } }
+          groupStage: { in: ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'] }
         }
       };
     }
