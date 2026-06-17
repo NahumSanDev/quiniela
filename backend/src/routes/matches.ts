@@ -105,11 +105,38 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore, groupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards } = req.body;
+    const { homeScore, awayScore, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards } = req.body;
+
+    let groupId = rawGroupId;
 
     if (!groupId) {
-      res.status(400).json({ error: 'Group ID is required' });
-      return;
+      let generalGroup = await prisma.group.findUnique({ where: { code: 'GENERAL' } });
+      if (!generalGroup) {
+        const firstUser = await prisma.user.findFirst({ orderBy: { createdAt: 'asc' } });
+        if (!firstUser) {
+          res.status(500).json({ error: 'No users found to create General group' });
+          return;
+        }
+        generalGroup = await prisma.group.create({
+          data: {
+            name: 'General',
+            code: 'GENERAL',
+            ownerId: firstUser.id,
+            members: { create: { userId: firstUser.id, role: 'ADMIN' } }
+          }
+        });
+      }
+
+      const existingMember = await prisma.groupMember.findUnique({
+        where: { userId_groupId: { userId, groupId: generalGroup.id } }
+      });
+      if (!existingMember) {
+        await prisma.groupMember.create({
+          data: { userId, groupId: generalGroup.id, role: 'MEMBER' }
+        });
+      }
+
+      groupId = generalGroup.id;
     }
 
     const match = await prisma.match.findUnique({ where: { id: parseInt(matchId) }, select: { isKnockout: true } });

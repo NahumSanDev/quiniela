@@ -216,18 +216,10 @@ export default function Home() {
 
     let groupId = selectedGroup;
     if (!groupId) {
-      if (groups.length > 0) {
-        groupId = groups[0].id;
+      const freshGroups = await fetchGroups();
+      if (freshGroups.length > 0) {
+        groupId = freshGroups[0].id;
         selectGroup(groupId);
-      } else {
-        const freshGroups = await fetchGroups();
-        if (freshGroups.length > 0) {
-          groupId = freshGroups[0].id;
-          selectGroup(groupId);
-        } else {
-          alert('Debes unirte a un grupo para hacer predicciones. Ve a la seccion de Grupos para crear o unirte a uno.');
-          return;
-        }
       }
     }
 
