@@ -39,6 +39,60 @@ function getWinner(homeScore: number, awayScore: number): 'HOME' | 'AWAY' | 'DRA
   return 'DRAW';
 }
 
+export interface KnockoutPredictionInput {
+  totalGoals?: number | null;
+  bothTeamsScore?: boolean | null;
+  cleanSheet?: string | null;
+  halfTimeHomeScore?: number | null;
+  halfTimeAwayScore?: number | null;
+}
+
+export function calculateKnockoutPoints(
+  prediction: KnockoutPredictionInput,
+  match: {
+    homeScore: number | null;
+    awayScore: number | null;
+    halfTimeHomeScore: number | null;
+    halfTimeAwayScore: number | null;
+  }
+): number {
+  let extra = 0;
+
+  if (match.homeScore === null || match.awayScore === null) return 0;
+
+  const actualTotal = match.homeScore + match.awayScore;
+  if (prediction.totalGoals !== null && prediction.totalGoals !== undefined) {
+    if (prediction.totalGoals === actualTotal) extra += 2;
+  }
+
+  const bothScored = match.homeScore > 0 && match.awayScore > 0;
+  if (prediction.bothTeamsScore !== null && prediction.bothTeamsScore !== undefined) {
+    if (prediction.bothTeamsScore === bothScored) extra += 1;
+  }
+
+  if (prediction.cleanSheet) {
+    let actualClean: string;
+    if (match.homeScore === 0 && match.awayScore === 0) actualClean = 'both';
+    else if (match.homeScore === 0) actualClean = 'home';
+    else if (match.awayScore === 0) actualClean = 'away';
+    else actualClean = 'none';
+    if (prediction.cleanSheet === actualClean) extra += 1;
+  }
+
+  if (
+    prediction.halfTimeHomeScore !== null && prediction.halfTimeHomeScore !== undefined &&
+    prediction.halfTimeAwayScore !== null && prediction.halfTimeAwayScore !== undefined &&
+    match.halfTimeHomeScore !== null && match.halfTimeAwayScore !== null
+  ) {
+    if (prediction.halfTimeHomeScore === match.halfTimeHomeScore &&
+        prediction.halfTimeAwayScore === match.halfTimeAwayScore) {
+      extra += 2;
+    }
+  }
+
+  return extra;
+}
+
 export async function processMatchResults(matchId: number): Promise<void> {
   const match = await prisma.match.findUnique({ where: { id: matchId } });
 
@@ -61,11 +115,18 @@ export async function processMatchResults(matchId: number): Promise<void> {
       { homeScore: match.homeScore, awayScore: match.awayScore }
     );
 
-    const pointsDiff = points - prediction.points;
+    let extraPoints = 0;
+    if (match.isKnockout) {
+      extraPoints = calculateKnockoutPoints(prediction, match);
+    }
+
+    const totalNewPoints = points + extraPoints;
+    const oldTotal = prediction.points + (prediction as any).extraPoints || 0;
+    const pointsDiff = totalNewPoints - oldTotal;
 
     await prisma.prediction.update({
       where: { id: prediction.id },
-      data: { points, bonus }
+      data: { points, bonus, extraPoints }
     });
 
     if (pointsDiff !== 0) {

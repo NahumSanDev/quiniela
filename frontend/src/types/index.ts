@@ -10,6 +10,9 @@ export interface Match {
   awayScore: number | null;
   status: 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'CANCELLED';
   groupStage: string | null;
+  isKnockout: boolean;
+  halfTimeHomeScore: number | null;
+  halfTimeAwayScore: number | null;
   predictions?: { id: number; homeScore: number; awayScore: number; points: number; bonus: boolean; userId: string }[];
 }
 
@@ -19,6 +22,12 @@ export interface Prediction {
   awayScore: number;
   points: number;
   bonus: boolean;
+  extraPoints?: number;
+  totalGoals?: number | null;
+  bothTeamsScore?: boolean | null;
+  cleanSheet?: string | null;
+  halfTimeHomeScore?: number | null;
+  halfTimeAwayScore?: number | null;
   updatedAt?: string;
 }
 

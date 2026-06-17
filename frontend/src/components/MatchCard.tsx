@@ -2,15 +2,28 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Match, Prediction } from '../types';
 
+export interface KnockoutData {
+  totalGoals: number | null;
+  bothTeamsScore: boolean | null;
+  cleanSheet: string | null;
+  halfTimeHomeScore: number | null;
+  halfTimeAwayScore: number | null;
+}
+
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
-  onPredict: (matchId: number, homeScore: number, awayScore: number) => void;
+  onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) => void;
 }
 
 export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
+  const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
+  const [bothTeamsScore, setBothTeamsScore] = useState<boolean | null>(prediction?.bothTeamsScore ?? null);
+  const [cleanSheet, setCleanSheet] = useState<string | null>(prediction?.cleanSheet ?? null);
+  const [htHomeScore, setHtHomeScore] = useState<number | null>(prediction?.halfTimeHomeScore ?? null);
+  const [htAwayScore, setHtAwayScore] = useState<number | null>(prediction?.halfTimeAwayScore ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isFinished = match.status === 'FINISHED';
@@ -39,9 +52,10 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   }
 
   function getPointsBadge(): { text: string; color: string } | null {
-    if (!prediction || prediction.points === 0) return null;
+    if (!prediction || (prediction.points === 0 && !prediction.extraPoints)) return null;
+    const total = prediction.points + (prediction.extraPoints || 0);
     return {
-      text: `+${prediction.points}${prediction.bonus ? ' ⭐' : ''}`,
+      text: `+${total}${prediction.bonus ? ' ⭐' : ''}`,
       color: prediction.bonus ? 'bg-yellow-500/20 text-yellow-400' : 'bg-emerald-500/20 text-emerald-400'
     };
   }
@@ -54,9 +68,17 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
 
     if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return;
 
+    const knockout: KnockoutData | undefined = match.isKnockout ? {
+      totalGoals,
+      bothTeamsScore,
+      cleanSheet,
+      halfTimeHomeScore: htHomeScore,
+      halfTimeAwayScore: htAwayScore,
+    } : undefined;
+
     setIsSubmitting(true);
     try {
-      await onPredict(match.id, home, away);
+      await onPredict(match.id, home, away, knockout);
     } finally {
       setIsSubmitting(false);
     }
@@ -225,6 +247,91 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
             </motion.span>
           )}
         </div>
+
+        {!isLocked && match.isKnockout && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-4 pt-4 border-t border-white/10 space-y-3"
+          >
+            <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Predicciones Extra — Eliminatorias</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Goles Totales</label>
+                <input
+                  type="number"
+                  value={totalGoals ?? ''}
+                  onChange={(e) => setTotalGoals(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                  min="0" max="20"
+                  placeholder="+2 pts"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">¿Ambos Anotan?</label>
+                <div className="flex gap-1">
+                  {[null, true, false].map((v) => (
+                    <button
+                      key={String(v)}
+                      onClick={() => setBothTeamsScore(v)}
+                      className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        bothTeamsScore === v
+                          ? v === null ? 'bg-white/20 text-white' : 'bg-amber-500 text-white'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      {v === null ? '-' : v ? 'Sí' : 'No'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Portería en Cero</label>
+                <div className="flex gap-1">
+                  {[
+                    { value: null, label: '-' },
+                    { value: 'home', label: match.homeTeam.substring(0, 3) },
+                    { value: 'away', label: match.awayTeam.substring(0, 3) },
+                    { value: 'both', label: 'Ambos' },
+                    { value: 'none', label: 'Ninguno' },
+                  ].map((opt) => (
+                    <button
+                      key={String(opt.value)}
+                      onClick={() => setCleanSheet(opt.value)}
+                      className={`flex-1 px-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        cleanSheet === opt.value
+                          ? opt.value === null ? 'bg-white/20 text-white' : 'bg-amber-500 text-white'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Marcador Medio Tiempo</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={htHomeScore ?? ''}
+                    onChange={(e) => setHtHomeScore(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-2 py-1.5 bg-white/10 rounded-lg text-white text-sm text-center outline-none focus:ring-2 focus:ring-amber-500"
+                    min="0" max="10" placeholder="L"
+                  />
+                  <span className="text-white/40">-</span>
+                  <input
+                    type="number"
+                    value={htAwayScore ?? ''}
+                    onChange={(e) => setHtAwayScore(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-2 py-1.5 bg-white/10 rounded-lg text-white text-sm text-center outline-none focus:ring-2 focus:ring-amber-500"
+                    min="0" max="10" placeholder="V"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {!isLocked && (
           <motion.button

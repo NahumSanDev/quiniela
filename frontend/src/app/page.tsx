@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MatchCard } from '../components/MatchCard';
+  import { MatchCard, KnockoutData } from '../components/MatchCard';
 import { RankingTable } from '../components/RankingTable';
 import { Match, RankingEntry } from '../types';
 
@@ -204,7 +204,7 @@ export default function Home() {
     }
   }
 
-  async function handlePredict(matchId: number, homeScore: number, awayScore: number) {
+  async function handlePredict(matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (!token || !storedUser) {
@@ -220,6 +220,15 @@ export default function Home() {
     const userData = JSON.parse(storedUser);
 
     try {
+      const body: any = { homeScore, awayScore, groupId: selectedGroup };
+      if (knockout) {
+        body.totalGoals = knockout.totalGoals;
+        body.bothTeamsScore = knockout.bothTeamsScore;
+        body.cleanSheet = knockout.cleanSheet;
+        body.halfTimeHomeScore = knockout.halfTimeHomeScore;
+        body.halfTimeAwayScore = knockout.halfTimeAwayScore;
+      }
+
       const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {
         method: 'POST',
         headers: {
@@ -227,7 +236,7 @@ export default function Home() {
           'Authorization': `Bearer ${token}`,
           'x-user-id': userData.id
         },
-        body: JSON.stringify({ homeScore, awayScore, groupId: selectedGroup })
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {

@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { calculateKnockoutPoints } from '../services/scoring';
 
 const execAsync = promisify(exec);
 
@@ -73,12 +74,12 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
 router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry } = req.body;
+    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry, isKnockout, halfTimeHomeScore, halfTimeAwayScore } = req.body;
 
     const matchId = parseInt(id);
     const before = await prisma.match.findUnique({
       where: { id: matchId },
-      select: { homeTeam: true, awayTeam: true, homeScore: true, awayScore: true, status: true }
+      select: { homeTeam: true, awayTeam: true, homeScore: true, awayScore: true, status: true, halfTimeHomeScore: true, halfTimeAwayScore: true, isKnockout: true }
     });
 
     if (!before) {
@@ -107,6 +108,9 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     if (venueName !== undefined) updateData.venueName = venueName;
     if (venueCity !== undefined) updateData.venueCity = venueCity;
     if (venueCountry !== undefined) updateData.venueCountry = venueCountry;
+    if (isKnockout !== undefined) updateData.isKnockout = isKnockout;
+    if (halfTimeHomeScore !== undefined) updateData.halfTimeHomeScore = halfTimeHomeScore;
+    if (halfTimeAwayScore !== undefined) updateData.halfTimeAwayScore = halfTimeAwayScore;
 
     const match = await prisma.match.update({
       where: { id: matchId },
@@ -116,7 +120,9 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     const after = {
       homeScore: match.homeScore,
       awayScore: match.awayScore,
-      status: match.status
+      status: match.status,
+      halfTimeHomeScore: match.halfTimeHomeScore,
+      halfTimeAwayScore: match.halfTimeAwayScore
     };
 
     await prisma.matchLog.create({
@@ -149,16 +155,27 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
           bonus = true;
         }
 
-        if (points > 0) {
+        let extraPoints = 0;
+        if (match.isKnockout) {
+          extraPoints = calculateKnockoutPoints(prediction, match);
+        }
+
+        const totalNewPoints = points + extraPoints;
+        const oldTotal = prediction.points + (prediction as any).extraPoints || 0;
+        const pointsDiff = totalNewPoints - oldTotal;
+
+        if (points > 0 || extraPoints > 0) {
           await prisma.prediction.update({
             where: { id: prediction.id },
-            data: { points, bonus }
+            data: { points, bonus, extraPoints }
           });
 
-          await prisma.user.update({
-            where: { id: prediction.userId },
-            data: { points: { increment: points } }
-          });
+          if (pointsDiff > 0) {
+            await prisma.user.update({
+              where: { id: prediction.userId },
+              data: { points: { increment: pointsDiff } }
+            });
+          }
         }
       }
     }
@@ -613,9 +630,12 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
     let created = 0;
     let updated = 0;
 
+    const knockoutStages = ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'];
+
     for (let i = 0; i < worldCupMatches.length; i++) {
       const match = worldCupMatches[i];
       const externalId = `wc2026-${i + 1}`;
+      const isKnockout = knockoutStages.includes(match.groupStage || '');
 
       const existing = await prisma.match.findFirst({
         where: { externalId }
@@ -631,6 +651,7 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
             awayFlag: match.awayFlag,
             startTime: match.startTime,
             groupStage: match.groupStage,
+            isKnockout,
             venueName: match.venueName,
             venueCity: match.venueCity,
             venueCountry: match.venueCountry,
@@ -650,6 +671,7 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
             awayFlag: match.awayFlag,
             startTime: match.startTime,
             groupStage: match.groupStage,
+            isKnockout,
             venueName: match.venueName,
             venueCity: match.venueCity,
             venueCountry: match.venueCountry,
@@ -664,6 +686,19 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
   } catch (error) {
     console.error('Seed error:', error);
     res.status(500).json({ error: 'Seeding failed' });
+  }
+});
+
+router.post('/migrate-knockout', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const knockoutStages = ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'];
+    const result = await prisma.match.updateMany({
+      where: { groupStage: { in: knockoutStages } },
+      data: { isKnockout: true }
+    });
+    res.json({ message: `Marcados ${result.count} partidos como eliminatoria` });
+  } catch (error) {
+    res.status(500).json({ error: 'Error' });
   }
 });
 

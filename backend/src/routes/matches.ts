@@ -105,11 +105,24 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore, groupId } = req.body;
+    const { homeScore, awayScore, groupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore } = req.body;
 
     if (!groupId) {
       res.status(400).json({ error: 'Group ID is required' });
       return;
+    }
+
+    const match = await prisma.match.findUnique({ where: { id: parseInt(matchId) }, select: { isKnockout: true } });
+
+    const updateData: any = { homeScore, awayScore };
+    const createData: any = { userId, matchId: parseInt(matchId), groupId, homeScore, awayScore };
+
+    if (match?.isKnockout) {
+      if (totalGoals !== undefined) { updateData.totalGoals = totalGoals; createData.totalGoals = totalGoals; }
+      if (bothTeamsScore !== undefined) { updateData.bothTeamsScore = bothTeamsScore; createData.bothTeamsScore = bothTeamsScore; }
+      if (cleanSheet !== undefined) { updateData.cleanSheet = cleanSheet; createData.cleanSheet = cleanSheet; }
+      if (halfTimeHomeScore !== undefined) { updateData.halfTimeHomeScore = halfTimeHomeScore; createData.halfTimeHomeScore = halfTimeHomeScore; }
+      if (halfTimeAwayScore !== undefined) { updateData.halfTimeAwayScore = halfTimeAwayScore; createData.halfTimeAwayScore = halfTimeAwayScore; }
     }
 
     const prediction = await prisma.prediction.upsert({
@@ -120,17 +133,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
           groupId
         }
       },
-      update: {
-        homeScore,
-        awayScore
-      },
-      create: {
-        userId,
-        matchId: parseInt(matchId),
-        groupId,
-        homeScore,
-        awayScore
-      }
+      update: updateData,
+      create: createData
     });
 
     res.status(200).json({

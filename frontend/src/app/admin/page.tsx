@@ -17,6 +17,9 @@ interface Match {
   awayScore: number | null;
   status: string;
   groupStage: string | null;
+  isKnockout: boolean;
+  halfTimeHomeScore: number | null;
+  halfTimeAwayScore: number | null;
   venueName: string | null;
   venueCity: string | null;
   venueCountry: string | null;
@@ -170,13 +173,20 @@ export default function AdminPanel() {
 
   async function handleUpdateMatch(id: number, homeScore: number, awayScore: number, status: string) {
     try {
+      const htHome = (document.getElementById(`hthome-${id}`) as HTMLInputElement)?.value;
+      const htAway = (document.getElementById(`htaway-${id}`) as HTMLInputElement)?.value;
+      const isKo = (document.getElementById(`isko-${id}`) as HTMLInputElement)?.checked;
+      const body: any = { homeScore, awayScore, status };
+      if (htHome !== undefined) body.halfTimeHomeScore = htHome ? parseInt(htHome) : null;
+      if (htAway !== undefined) body.halfTimeAwayScore = htAway ? parseInt(htAway) : null;
+      if (isKo !== undefined) body.isKnockout = isKo;
       await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'x-admin-key': adminKey
         },
-        body: JSON.stringify({ homeScore, awayScore, status })
+        body: JSON.stringify(body)
       });
       fetchData();
     } catch (error) {
@@ -241,7 +251,7 @@ export default function AdminPanel() {
       const localDate = new Date(startTimeInput);
       const isoWithTimezone = localDate.toISOString();
 
-      const body = {
+      const body: any = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
         homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
@@ -253,7 +263,10 @@ export default function AdminPanel() {
         groupStage: formData.get('groupStage'),
         venueName: formData.get('venueName'),
         venueCity: formData.get('venueCity'),
-        venueCountry: formData.get('venueCountry')
+        venueCountry: formData.get('venueCountry'),
+        isKnockout: formData.get('isKnockout') === 'on',
+        halfTimeHomeScore: formData.get('halfTimeHomeScore') ? parseInt(formData.get('halfTimeHomeScore') as string) : null,
+        halfTimeAwayScore: formData.get('halfTimeAwayScore') ? parseInt(formData.get('halfTimeAwayScore') as string) : null
       };
       const res = await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
@@ -355,6 +368,22 @@ export default function AdminPanel() {
                     <label className="block text-white/60 text-sm mb-1">Marcador Visitante</label>
                     <input name="awayScore" type="number" defaultValue={match?.awayScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Medio Tiempo Local</label>
+                    <input name="halfTimeHomeScore" type="number" defaultValue={(match as any)?.halfTimeHomeScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Medio Tiempo Visitante</label>
+                    <input name="halfTimeAwayScore" type="number" defaultValue={(match as any)?.halfTimeAwayScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="flex items-center gap-2 text-white/60 text-sm cursor-pointer">
+                    <input name="isKnockout" type="checkbox" defaultChecked={(match as any)?.isKnockout ?? false} className="w-5 h-5 rounded accent-amber-500" />
+                    Partido de Eliminatoria (predicciones extra)
+                  </label>
                 </div>
                 <div className="mb-4">
                   <label className="block text-white/60 text-sm mb-1">Estado</label>
@@ -565,7 +594,10 @@ export default function AdminPanel() {
                         )}
                         <div>
                           <div className="text-white font-bold">{match.homeTeam}</div>
-                          <div className="text-white/40 text-sm">{match.groupStage || 'World Cup'}</div>
+                          <div className="text-white/40 text-sm">
+                            {match.groupStage || 'World Cup'}
+                            {match.isKnockout && <span className="ml-2 text-amber-400 font-semibold">⚔️ KO</span>}
+                          </div>
                         </div>
                       </div>
 
@@ -600,15 +632,43 @@ export default function AdminPanel() {
                           )}
                         </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            defaultValue={(match as any).halfTimeHomeScore ?? ''}
+                            className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
+                            min="0"
+                            id={`hthome-${match.id}`}
+                            placeholder="HT"
+                          />
+                          <span className="text-white/30 text-xs">-</span>
+                          <input
+                            type="number"
+                            defaultValue={(match as any).halfTimeAwayScore ?? ''}
+                            className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
+                            min="0"
+                            id={`htaway-${match.id}`}
+                            placeholder="HT"
+                          />
+                        </div>
+                        <label className="flex items-center gap-1 text-xs text-white/40 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            defaultChecked={match.isKnockout}
+                            id={`isko-${match.id}`}
+                            className="w-3.5 h-3.5 rounded accent-amber-500"
+                          />
+                          KO
+                        </label>
                         <select
                           defaultValue={match.status}
-                          className="bg-white/10 text-white px-3 py-2 rounded-xl"
+                          className="bg-white/10 text-white px-2 py-2 rounded-xl text-sm"
                           id={`status-${match.id}`}
                         >
-                          <option value="SCHEDULED">Programado</option>
-                          <option value="LIVE">En juego</option>
-                          <option value="FINISHED">Finalizado</option>
+                          <option value="SCHEDULED">Prog</option>
+                          <option value="LIVE">Live</option>
+                          <option value="FINISHED">Fin</option>
                         </select>
                         <button
                           onClick={() => {
@@ -617,19 +677,19 @@ export default function AdminPanel() {
                             const status = (document.getElementById(`status-${match.id}`) as HTMLSelectElement).value;
                             handleUpdateMatch(match.id, homeScore, awayScore, status);
                           }}
-                          className="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400"
+                          className="px-3 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 text-sm"
                         >
                           Guardar
                         </button>
                         <button
                           onClick={() => setEditingMatch(match)}
-                          className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30"
+                          className="px-3 py-2 bg-blue-500/20 text-blue-400 rounded-xl hover:bg-blue-500/30 text-sm"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => handleDeleteMatch(match.id)}
-                          className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30"
+                          className="px-3 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm"
                         >
                           🗑️
                         </button>
