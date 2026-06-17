@@ -54,7 +54,8 @@ router.get('/ranking', async (req: Request, res: Response) => {
   try {
     console.log('Ranking endpoint called');
     const limit = parseInt(req.query.limit as string) || 10;
-    const ranking = await getRanking(limit);
+    const round = req.query.round as string | undefined;
+    const ranking = await getRanking(limit, round);
     console.log('Ranking fetched:', ranking.length, 'users');
 
     res.json(ranking);
@@ -230,7 +231,8 @@ router.get('/ranking', async (req: Request, res: Response) => {
   try {
     console.log('Ranking endpoint called');
     const limit = parseInt(req.query.limit as string) || 10;
-    const ranking = await getRanking(limit);
+    const round = req.query.round as string | undefined;
+    const ranking = await getRanking(limit, round);
     console.log('Ranking fetched:', ranking.length, 'users');
 
     res.json(ranking);

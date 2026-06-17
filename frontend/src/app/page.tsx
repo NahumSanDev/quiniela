@@ -95,6 +95,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'matches' | 'ranking'>('matches');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [rankingRound, setRankingRound] = useState<string>('all');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -113,6 +114,14 @@ export default function Home() {
       fetchGeneralRanking();
     }
   }, [selectedGroup]);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchGroupRanking();
+    } else {
+      fetchGeneralRanking();
+    }
+  }, [rankingRound]);
 
   async function fetchGroups() {
     const token = localStorage.getItem('token');
@@ -156,8 +165,9 @@ export default function Home() {
 
   async function fetchGeneralRanking() {
     const token = localStorage.getItem('token');
+    const roundParam = rankingRound !== 'all' ? `&round=${rankingRound}` : '';
     try {
-      const res = await fetch(`${API_URL}/api/matches/ranking?limit=50`, {
+      const res = await fetch(`${API_URL}/api/matches/ranking?limit=50${roundParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -172,7 +182,8 @@ export default function Home() {
     if (!selectedGroup) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API_URL}/api/groups/${selectedGroup}/ranking`, {
+      const roundParam = rankingRound !== 'all' ? `?round=${rankingRound}` : '';
+      const res = await fetch(`${API_URL}/api/groups/${selectedGroup}/ranking${roundParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -186,6 +197,7 @@ export default function Home() {
   function selectGroup(groupId: string | null) {
     setSelectedGroup(groupId);
     if (groupId) {
+      setRankingRound('all');
       localStorage.setItem('selectedGroup', groupId);
     } else {
       localStorage.removeItem('selectedGroup');
@@ -477,6 +489,27 @@ export default function Home() {
             animate={{ opacity: 1 }}
             className="max-w-2xl mx-auto"
           >
+            <div className="flex gap-2 mb-4 flex-wrap justify-center">
+              {[
+                { value: 'all', label: 'General' },
+                { value: 'groups-j1', label: 'Jornada 1' },
+                { value: 'groups-j2', label: 'Jornada 2' },
+                { value: 'groups-j3', label: 'Jornada 3' },
+                { value: 'knockout', label: 'Eliminatorias' },
+              ].map((round) => (
+                <button
+                  key={round.value}
+                  onClick={() => setRankingRound(round.value)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    rankingRound === round.value
+                      ? 'bg-amber-500 text-white glow-gold'
+                      : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  }`}
+                >
+                  {round.label}
+                </button>
+              ))}
+            </div>
             <RankingTable ranking={ranking} />
           </motion.div>
         )}

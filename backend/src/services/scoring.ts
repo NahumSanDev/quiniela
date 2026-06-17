@@ -85,28 +85,73 @@ export interface RankingEntry {
   points: number;
 }
 
-export async function getRanking(limit: number = 10): Promise<RankingEntry[]> {
+export async function getRanking(limit: number = 10, round?: string): Promise<RankingEntry[]> {
+  if (!round || round === 'all') {
+    const users = await prisma.user.findMany({
+      orderBy: [
+        { points: 'desc' },
+        { updatedAt: 'asc' }
+      ],
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        points: true
+      }
+    });
+
+    return users.map((user, index) => ({
+      rank: index + 1,
+      userId: user.id,
+      name: user.name,
+      avatarUrl: user.image,
+      points: user.points
+    }));
+  }
+
+  const J1_END = new Date('2026-06-18T00:00:00Z');
+  const J2_END = new Date('2026-06-24T00:00:00Z');
+
+  let stageFilter: any = {};
+  if (round === 'groups-j1') {
+    stageFilter = { groupStage: { startsWith: 'Group' }, startTime: { lt: J1_END } };
+  } else if (round === 'groups-j2') {
+    stageFilter = { groupStage: { startsWith: 'Group' }, startTime: { gte: J1_END, lt: J2_END } };
+  } else if (round === 'groups-j3') {
+    stageFilter = { groupStage: { startsWith: 'Group' }, startTime: { gte: J2_END } };
+  } else if (round === 'knockout') {
+    stageFilter = {
+      groupStage: { in: ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'] }
+    };
+  }
+
+  const roundMatchIds = (
+    await prisma.match.findMany({ where: stageFilter, select: { id: true } })
+  ).map(m => m.id);
+
   const users = await prisma.user.findMany({
-    orderBy: [
-      { points: 'desc' },
-      { updatedAt: 'asc' }
-    ],
-    take: limit,
     select: {
       id: true,
       name: true,
       image: true,
-      points: true
+      predictions: {
+        where: { matchId: { in: roundMatchIds } },
+        select: { points: true }
+      }
     }
   });
 
-  return users.map((user, index) => ({
-    rank: index + 1,
-    userId: user.id,
-    name: user.name,
-    avatarUrl: user.image,
-    points: user.points
-  }));
+  return users
+    .map(user => ({
+      userId: user.id,
+      name: user.name,
+      avatarUrl: user.image,
+      points: user.predictions.reduce((sum, p) => sum + p.points, 0)
+    }))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, limit)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
 }
 
 export async function getUserPosition(userId: string): Promise<number> {
