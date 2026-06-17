@@ -13,6 +13,10 @@ export interface Match {
   isKnockout: boolean;
   halfTimeHomeScore: number | null;
   halfTimeAwayScore: number | null;
+  firstGoalTeam: string | null;
+  firstGoalMinute: number | null;
+  redCard: boolean | null;
+  totalCards: number | null;
   predictions?: { id: number; homeScore: number; awayScore: number; points: number; bonus: boolean; userId: string }[];
 }
 
@@ -28,6 +32,10 @@ export interface Prediction {
   cleanSheet?: string | null;
   halfTimeHomeScore?: number | null;
   halfTimeAwayScore?: number | null;
+  firstGoalTeam?: string | null;
+  firstGoalMinute?: number | null;
+  redCard?: boolean | null;
+  totalCards?: number | null;
   updatedAt?: string;
 }
 

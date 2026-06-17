@@ -176,10 +176,18 @@ export default function AdminPanel() {
       const htHome = (document.getElementById(`hthome-${id}`) as HTMLInputElement)?.value;
       const htAway = (document.getElementById(`htaway-${id}`) as HTMLInputElement)?.value;
       const isKo = (document.getElementById(`isko-${id}`) as HTMLInputElement)?.checked;
+      const fgTeam = (document.getElementById(`fgteam-${id}`) as HTMLSelectElement)?.value;
+      const fgMin = (document.getElementById(`fgmin-${id}`) as HTMLInputElement)?.value;
+      const rc = (document.getElementById(`rc-${id}`) as HTMLInputElement)?.checked;
+      const tc = (document.getElementById(`tc-${id}`) as HTMLInputElement)?.value;
       const body: any = { homeScore, awayScore, status };
       if (htHome !== undefined) body.halfTimeHomeScore = htHome ? parseInt(htHome) : null;
       if (htAway !== undefined) body.halfTimeAwayScore = htAway ? parseInt(htAway) : null;
       if (isKo !== undefined) body.isKnockout = isKo;
+      if (fgTeam !== undefined) body.firstGoalTeam = fgTeam || null;
+      if (fgMin !== undefined) body.firstGoalMinute = fgMin ? parseInt(fgMin) : null;
+      if (rc !== undefined) body.redCard = rc;
+      if (tc !== undefined) body.totalCards = tc ? parseInt(tc) : null;
       await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
         headers: {
@@ -266,7 +274,11 @@ export default function AdminPanel() {
         venueCountry: formData.get('venueCountry'),
         isKnockout: formData.get('isKnockout') === 'on',
         halfTimeHomeScore: formData.get('halfTimeHomeScore') ? parseInt(formData.get('halfTimeHomeScore') as string) : null,
-        halfTimeAwayScore: formData.get('halfTimeAwayScore') ? parseInt(formData.get('halfTimeAwayScore') as string) : null
+        halfTimeAwayScore: formData.get('halfTimeAwayScore') ? parseInt(formData.get('halfTimeAwayScore') as string) : null,
+        firstGoalTeam: formData.get('firstGoalTeam') || null,
+        firstGoalMinute: formData.get('firstGoalMinute') ? parseInt(formData.get('firstGoalMinute') as string) : null,
+        redCard: formData.get('redCard') === 'on',
+        totalCards: formData.get('totalCards') ? parseInt(formData.get('totalCards') as string) : null
       };
       const res = await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
@@ -384,6 +396,28 @@ export default function AdminPanel() {
                     <input name="isKnockout" type="checkbox" defaultChecked={(match as any)?.isKnockout ?? false} className="w-5 h-5 rounded accent-amber-500" />
                     Partido de Eliminatoria (predicciones extra)
                   </label>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Primer Gol (Equipo)</label>
+                    <input name="firstGoalTeam" defaultValue={(match as any)?.firstGoalTeam ?? ''} placeholder="ej: Argentina" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Minuto Primer Gol</label>
+                    <input name="firstGoalMinute" type="number" defaultValue={(match as any)?.firstGoalMinute ?? ''} min="0" max="120" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-white/60 text-sm cursor-pointer">
+                      <input name="redCard" type="checkbox" defaultChecked={(match as any)?.redCard ?? false} className="w-5 h-5 rounded accent-red-500" />
+                      ¿Hubo Tarjeta Roja?
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Total Tarjetas</label>
+                    <input name="totalCards" type="number" defaultValue={(match as any)?.totalCards ?? ''} min="0" max="20" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
+                  </div>
                 </div>
                 <div className="mb-4">
                   <label className="block text-white/60 text-sm mb-1">Estado</label>
@@ -661,6 +695,41 @@ export default function AdminPanel() {
                           />
                           KO
                         </label>
+                        <select
+                          id={`fgteam-${match.id}`}
+                          defaultValue={(match as any).firstGoalTeam ?? ''}
+                          className="bg-white/10 text-white px-1 py-2 rounded-xl text-xs max-w-[80px]"
+                        >
+                          <option value="">1er Gol</option>
+                          <option value={match.homeTeam}>{match.homeTeam.substring(0, 10)}</option>
+                          <option value={match.awayTeam}>{match.awayTeam.substring(0, 10)}</option>
+                          <option value="ninguno">Ninguno</option>
+                        </select>
+                        <input
+                          type="number"
+                          defaultValue={(match as any).firstGoalMinute ?? ''}
+                          className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
+                          min="0" max="120"
+                          id={`fgmin-${match.id}`}
+                          placeholder="Min"
+                        />
+                        <label className="flex items-center gap-1 text-xs text-white/40 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            defaultChecked={(match as any).redCard ?? false}
+                            id={`rc-${match.id}`}
+                            className="w-3.5 h-3.5 rounded accent-red-500"
+                          />
+                          RC
+                        </label>
+                        <input
+                          type="number"
+                          defaultValue={(match as any).totalCards ?? ''}
+                          className="w-8 text-center bg-white/10 rounded-lg text-white text-xs"
+                          min="0" max="20"
+                          id={`tc-${match.id}`}
+                          placeholder="TC"
+                        />
                         <select
                           defaultValue={match.status}
                           className="bg-white/10 text-white px-2 py-2 rounded-xl text-sm"

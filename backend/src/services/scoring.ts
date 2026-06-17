@@ -45,6 +45,10 @@ export interface KnockoutPredictionInput {
   cleanSheet?: string | null;
   halfTimeHomeScore?: number | null;
   halfTimeAwayScore?: number | null;
+  firstGoalTeam?: string | null;
+  firstGoalMinute?: number | null;
+  redCard?: boolean | null;
+  totalCards?: number | null;
 }
 
 export function calculateKnockoutPoints(
@@ -54,6 +58,10 @@ export function calculateKnockoutPoints(
     awayScore: number | null;
     halfTimeHomeScore: number | null;
     halfTimeAwayScore: number | null;
+    firstGoalTeam: string | null;
+    firstGoalMinute: number | null;
+    redCard: boolean | null;
+    totalCards: number | null;
   }
 ): number {
   let extra = 0;
@@ -88,6 +96,26 @@ export function calculateKnockoutPoints(
         prediction.halfTimeAwayScore === match.halfTimeAwayScore) {
       extra += 2;
     }
+  }
+
+  if (prediction.firstGoalTeam && match.firstGoalTeam) {
+    if (prediction.firstGoalTeam === match.firstGoalTeam) extra += 1;
+  }
+
+  if (
+    prediction.firstGoalMinute !== null && prediction.firstGoalMinute !== undefined &&
+    match.firstGoalMinute !== null
+  ) {
+    if (Math.abs(prediction.firstGoalMinute - match.firstGoalMinute) <= 2) extra += 2;
+  }
+
+  if (prediction.redCard !== null && prediction.redCard !== undefined && match.redCard !== null) {
+    if (prediction.redCard === match.redCard) extra += 1;
+  }
+
+  if (prediction.totalCards !== null && prediction.totalCards !== undefined && match.totalCards !== null) {
+    const diff = Math.abs(prediction.totalCards - match.totalCards);
+    if (diff <= 1) extra += 2;
   }
 
   return extra;

@@ -227,6 +227,10 @@ export default function Home() {
         body.cleanSheet = knockout.cleanSheet;
         body.halfTimeHomeScore = knockout.halfTimeHomeScore;
         body.halfTimeAwayScore = knockout.halfTimeAwayScore;
+        body.firstGoalTeam = knockout.firstGoalTeam;
+        body.firstGoalMinute = knockout.firstGoalMinute;
+        body.redCard = knockout.redCard;
+        body.totalCards = knockout.totalCards;
       }
 
       const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {

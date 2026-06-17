@@ -8,6 +8,10 @@ export interface KnockoutData {
   cleanSheet: string | null;
   halfTimeHomeScore: number | null;
   halfTimeAwayScore: number | null;
+  firstGoalTeam: string | null;
+  firstGoalMinute: number | null;
+  redCard: boolean | null;
+  totalCards: number | null;
 }
 
 interface MatchCardProps {
@@ -24,6 +28,10 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [cleanSheet, setCleanSheet] = useState<string | null>(prediction?.cleanSheet ?? null);
   const [htHomeScore, setHtHomeScore] = useState<number | null>(prediction?.halfTimeHomeScore ?? null);
   const [htAwayScore, setHtAwayScore] = useState<number | null>(prediction?.halfTimeAwayScore ?? null);
+  const [firstGoalTeam, setFirstGoalTeam] = useState<string | null>(prediction?.firstGoalTeam ?? null);
+  const [firstGoalMinute, setFirstGoalMinute] = useState<number | null>(prediction?.firstGoalMinute ?? null);
+  const [redCard, setRedCard] = useState<boolean | null>(prediction?.redCard ?? null);
+  const [totalCards, setTotalCards] = useState<number | null>(prediction?.totalCards ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isFinished = match.status === 'FINISHED';
@@ -74,6 +82,10 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
       cleanSheet,
       halfTimeHomeScore: htHomeScore,
       halfTimeAwayScore: htAwayScore,
+      firstGoalTeam,
+      firstGoalMinute,
+      redCard,
+      totalCards,
     } : undefined;
 
     setIsSubmitting(true);
@@ -357,6 +369,99 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
                   min="0" max="10" placeholder="Visitante"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+1 pt</span>
+              </label>
+              <div className="flex gap-2">
+                {[
+                  { value: match.homeTeam, label: match.homeTeam.substring(0, 12) },
+                  { value: match.awayTeam, label: match.awayTeam.substring(0, 12) },
+                  { value: 'ninguno', label: 'Ninguno' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFirstGoalTeam(firstGoalTeam === opt.value ? null : opt.value)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      firstGoalTeam === opt.value
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                {firstGoalTeam !== null && (
+                  <button
+                    onClick={() => setFirstGoalTeam(null)}
+                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                Minuto del Primer Gol <span className="text-amber-400 font-semibold">+2 pts</span>
+              </label>
+              <input
+                type="number"
+                value={firstGoalMinute ?? ''}
+                onChange={(e) => setFirstGoalMinute(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
+                min="0" max="120"
+                placeholder="Ej: 15"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+1 pt</span>
+              </label>
+              <div className="flex gap-2">
+                {[
+                  { value: true, label: 'Sí' },
+                  { value: false, label: 'No' },
+                ].map((opt) => (
+                  <button
+                    key={String(opt.value)}
+                    onClick={() => setRedCard(redCard === opt.value ? null : opt.value)}
+                    className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      redCard === opt.value
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                {redCard !== null && (
+                  <button
+                    onClick={() => setRedCard(null)}
+                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                Total Tarjetas <span className="text-amber-400 font-semibold">+2 pts</span>
+              </label>
+              <input
+                type="number"
+                value={totalCards ?? ''}
+                onChange={(e) => setTotalCards(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
+                min="0" max="20"
+                placeholder="Ej: 4"
+              />
             </div>
           </motion.div>
         )}

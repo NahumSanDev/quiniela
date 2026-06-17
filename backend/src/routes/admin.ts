@@ -74,7 +74,7 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
 router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry, isKnockout, halfTimeHomeScore, halfTimeAwayScore } = req.body;
+    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry, isKnockout, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards } = req.body;
 
     const matchId = parseInt(id);
     const before = await prisma.match.findUnique({
@@ -111,6 +111,10 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     if (isKnockout !== undefined) updateData.isKnockout = isKnockout;
     if (halfTimeHomeScore !== undefined) updateData.halfTimeHomeScore = halfTimeHomeScore;
     if (halfTimeAwayScore !== undefined) updateData.halfTimeAwayScore = halfTimeAwayScore;
+    if (firstGoalTeam !== undefined) updateData.firstGoalTeam = firstGoalTeam;
+    if (firstGoalMinute !== undefined) updateData.firstGoalMinute = firstGoalMinute;
+    if (redCard !== undefined) updateData.redCard = redCard;
+    if (totalCards !== undefined) updateData.totalCards = totalCards;
 
     const match = await prisma.match.update({
       where: { id: matchId },
