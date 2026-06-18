@@ -39,7 +39,12 @@ export default function SignInPage() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      router.push('/');
+
+      if (data.mustChangePassword) {
+        router.push('/auth/change-password');
+      } else {
+        router.push('/');
+      }
       router.refresh();
     } catch (err) {
       setError('Error de conexión');

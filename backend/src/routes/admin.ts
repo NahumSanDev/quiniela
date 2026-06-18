@@ -340,7 +340,7 @@ router.put('/users/:id/password', adminAuth, async (req: Request, res: Response)
     const hashedPassword = Buffer.from(password).toString('base64');
     await prisma.user.update({
       where: { id },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword, mustChangePassword: true }
     });
     res.json({ message: 'Contraseña actualizada exitosamente' });
   } catch (error) {

@@ -91,6 +91,7 @@ router.post('/login', async (req: Request, res: Response) => {
     res.json({
       message: 'Login exitoso',
       token,
+      mustChangePassword: user.mustChangePassword,
       user: {
         id: user.id,
         name: user.name,
@@ -102,6 +103,56 @@ router.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
+router.post('/change-password', async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Token requerido' });
+      return;
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user) {
+      res.status(404).json({ error: 'Usuario no encontrado' });
+      return;
+    }
+
+    if (currentPassword) {
+      const hashedCurrent = Buffer.from(currentPassword).toString('base64');
+      if (user.password !== hashedCurrent) {
+        res.status(400).json({ error: 'La contraseña actual no es correcta' });
+        return;
+      }
+    }
+
+    const hashedPassword = Buffer.from(newPassword).toString('base64');
+    await prisma.user.update({
+      where: { id: decoded.userId },
+      data: { password: hashedPassword, mustChangePassword: false }
+    });
+
+    const newToken = jwt.sign(
+      { userId: user.id, email: user.email, name: user.name || '' },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    res.json({ message: 'Contraseña actualizada exitosamente', token: newToken });
+  } catch (error) {
+    console.error('Error cambiando contraseña:', error);
     res.status(500).json({ error: 'Error en el servidor' });
   }
 });
