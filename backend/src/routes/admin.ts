@@ -329,6 +329,25 @@ router.put('/users/:id', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.put('/users/:id/password', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+    if (!password || password.length < 4) {
+      res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres' });
+      return;
+    }
+    const hashedPassword = Buffer.from(password).toString('base64');
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
+    });
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar contraseña' });
+  }
+});
+
 router.get('/stats', adminAuth, async (req: Request, res: Response) => {
   try {
     const [totalUsers, totalMatches, totalPredictions, finishedMatches] = await Promise.all([

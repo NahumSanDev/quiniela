@@ -101,6 +101,8 @@ export default function AdminPanel() {
   const [userPredictions, setUserPredictions] = useState<any[]>([]);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
 
   async function fetchData() {
     setLoading(true);
@@ -318,8 +320,50 @@ export default function AdminPanel() {
             <h2 className="text-xl font-bold text-white">{isEdit ? 'Editar Partido' : 'Crear Partido'}</h2>
             <button onClick={onClose} className="text-white/60 hover:text-white">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
+              </button>
+
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <label className="block text-white/60 text-sm mb-1">Nueva Contraseña</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Ingresa nueva contraseña"
+                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500"
+                  />
+                  <button
+                    onClick={async () => {
+                      const user = selectedUser;
+                      if (!user || !newPassword || newPassword.length < 4) {
+                        setPasswordMessage('Minimo 4 caracteres');
+                        return;
+                      }
+                      const res = await fetch(`${API_URL}/api/admin/users/${user.id}/password`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ password: newPassword })
+                      });
+                      if (res.ok) {
+                        setPasswordMessage('Contraseña actualizada');
+                        setNewPassword('');
+                      } else {
+                        const err = await res.json();
+                        setPasswordMessage(err.error || 'Error');
+                      }
+                    }}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-400"
+                  >
+                    Resetear
+                  </button>
+                </div>
+                {passwordMessage && (
+                  <p className={`text-xs mt-1 ${passwordMessage.includes('actualizada') ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {passwordMessage}
+                  </p>
+                )}
+              </div>
+            </div>
           <form onSubmit={(e) => { e.preventDefault(); onSubmit(new FormData(e.currentTarget)); }}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -803,6 +847,8 @@ export default function AdminPanel() {
                       setSelectedUser(user);
                       setEditName(user.name || '');
                       setEditEmail(user.email || '');
+                      setNewPassword('');
+                      setPasswordMessage('');
                       fetch(`${API_URL}/api/admin/users/${user.id}/predictions`, {
                         headers: { 'x-admin-key': adminKey }
                       }).then(r => r.json()).then(setUserPredictions);
