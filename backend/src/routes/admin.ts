@@ -844,4 +844,19 @@ router.get('/logs', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/db-push', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { exec } = require('child_process');
+    exec('npx prisma db push --accept-data-loss', { cwd: __dirname + '/../..' }, (err: any, stdout: string, stderr: string) => {
+      if (err) {
+        res.status(500).json({ error: stderr || err.message });
+        return;
+      }
+      res.json({ message: 'DB push exitoso', output: stdout });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
 export default router;
