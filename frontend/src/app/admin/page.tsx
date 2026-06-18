@@ -321,48 +321,6 @@ export default function AdminPanel() {
             <button onClick={onClose} className="text-white/60 hover:text-white">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
-
-              <div className="border-t border-white/10 pt-4 mt-4">
-                <label className="block text-white/60 text-sm mb-1">Nueva Contraseña</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Ingresa nueva contraseña"
-                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500"
-                  />
-                  <button
-                    onClick={async () => {
-                      const user = selectedUser;
-                      if (!user || !newPassword || newPassword.length < 4) {
-                        setPasswordMessage('Minimo 4 caracteres');
-                        return;
-                      }
-                      const res = await fetch(`${API_URL}/api/admin/users/${user.id}/password`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-                        body: JSON.stringify({ password: newPassword })
-                      });
-                      if (res.ok) {
-                        setPasswordMessage('Contraseña actualizada');
-                        setNewPassword('');
-                      } else {
-                        const err = await res.json();
-                        setPasswordMessage(err.error || 'Error');
-                      }
-                    }}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-400"
-                  >
-                    Resetear
-                  </button>
-                </div>
-                {passwordMessage && (
-                  <p className={`text-xs mt-1 ${passwordMessage.includes('actualizada') ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {passwordMessage}
-                  </p>
-                )}
-              </div>
             </div>
           <form onSubmit={(e) => { e.preventDefault(); onSubmit(new FormData(e.currentTarget)); }}>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1155,6 +1113,48 @@ export default function AdminPanel() {
               >
                 Guardar Cambios
               </button>
+
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <label className="block text-white/60 text-sm mb-1">Nueva Contraseña (provisional)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Ingresa nueva contraseña"
+                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500"
+                  />
+                  <button
+                    onClick={async () => {
+                      const user = selectedUser;
+                      if (!user || !newPassword || newPassword.length < 4) {
+                        setPasswordMessage('Minimo 4 caracteres');
+                        return;
+                      }
+                      const res = await fetch(`${API_URL}/api/admin/users/${user.id}/password`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                        body: JSON.stringify({ password: newPassword })
+                      });
+                      if (res.ok) {
+                        setPasswordMessage('Contraseña actualizada');
+                        setNewPassword('');
+                      } else {
+                        const err = await res.json();
+                        setPasswordMessage(err.error || 'Error');
+                      }
+                    }}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-400 whitespace-nowrap"
+                  >
+                    Resetear
+                  </button>
+                </div>
+                {passwordMessage && (
+                  <p className={`text-xs mt-1 ${passwordMessage.includes('actualizada') ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {passwordMessage}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
