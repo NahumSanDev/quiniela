@@ -550,7 +550,7 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
     { homeTeam: 'Czechia', homeFlag: 'cz', awayTeam: 'South Africa', awayFlag: 'za', startTime: new Date('2026-06-18T16:00:00Z'), groupStage: 'Group A', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
     { homeTeam: 'Switzerland', homeFlag: 'ch', awayTeam: 'Bosnia and Herzegovina', awayFlag: 'ba', startTime: new Date('2026-06-18T19:00:00Z'), groupStage: 'Group B', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
     { homeTeam: 'Canada', homeFlag: 'ca', awayTeam: 'Qatar', awayFlag: 'qa', startTime: new Date('2026-06-18T22:00:00Z'), groupStage: 'Group B', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
-    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'South Korea', awayFlag: 'kr', startTime: new Date('2026-06-19T02:00:00Z'), groupStage: 'Group A', venueName: 'Estadio Akron', venueCity: 'Zapopan', venueCountry: 'Mexico' },
+    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'South Korea', awayFlag: 'kr', startTime: new Date('2026-06-19T01:00:00Z'), groupStage: 'Group A', venueName: 'Estadio Akron', venueCity: 'Zapopan', venueCountry: 'Mexico' },
     // Group Stage - June 19
     { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Australia', awayFlag: 'au', startTime: new Date('2026-06-19T19:00:00Z'), groupStage: 'Group D', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
     { homeTeam: 'Scotland', homeFlag: 'gb', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-06-19T22:00:00Z'), groupStage: 'Group C', venueName: 'Gillette Stadium', venueCity: 'Foxborough', venueCountry: 'USA' },
