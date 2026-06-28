@@ -300,7 +300,9 @@ export default function AdminPanel() {
         firstGoalTeam: formData.get('firstGoalTeam') || null,
         firstGoalMinute: formData.get('firstGoalMinute') ? parseInt(formData.get('firstGoalMinute') as string) : null,
         redCard: formData.get('redCard') === 'on',
-        totalCards: formData.get('totalCards') ? parseInt(formData.get('totalCards') as string) : null
+        totalCards: formData.get('totalCards') ? parseInt(formData.get('totalCards') as string) : null,
+        extraTime: formData.get('extraTime') === 'on',
+        penaltyShootout: formData.get('penaltyShootout') === 'on'
       };
       const res = await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
@@ -441,6 +443,20 @@ export default function AdminPanel() {
                   <div>
                     <label className="block text-white/60 text-sm mb-1">Total Tarjetas</label>
                     <input name="totalCards" type="number" defaultValue={(match as any)?.totalCards ?? ''} min="0" max="20" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="flex items-center gap-2 text-white/60 text-sm cursor-pointer">
+                      <input name="extraTime" type="checkbox" defaultChecked={(match as any)?.extraTime ?? false} className="w-5 h-5 rounded accent-amber-500" />
+                      ¿Hubo Tiempos Extra?
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-white/60 text-sm cursor-pointer">
+                      <input name="penaltyShootout" type="checkbox" defaultChecked={(match as any)?.penaltyShootout ?? false} className="w-5 h-5 rounded accent-amber-500" />
+                      ¿Hubo Tanda de Penales?
+                    </label>
                   </div>
                 </div>
                 <div className="mb-4">
