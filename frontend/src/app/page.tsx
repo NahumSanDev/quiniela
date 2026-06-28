@@ -94,7 +94,7 @@ export default function Home() {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'matches' | 'ranking'>('matches');
-  const [matchFilter, setMatchFilter] = useState<'all' | 'groups' | 'knockout'>('knockout');
+  const [matchFilter, setMatchFilter] = useState<string>('knockout');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
 
@@ -476,17 +476,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="flex gap-2 mb-6 justify-center">
-              <button
-                onClick={() => setMatchFilter('knockout')}
-                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
-                  matchFilter === 'knockout'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10'
-                }`}
-              >
-                🏆 Eliminatorias
-              </button>
+            <div className="flex gap-2 mb-2 justify-center flex-wrap">
               <button
                 onClick={() => setMatchFilter('groups')}
                 className={`px-4 py-2 rounded-xl font-semibold transition-all ${
@@ -497,7 +487,40 @@ export default function Home() {
               >
                 📋 Fase de Grupos
               </button>
+              <button
+                onClick={() => setMatchFilter('knockout')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                  matchFilter === 'knockout'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                🏆 Todas
+              </button>
             </div>
+            {matchFilter !== 'groups' && (
+              <div className="flex gap-2 mb-6 justify-center flex-wrap">
+                {[
+                  { value: 'Round of 32', label: '16vos' },
+                  { value: 'Round of 16', label: '8vos' },
+                  { value: 'Quarter-final', label: 'Cuartos' },
+                  { value: 'Semi-final', label: 'Semis' },
+                  { value: 'Final', label: 'Final' },
+                ].map((round) => (
+                  <button
+                    key={round.value}
+                    onClick={() => setMatchFilter(round.value)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                      matchFilter === round.value
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                    }`}
+                  >
+                    {round.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {matches.length === 0 ? (
@@ -506,7 +529,12 @@ export default function Home() {
                 </p>
               ) : (
                 matches
-                  .filter(m => matchFilter === 'all' ? true : matchFilter === 'knockout' ? m.isKnockout : !m.isKnockout)
+                  .filter(m => {
+                    if (matchFilter === 'groups') return !m.isKnockout;
+                    if (matchFilter === 'knockout') return m.isKnockout;
+                    if (matchFilter === 'Final') return m.groupStage === 'Final' || m.groupStage === 'Third Place';
+                    return m.groupStage === matchFilter;
+                  })
                   .map((match, index) => {
                     const userPrediction = match.predictions?.find(
                       (p: any) => p.userId === user?.id
