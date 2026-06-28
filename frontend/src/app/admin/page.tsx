@@ -89,6 +89,7 @@ export default function AdminPanel() {
   const [logsPagination, setLogsPagination] = useState<Pagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [updatingKnockout, setUpdatingKnockout] = useState(false);
   const [message, setMessage] = useState('');
   const [usersPage, setUsersPage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
@@ -170,6 +171,27 @@ export default function AdminPanel() {
       setMessage('Error en sincronización');
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleUpdateKnockout() {
+    setUpdatingKnockout(true);
+    setMessage('');
+    try {
+      const res = await fetch(`${API_URL}/api/admin/update-knockout-teams`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey
+        }
+      });
+      const data = await res.json();
+      setMessage(data.message || data.error);
+      if (res.ok) fetchData();
+    } catch (error) {
+      setMessage('Error al actualizar equipos');
+    } finally {
+      setUpdatingKnockout(false);
     }
   }
 
@@ -264,8 +286,6 @@ export default function AdminPanel() {
       const body: any = {
         homeTeam: formData.get('homeTeam'),
         awayTeam: formData.get('awayTeam'),
-        homeFlag: `${formData.get('homeFlag1')},${formData.get('homeFlag2')}`,
-        awayFlag: `${formData.get('awayFlag1')},${formData.get('awayFlag2')}`,
         startTime: isoWithTimezone,
         homeScore: formData.get('homeScore') ? parseInt(formData.get('homeScore') as string) : null,
         awayScore: formData.get('awayScore') ? parseInt(formData.get('awayScore') as string) : null,
@@ -333,22 +353,24 @@ export default function AdminPanel() {
                 <input name="awayTeam" defaultValue={match?.awayTeam} required className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-white/60 text-sm mb-1">Color 1 Local</label>
-                <div className="flex gap-2">
-                  <input name="homeFlag1" type="color" defaultValue={match?.homeFlag?.split(',')[0] || '#00ff00'} className="w-10 h-10 rounded-lg cursor-pointer" />
-                  <input name="homeFlag2" type="color" defaultValue={match?.homeFlag?.split(',')[1] || '#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
+            {!isEdit && (
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-white/60 text-sm mb-1">Color 1 Local</label>
+                  <div className="flex gap-2">
+                    <input name="homeFlag1" type="color" defaultValue={'#00ff00'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                    <input name="homeFlag2" type="color" defaultValue={'#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-white/60 text-sm mb-1">Color 1 Visitante</label>
+                  <div className="flex gap-2">
+                    <input name="awayFlag1" type="color" defaultValue={'#ff0000'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                    <input name="awayFlag2" type="color" defaultValue={'#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-white/60 text-sm mb-1">Color 1 Visitante</label>
-                <div className="flex gap-2">
-                  <input name="awayFlag1" type="color" defaultValue={match?.awayFlag?.split(',')[0] || '#ff0000'} className="w-10 h-10 rounded-lg cursor-pointer" />
-                  <input name="awayFlag2" type="color" defaultValue={match?.awayFlag?.split(',')[1] || '#ffffff'} className="w-10 h-10 rounded-lg cursor-pointer" />
-                </div>
-              </div>
-            </div>
+            )}
             <div className="mb-4">
               <label className="block text-white/60 text-sm mb-1">Fecha y Hora</label>
               <input name="startTime" type="datetime-local" defaultValue={match?.startTime ? new Date(match.startTime).toISOString().slice(0, 16) : ''} required className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
@@ -1046,7 +1068,7 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {activeTab === 'sync' && (
+            {activeTab === 'sync' && (<>
               <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
                 <div className="text-6xl mb-4">🔄</div>
                 <h3 className="text-xl font-bold text-white mb-2">Sincronizar con API-Football</h3>
@@ -1061,7 +1083,21 @@ export default function AdminPanel() {
                   {syncing ? 'Sincronizando...' : 'Sincronizar ahora'}
                 </button>
               </div>
-            )}
+              <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 text-center mt-4">
+                <div className="text-6xl mb-4">🏆</div>
+                <h3 className="text-xl font-bold text-white mb-2">Actualizar 16vos de Final</h3>
+                <p className="text-white/60 mb-6">
+                  Actualiza los nombres y banderas de los partidos de 16vos con los equipos clasificados
+                </p>
+                <button
+                  onClick={handleUpdateKnockout}
+                  disabled={updatingKnockout}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-400 hover:to-blue-500 disabled:opacity-50"
+                >
+                  {updatingKnockout ? 'Actualizando...' : 'Actualizar 16vos'}
+                </button>
+              </div>
+            </>)}
           </>
         )}
       </div>

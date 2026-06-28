@@ -605,27 +605,27 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
     { homeTeam: 'Algeria', homeFlag: 'dz', awayTeam: 'Austria', awayFlag: 'at', startTime: new Date('2026-06-28T02:00:00Z'), groupStage: 'Group J', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
     { homeTeam: 'Jordan', homeFlag: 'jo', awayTeam: 'Argentina', awayFlag: 'ar', startTime: new Date('2026-06-28T02:00:00Z'), groupStage: 'Group J', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
     // Round of 32 - June 28
-    { homeTeam: 'Runner-up A', homeFlag: 'globe', awayTeam: 'Runner-up B', awayFlag: 'globe', startTime: new Date('2026-06-28T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
+    { homeTeam: 'South Africa', homeFlag: 'za', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-28T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
     // Round of 32 - June 29
-    { homeTeam: 'Winner C', homeFlag: 'globe', awayTeam: 'Runner-up F', awayFlag: 'globe', startTime: new Date('2026-06-29T17:00:00Z'), groupStage: 'Round of 32', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
-    { homeTeam: 'Winner E', homeFlag: 'globe', awayTeam: 'Best 3rd A/B/C/D/F', awayFlag: 'globe', startTime: new Date('2026-06-29T20:30:00Z'), groupStage: 'Round of 32', venueName: 'Gillette Stadium', venueCity: 'Foxborough', venueCountry: 'USA' },
-    { homeTeam: 'Winner F', homeFlag: 'globe', awayTeam: 'Runner-up C', awayFlag: 'globe', startTime: new Date('2026-06-30T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio BBVA', venueCity: 'Monterrey', venueCountry: 'Mexico' },
+    { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Japan', awayFlag: 'jp', startTime: new Date('2026-06-29T17:00:00Z'), groupStage: 'Round of 32', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'Paraguay', awayFlag: 'py', startTime: new Date('2026-06-29T20:30:00Z'), groupStage: 'Round of 32', venueName: 'Gillette Stadium', venueCity: 'Foxborough', venueCountry: 'USA' },
+    { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-06-30T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio BBVA', venueCity: 'Monterrey', venueCountry: 'Mexico' },
     // Round of 32 - June 30
-    { homeTeam: 'Runner-up E', homeFlag: 'globe', awayTeam: 'Runner-up I', awayFlag: 'globe', startTime: new Date('2026-06-30T17:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
-    { homeTeam: 'Winner I', homeFlag: 'globe', awayTeam: 'Best 3rd C/D/F/G/H', awayFlag: 'globe', startTime: new Date('2026-06-30T21:00:00Z'), groupStage: 'Round of 32', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
-    { homeTeam: 'Winner A', homeFlag: 'globe', awayTeam: 'Best 3rd C/E/F/H/I', awayFlag: 'globe', startTime: new Date('2026-07-01T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio Azteca', venueCity: 'Mexico City', venueCountry: 'Mexico' },
+    { homeTeam: 'Ivory Coast', homeFlag: 'ci', awayTeam: 'Norway', awayFlag: 'no', startTime: new Date('2026-06-30T17:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
+    { homeTeam: 'France', homeFlag: 'fr', awayTeam: 'Sweden', awayFlag: 'se', startTime: new Date('2026-06-30T21:00:00Z'), groupStage: 'Round of 32', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'Ecuador', awayFlag: 'ec', startTime: new Date('2026-07-01T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio Azteca', venueCity: 'Mexico City', venueCountry: 'Mexico' },
     // Round of 32 - July 1
-    { homeTeam: 'Winner L', homeFlag: 'globe', awayTeam: 'Best 3rd E/H/I/J/K', awayFlag: 'globe', startTime: new Date('2026-07-01T16:00:00Z'), groupStage: 'Round of 32', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
-    { homeTeam: 'Winner G', homeFlag: 'globe', awayTeam: 'Best 3rd A/E/H/I/J', awayFlag: 'globe', startTime: new Date('2026-07-01T20:00:00Z'), groupStage: 'Round of 32', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
-    { homeTeam: 'Winner D', homeFlag: 'globe', awayTeam: 'Best 3rd B/E/F/I/J', awayFlag: 'globe', startTime: new Date('2026-07-02T00:00:00Z'), groupStage: 'Round of 32', venueName: "Levi's Stadium", venueCity: 'Santa Clara', venueCountry: 'USA' },
+    { homeTeam: 'England', homeFlag: 'gb', awayTeam: 'DR Congo', awayFlag: 'cd', startTime: new Date('2026-07-01T16:00:00Z'), groupStage: 'Round of 32', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Belgium', homeFlag: 'be', awayTeam: 'Senegal', awayFlag: 'sn', startTime: new Date('2026-07-01T20:00:00Z'), groupStage: 'Round of 32', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Bosnia and Herzegovina', awayFlag: 'ba', startTime: new Date('2026-07-02T00:00:00Z'), groupStage: 'Round of 32', venueName: "Levi's Stadium", venueCity: 'Santa Clara', venueCountry: 'USA' },
     // Round of 32 - July 2
-    { homeTeam: 'Winner H', homeFlag: 'globe', awayTeam: 'Runner-up J', awayFlag: 'globe', startTime: new Date('2026-07-02T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
-    { homeTeam: 'Runner-up K', homeFlag: 'globe', awayTeam: 'Runner-up L', awayFlag: 'globe', startTime: new Date('2026-07-02T23:00:00Z'), groupStage: 'Round of 32', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
-    { homeTeam: 'Winner B', homeFlag: 'globe', awayTeam: 'Best 3rd E/F/G/I/J', awayFlag: 'globe', startTime: new Date('2026-07-03T03:00:00Z'), groupStage: 'Round of 32', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
+    { homeTeam: 'Spain', homeFlag: 'es', awayTeam: 'Austria', awayFlag: 'at', startTime: new Date('2026-07-02T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
+    { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Croatia', awayFlag: 'hr', startTime: new Date('2026-07-02T23:00:00Z'), groupStage: 'Round of 32', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Switzerland', homeFlag: 'ch', awayTeam: 'Algeria', awayFlag: 'dz', startTime: new Date('2026-07-03T03:00:00Z'), groupStage: 'Round of 32', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
     // Round of 32 - July 3
-    { homeTeam: 'Runner-up D', homeFlag: 'globe', awayTeam: 'Runner-up G', awayFlag: 'globe', startTime: new Date('2026-07-03T18:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
-    { homeTeam: 'Winner J', homeFlag: 'globe', awayTeam: 'Runner-up H', awayFlag: 'globe', startTime: new Date('2026-07-03T22:00:00Z'), groupStage: 'Round of 32', venueName: 'Hard Rock Stadium', venueCity: 'Miami Gardens', venueCountry: 'USA' },
-    { homeTeam: 'Winner K', homeFlag: 'globe', awayTeam: 'Best 3rd D/E/I/J/L', awayFlag: 'globe', startTime: new Date('2026-07-04T01:30:00Z'), groupStage: 'Round of 32', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Egypt', awayFlag: 'eg', startTime: new Date('2026-07-03T18:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
+    { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'Cape Verde', awayFlag: 'cv', startTime: new Date('2026-07-03T22:00:00Z'), groupStage: 'Round of 32', venueName: 'Hard Rock Stadium', venueCity: 'Miami Gardens', venueCountry: 'USA' },
+    { homeTeam: 'Colombia', homeFlag: 'co', awayTeam: 'Ghana', awayFlag: 'gh', startTime: new Date('2026-07-04T01:30:00Z'), groupStage: 'Round of 32', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
     // Round of 16 - July 4-7
     { homeTeam: 'Winner M73', homeFlag: 'globe', awayTeam: 'Winner M75', awayFlag: 'globe', startTime: new Date('2026-07-04T17:00:00Z'), groupStage: 'Round of 16', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
     { homeTeam: 'Winner M74', homeFlag: 'globe', awayTeam: 'Winner M77', awayFlag: 'globe', startTime: new Date('2026-07-04T21:00:00Z'), groupStage: 'Round of 16', venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia', venueCountry: 'USA' },
@@ -709,6 +709,89 @@ router.post('/seed-worldcup', adminAuth, async (req: Request, res: Response) => 
   } catch (error) {
     console.error('Seed error:', error);
     res.status(500).json({ error: 'Seeding failed' });
+  }
+});
+
+router.post('/update-knockout-teams', adminAuth, async (req: Request, res: Response) => {
+  const worldCupMatches = [
+    // Round of 32 - June 28
+    { homeTeam: 'South Africa', homeFlag: 'za', awayTeam: 'Canada', awayFlag: 'ca', startTime: new Date('2026-06-28T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
+    // Round of 32 - June 29
+    { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Japan', awayFlag: 'jp', startTime: new Date('2026-06-29T17:00:00Z'), groupStage: 'Round of 32', venueName: 'NRG Stadium', venueCity: 'Houston', venueCountry: 'USA' },
+    { homeTeam: 'Germany', homeFlag: 'de', awayTeam: 'Paraguay', awayFlag: 'py', startTime: new Date('2026-06-29T20:30:00Z'), groupStage: 'Round of 32', venueName: 'Gillette Stadium', venueCity: 'Foxborough', venueCountry: 'USA' },
+    { homeTeam: 'Netherlands', homeFlag: 'nl', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-06-30T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio BBVA', venueCity: 'Monterrey', venueCountry: 'Mexico' },
+    // Round of 32 - June 30
+    { homeTeam: 'Ivory Coast', homeFlag: 'ci', awayTeam: 'Norway', awayFlag: 'no', startTime: new Date('2026-06-30T17:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
+    { homeTeam: 'France', homeFlag: 'fr', awayTeam: 'Sweden', awayFlag: 'se', startTime: new Date('2026-06-30T21:00:00Z'), groupStage: 'Round of 32', venueName: 'MetLife Stadium', venueCity: 'East Rutherford', venueCountry: 'USA' },
+    { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'Ecuador', awayFlag: 'ec', startTime: new Date('2026-07-01T01:00:00Z'), groupStage: 'Round of 32', venueName: 'Estadio Azteca', venueCity: 'Mexico City', venueCountry: 'Mexico' },
+    // Round of 32 - July 1
+    { homeTeam: 'England', homeFlag: 'gb', awayTeam: 'DR Congo', awayFlag: 'cd', startTime: new Date('2026-07-01T16:00:00Z'), groupStage: 'Round of 32', venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta', venueCountry: 'USA' },
+    { homeTeam: 'Belgium', homeFlag: 'be', awayTeam: 'Senegal', awayFlag: 'sn', startTime: new Date('2026-07-01T20:00:00Z'), groupStage: 'Round of 32', venueName: 'Lumen Field', venueCity: 'Seattle', venueCountry: 'USA' },
+    { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Bosnia and Herzegovina', awayFlag: 'ba', startTime: new Date('2026-07-02T00:00:00Z'), groupStage: 'Round of 32', venueName: "Levi's Stadium", venueCity: 'Santa Clara', venueCountry: 'USA' },
+    // Round of 32 - July 2
+    { homeTeam: 'Spain', homeFlag: 'es', awayTeam: 'Austria', awayFlag: 'at', startTime: new Date('2026-07-02T19:00:00Z'), groupStage: 'Round of 32', venueName: 'SoFi Stadium', venueCity: 'Inglewood', venueCountry: 'USA' },
+    { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Croatia', awayFlag: 'hr', startTime: new Date('2026-07-02T23:00:00Z'), groupStage: 'Round of 32', venueName: 'BMO Field', venueCity: 'Toronto', venueCountry: 'Canada' },
+    { homeTeam: 'Switzerland', homeFlag: 'ch', awayTeam: 'Algeria', awayFlag: 'dz', startTime: new Date('2026-07-03T03:00:00Z'), groupStage: 'Round of 32', venueName: 'BC Place', venueCity: 'Vancouver', venueCountry: 'Canada' },
+    // Round of 32 - July 3
+    { homeTeam: 'Australia', homeFlag: 'au', awayTeam: 'Egypt', awayFlag: 'eg', startTime: new Date('2026-07-03T18:00:00Z'), groupStage: 'Round of 32', venueName: 'AT&T Stadium', venueCity: 'Arlington', venueCountry: 'USA' },
+    { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'Cape Verde', awayFlag: 'cv', startTime: new Date('2026-07-03T22:00:00Z'), groupStage: 'Round of 32', venueName: 'Hard Rock Stadium', venueCity: 'Miami Gardens', venueCountry: 'USA' },
+    { homeTeam: 'Colombia', homeFlag: 'co', awayTeam: 'Ghana', awayFlag: 'gh', startTime: new Date('2026-07-04T01:30:00Z'), groupStage: 'Round of 32', venueName: 'Arrowhead Stadium', venueCity: 'Kansas City', venueCountry: 'USA' },
+  ];
+
+  try {
+    const existingKnockout = await prisma.match.findMany({
+      where: { groupStage: 'Round of 32' },
+      orderBy: { id: 'asc' }
+    });
+
+    let updated = 0;
+    let created = 0;
+
+    for (let i = 0; i < worldCupMatches.length; i++) {
+      const match = worldCupMatches[i];
+      const existing = existingKnockout[i];
+
+      if (existing) {
+        await prisma.match.update({
+          where: { id: existing.id },
+          data: {
+            homeTeam: match.homeTeam,
+            homeFlag: match.homeFlag,
+            awayTeam: match.awayTeam,
+            awayFlag: match.awayFlag,
+            startTime: match.startTime,
+            venueName: match.venueName,
+            venueCity: match.venueCity,
+            venueCountry: match.venueCountry,
+          }
+        });
+        updated++;
+      } else {
+        const externalId = `wc2026-knockout-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        await prisma.match.create({
+          data: {
+            externalId,
+            homeTeam: match.homeTeam,
+            homeFlag: match.homeFlag,
+            awayTeam: match.awayTeam,
+            awayFlag: match.awayFlag,
+            startTime: match.startTime,
+            groupStage: match.groupStage,
+            isKnockout: true,
+            venueName: match.venueName,
+            venueCity: match.venueCity,
+            venueCountry: match.venueCountry,
+            status: 'SCHEDULED'
+          }
+        });
+        created++;
+      }
+    }
+
+    res.json({ message: 'Knockout teams updated successfully', updated, created });
+  } catch (error) {
+    console.error('Update knockout error:', error);
+    res.status(500).json({ error: 'Failed to update knockout teams' });
   }
 });
 
