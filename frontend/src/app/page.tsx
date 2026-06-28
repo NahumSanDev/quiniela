@@ -563,7 +563,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             className="max-w-2xl mx-auto"
           >
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
+            <div className="flex gap-2 mb-2 flex-wrap justify-center">
               {[
                 { value: 'all', label: 'General' },
                 { value: 'groups-j1', label: 'Jornada 1' },
@@ -584,6 +584,29 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            {(rankingRound === 'knockout' || ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Final'].includes(rankingRound)) && (
+              <div className="flex gap-2 mb-4 flex-wrap justify-center">
+                {[
+                  { value: 'Round of 32', label: '16vos' },
+                  { value: 'Round of 16', label: '8vos' },
+                  { value: 'Quarter-final', label: 'Cuartos' },
+                  { value: 'Semi-final', label: 'Semis' },
+                  { value: 'Final', label: 'Final' },
+                ].map((round) => (
+                  <button
+                    key={round.value}
+                    onClick={() => setRankingRound(round.value)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                      rankingRound === round.value
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white/5 text-white/40 hover:bg-white/10'
+                    }`}
+                  >
+                    {round.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <RankingTable ranking={ranking} />
           </motion.div>
         )}

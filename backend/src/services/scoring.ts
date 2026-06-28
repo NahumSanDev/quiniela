@@ -213,6 +213,10 @@ export async function getRanking(limit: number = 10, round?: string): Promise<Ra
     stageFilter = {
       groupStage: { in: ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'] }
     };
+  } else if (round === 'Round of 32' || round === 'Round of 16' || round === 'Quarter-final' || round === 'Semi-final') {
+    stageFilter = { groupStage: round };
+  } else if (round === 'Final') {
+    stageFilter = { groupStage: { in: ['Final', 'Third Place'] } };
   }
 
   const roundMatchIds = (
