@@ -12,6 +12,8 @@ export interface KnockoutData {
   firstGoalMinute: number | null;
   redCard: boolean | null;
   totalCards: number | null;
+  extraTime: boolean | null;
+  penaltyShootout: boolean | null;
 }
 
 interface MatchCardProps {
@@ -32,6 +34,8 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
   const [firstGoalMinute, setFirstGoalMinute] = useState<number | null>(prediction?.firstGoalMinute ?? null);
   const [redCard, setRedCard] = useState<boolean | null>(prediction?.redCard ?? null);
   const [totalCards, setTotalCards] = useState<number | null>(prediction?.totalCards ?? null);
+  const [extraTime, setExtraTime] = useState<boolean | null>(prediction?.extraTime ?? null);
+  const [penaltyShootout, setPenaltyShootout] = useState<boolean | null>(prediction?.penaltyShootout ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isFinished = match.status === 'FINISHED';
@@ -86,6 +90,8 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
       firstGoalMinute,
       redCard,
       totalCards,
+      extraTime,
+      penaltyShootout,
     } : undefined;
 
     setIsSubmitting(true);
@@ -462,6 +468,62 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
                 min="0" max="20"
                 placeholder="Ej: 4"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+1 pt</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setExtraTime(extraTime === true ? null : true)}
+                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                    extraTime === true
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  Sí
+                </button>
+                <button
+                  onClick={() => setExtraTime(extraTime === false ? null : false)}
+                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                    extraTime === false
+                      ? 'bg-red-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-white/80 mb-1.5">
+                ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+1 pt</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPenaltyShootout(penaltyShootout === true ? null : true)}
+                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                    penaltyShootout === true
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  Sí
+                </button>
+                <button
+                  onClick={() => setPenaltyShootout(penaltyShootout === false ? null : false)}
+                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                    penaltyShootout === false
+                      ? 'bg-red-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  No
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

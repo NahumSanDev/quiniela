@@ -238,6 +238,8 @@ export default function Home() {
         body.firstGoalMinute = knockout.firstGoalMinute;
         body.redCard = knockout.redCard;
         body.totalCards = knockout.totalCards;
+        body.extraTime = knockout.extraTime;
+        body.penaltyShootout = knockout.penaltyShootout;
       }
 
       const res = await fetch(`${API_URL}/api/matches/${matchId}/prediction`, {

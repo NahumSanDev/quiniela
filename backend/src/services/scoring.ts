@@ -49,6 +49,8 @@ export interface KnockoutPredictionInput {
   firstGoalMinute?: number | null;
   redCard?: boolean | null;
   totalCards?: number | null;
+  extraTime?: boolean | null;
+  penaltyShootout?: boolean | null;
 }
 
 export function calculateKnockoutPoints(
@@ -62,6 +64,8 @@ export function calculateKnockoutPoints(
     firstGoalMinute: number | null;
     redCard: boolean | null;
     totalCards: number | null;
+    extraTime: boolean | null;
+    penaltyShootout: boolean | null;
   }
 ): number {
   let extra = 0;
@@ -116,6 +120,14 @@ export function calculateKnockoutPoints(
   if (prediction.totalCards !== null && prediction.totalCards !== undefined && match.totalCards !== null) {
     const diff = Math.abs(prediction.totalCards - match.totalCards);
     if (diff <= 1) extra += 2;
+  }
+
+  if (prediction.extraTime !== null && prediction.extraTime !== undefined && match.extraTime !== null) {
+    if (prediction.extraTime === match.extraTime) extra += 1;
+  }
+
+  if (prediction.penaltyShootout !== null && prediction.penaltyShootout !== undefined && match.penaltyShootout !== null) {
+    if (prediction.penaltyShootout === match.penaltyShootout) extra += 1;
   }
 
   return extra;

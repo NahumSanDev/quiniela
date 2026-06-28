@@ -105,7 +105,7 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards } = req.body;
+    const { homeScore, awayScore, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
 
     let groupId = rawGroupId;
 
@@ -154,6 +154,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
       if (firstGoalMinute !== undefined) { updateData.firstGoalMinute = firstGoalMinute; createData.firstGoalMinute = firstGoalMinute; }
       if (redCard !== undefined) { updateData.redCard = redCard; createData.redCard = redCard; }
       if (totalCards !== undefined) { updateData.totalCards = totalCards; createData.totalCards = totalCards; }
+      if (extraTime !== undefined) { updateData.extraTime = extraTime; createData.extraTime = extraTime; }
+      if (penaltyShootout !== undefined) { updateData.penaltyShootout = penaltyShootout; createData.penaltyShootout = penaltyShootout; }
     }
 
     const prediction = await prisma.prediction.upsert({

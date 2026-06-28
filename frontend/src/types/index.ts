@@ -17,6 +17,8 @@ export interface Match {
   firstGoalMinute: number | null;
   redCard: boolean | null;
   totalCards: number | null;
+  extraTime: boolean | null;
+  penaltyShootout: boolean | null;
   predictions?: { id: number; homeScore: number; awayScore: number; points: number; bonus: boolean; userId: string }[];
 }
 
@@ -36,6 +38,8 @@ export interface Prediction {
   firstGoalMinute?: number | null;
   redCard?: boolean | null;
   totalCards?: number | null;
+  extraTime?: boolean | null;
+  penaltyShootout?: boolean | null;
   updatedAt?: string;
 }
 
