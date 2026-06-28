@@ -94,6 +94,7 @@ export default function Home() {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'matches' | 'ranking'>('matches');
+  const [matchFilter, setMatchFilter] = useState<'all' | 'groups' | 'knockout'>('knockout');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
 
@@ -474,33 +475,59 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {matches.length === 0 ? (
-              <p className="col-span-full text-center text-white/40 py-20">
-                No hay partidos disponibles
-              </p>
-            ) : (
-              matches.map((match, index) => {
-                  const userPrediction = match.predictions?.find(
-                    (p: any) => p.userId === user?.id
-                  );
-                  return (
-                    <motion.div
-                      key={match.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-<MatchCard
+            <div className="flex gap-2 mb-6 justify-center">
+              <button
+                onClick={() => setMatchFilter('knockout')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                  matchFilter === 'knockout'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                🏆 Eliminatorias
+              </button>
+              <button
+                onClick={() => setMatchFilter('groups')}
+                className={`px-4 py-2 rounded-xl font-semibold transition-all ${
+                  matchFilter === 'groups'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                }`}
+              >
+                📋 Fase de Grupos
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {matches.length === 0 ? (
+                <p className="col-span-full text-center text-white/40 py-20">
+                  No hay partidos disponibles
+                </p>
+              ) : (
+                matches
+                  .filter(m => matchFilter === 'all' ? true : matchFilter === 'knockout' ? m.isKnockout : !m.isKnockout)
+                  .map((match, index) => {
+                    const userPrediction = match.predictions?.find(
+                      (p: any) => p.userId === user?.id
+                    );
+                    return (
+                      <motion.div
+                        key={match.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <MatchCard
                           match={match}
                           prediction={userPrediction}
                           onPredict={handlePredict}
                         />
-                    </motion.div>
-                  );
-                })
-            )}
+                      </motion.div>
+                    );
+                  })
+              )}
+            </div>
           </motion.div>
         ) : (
           <motion.div
