@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { calculateKnockoutPoints } from '../services/scoring';
+import { calculateKnockoutPoints, getGroupRules, defaultKnockoutBetConfig } from '../services/scoring';
 
 const execAsync = promisify(exec);
 
@@ -163,7 +163,12 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
 
         let extraPoints = 0;
         if (match.isKnockout) {
-          extraPoints = calculateKnockoutPoints(prediction, match);
+          let enabledBets = defaultKnockoutBetConfig();
+          if (prediction.groupId) {
+            const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
+            enabledBets = getGroupRules(group);
+          }
+          extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
         }
 
         const totalNewPoints = points + extraPoints;

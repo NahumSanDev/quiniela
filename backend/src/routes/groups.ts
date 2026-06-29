@@ -300,4 +300,70 @@ router.put('/:id/members/:memberId/role', async (req: Request, res: Response) =>
   }
 });
 
+router.get('/:id/rules', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id } = req.params;
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!membership) {
+      res.status(403).json({ error: 'No eres miembro de este grupo' });
+      return;
+    }
+
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
+
+    const rules = group.rules || {};
+    res.json(rules);
+  } catch (error) {
+    console.error('Error fetching group rules:', error);
+    res.status(500).json({ error: 'Error al obtener reglas' });
+  }
+});
+
+router.put('/:id/rules', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id } = req.params;
+
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!membership || (membership.role !== 'ADMIN' && group.ownerId !== userId)) {
+      res.status(403).json({ error: 'Solo administradores pueden modificar reglas' });
+      return;
+    }
+
+    const { knockoutBets } = req.body;
+
+    const updated = await prisma.group.update({
+      where: { id },
+      data: { rules: { knockoutBets } }
+    });
+
+    res.json(updated.rules || {});
+  } catch (error) {
+    console.error('Error updating group rules:', error);
+    res.status(500).json({ error: 'Error al actualizar reglas' });
+  }
+});
+
 export default router;

@@ -51,6 +51,34 @@ export interface User {
   points: number;
 }
 
+export interface KnockoutBetConfig {
+  totalGoals: boolean;
+  bothTeamsScore: boolean;
+  cleanSheet: boolean;
+  halfTimeScore: boolean;
+  firstGoalTeam: boolean;
+  firstGoalMinute: boolean;
+  redCard: boolean;
+  totalCards: boolean;
+  extraTime: boolean;
+  penaltyShootout: boolean;
+}
+
+export function defaultKnockoutBetConfig(): KnockoutBetConfig {
+  return {
+    totalGoals: true,
+    bothTeamsScore: true,
+    cleanSheet: true,
+    halfTimeScore: true,
+    firstGoalTeam: true,
+    firstGoalMinute: true,
+    redCard: true,
+    totalCards: true,
+    extraTime: true,
+    penaltyShootout: true,
+  };
+}
+
 export interface RankingEntry {
   rank: number;
   userId: number;

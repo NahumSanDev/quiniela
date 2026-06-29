@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { KnockoutBetConfig, defaultKnockoutBetConfig } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -11,6 +12,7 @@ interface Group {
   code: string;
   ownerId: string;
   isOwner: boolean;
+  myRole?: string;
   members: { id: string; user: { id: string; name: string | null; image: string | null; points: number } }[];
 }
 
@@ -38,6 +40,9 @@ export default function GroupsPage() {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loadingRanking, setLoadingRanking] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
+  const [rulesGroup, setRulesGroup] = useState<string | null>(null);
+  const [rules, setRules] = useState<KnockoutBetConfig>(defaultKnockoutBetConfig());
+  const [savingRules, setSavingRules] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -197,6 +202,49 @@ export default function GroupsPage() {
     setRanking([]);
   }
 
+  async function openRules(groupId: string) {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${groupId}/rules`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRules({ ...defaultKnockoutBetConfig(), ...(data.knockoutBets || {}) });
+        setRulesGroup(groupId);
+      }
+    } catch (error) {
+      console.error('Error loading rules:', error);
+    }
+  }
+
+  async function saveRules() {
+    if (!rulesGroup) return;
+    const token = localStorage.getItem('token');
+    setSavingRules(true);
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${rulesGroup}/rules`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ knockoutBets: rules })
+      });
+      if (res.ok) {
+        setRulesGroup(null);
+      }
+    } catch (error) {
+      console.error('Error saving rules:', error);
+    } finally {
+      setSavingRules(false);
+    }
+  }
+
+  function toggleBet(bet: keyof KnockoutBetConfig) {
+    setRules(prev => ({ ...prev, [bet]: !prev[bet] }));
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -295,6 +343,11 @@ export default function GroupsPage() {
                   <button onClick={() => viewGroupRanking(group.id)} className="flex-1 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl hover:bg-emerald-500/30 text-sm font-semibold">
                     Ver Ranking
                   </button>
+                  {(group.isOwner || group.myRole === 'ADMIN') && (
+                    <button onClick={() => openRules(group.id)} className="py-2 px-4 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 text-sm">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
+                  )}
                   {group.isOwner ? (
                     <button onClick={() => deleteGroup(group.id)} className="py-2 px-4 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 text-sm">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -366,6 +419,52 @@ export default function GroupsPage() {
                 {ranking.length === 0 && <p className="text-center text-white/40 py-8">No hay miembros en este grupo</p>}
               </div>
             )}
+          </motion.div>
+        </div>
+      )}
+      {rulesGroup && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Reglas del Grupo</h2>
+              <button onClick={() => setRulesGroup(null)} className="text-white/60 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p className="text-white/50 text-sm mb-4">Activa o desactiva las apuestas extra para eliminatorias:</p>
+            <div className="space-y-3 mb-6">
+              {[
+                { key: 'totalGoals' as keyof KnockoutBetConfig, label: 'Goles Totales', pts: '+2' },
+                { key: 'bothTeamsScore' as keyof KnockoutBetConfig, label: 'Ambos Anotan', pts: '+1' },
+                { key: 'cleanSheet' as keyof KnockoutBetConfig, label: 'Valla Invicta', pts: '+1' },
+                { key: 'halfTimeScore' as keyof KnockoutBetConfig, label: 'Marcador Medio Tiempo', pts: '+2' },
+                { key: 'firstGoalTeam' as keyof KnockoutBetConfig, label: 'Equipo Primer Gol', pts: '+1' },
+                { key: 'firstGoalMinute' as keyof KnockoutBetConfig, label: 'Minuto Primer Gol', pts: '+2' },
+                { key: 'redCard' as keyof KnockoutBetConfig, label: 'Tarjeta Roja', pts: '+1' },
+                { key: 'totalCards' as keyof KnockoutBetConfig, label: 'Total Tarjetas', pts: '+2' },
+                { key: 'extraTime' as keyof KnockoutBetConfig, label: 'Tiempos Extra', pts: '+1' },
+                { key: 'penaltyShootout' as keyof KnockoutBetConfig, label: 'Tanda de Penales', pts: '+1' },
+              ].map(bet => (
+                <div key={bet.key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div>
+                    <span className="text-white font-medium">{bet.label}</span>
+                    <span className="text-amber-400 text-sm ml-2">{bet.pts}</span>
+                  </div>
+                  <button
+                    onClick={() => toggleBet(bet.key)}
+                    className={`relative w-12 h-6 rounded-full transition-colors ${rules[bet.key] ? 'bg-emerald-500' : 'bg-white/20'}`}
+                  >
+                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${rules[bet.key] ? 'left-7' : 'left-1'}`} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={saveRules} disabled={savingRules} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
+                {savingRules ? 'Guardando...' : 'Guardar'}
+              </button>
+              <button onClick={() => setRulesGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
+            </div>
           </motion.div>
         </div>
       )}
