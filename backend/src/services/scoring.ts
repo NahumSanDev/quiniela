@@ -210,24 +210,47 @@ async function getBetsForPrediction(groupId: string | null, matchId: number): Pr
     where: { groupId_matchId: { groupId, matchId } }
   });
 
-  if (!config) return { bets: defaultKnockoutBetConfig(), rules: null };
+  if (config) {
+    const bets: KnockoutBetConfig = {
+      score: config.score,
+      totalGoals: config.totalGoals,
+      bothTeamsScore: config.bothTeamsScore,
+      cleanSheet: config.cleanSheet,
+      halfTimeScore: config.halfTimeScore,
+      firstGoalTeam: config.firstGoalTeam,
+      firstGoalMinute: config.firstGoalMinute,
+      redCard: config.redCard,
+      totalCards: config.totalCards,
+      extraTime: config.extraTime,
+      penaltyShootout: config.penaltyShootout,
+    };
+    const rules: KnockoutBetRules | null = config.rules as KnockoutBetRules | null;
+    return { bets, rules };
+  }
 
-  const bets: KnockoutBetConfig = {
-    score: config.score,
-    totalGoals: config.totalGoals,
-    bothTeamsScore: config.bothTeamsScore,
-    cleanSheet: config.cleanSheet,
-    halfTimeScore: config.halfTimeScore,
-    firstGoalTeam: config.firstGoalTeam,
-    firstGoalMinute: config.firstGoalMinute,
-    redCard: config.redCard,
-    totalCards: config.totalCards,
-    extraTime: config.extraTime,
-    penaltyShootout: config.penaltyShootout,
-  };
-  const rules: KnockoutBetRules | null = config.rules as KnockoutBetRules | null;
+  // fall back to match-level default betConfig
+  const match = await prisma.match.findUnique({ where: { id: matchId } });
+  if (match?.betConfig) {
+    const bc = match.betConfig as any;
+    return {
+      bets: {
+        score: bc.score ?? true,
+        totalGoals: bc.totalGoals ?? true,
+        bothTeamsScore: bc.bothTeamsScore ?? true,
+        cleanSheet: bc.cleanSheet ?? true,
+        halfTimeScore: bc.halfTimeScore ?? true,
+        firstGoalTeam: bc.firstGoalTeam ?? true,
+        firstGoalMinute: bc.firstGoalMinute ?? true,
+        redCard: bc.redCard ?? true,
+        totalCards: bc.totalCards ?? true,
+        extraTime: bc.extraTime ?? true,
+        penaltyShootout: bc.penaltyShootout ?? true,
+      },
+      rules: (bc.rules as KnockoutBetRules) ?? null,
+    };
+  }
 
-  return { bets, rules };
+  return { bets: defaultKnockoutBetConfig(), rules: null };
 }
 
 export async function processMatchResults(matchId: number): Promise<void> {
