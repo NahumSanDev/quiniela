@@ -563,15 +563,15 @@ export default function GroupsPage() {
 
       {matchBetsGroup && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl">
-            <div className="flex justify-between items-center mb-4">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4 shrink-0">
               <h2 className="text-xl font-bold text-white">Apuestas por Partido</h2>
               <button onClick={() => setMatchBetsGroup(null)} className="text-white/60 hover:text-white">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <p className="text-white/50 text-sm mb-4">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
-            <div className="flex flex-wrap gap-1 mb-4 p-2 bg-white/5 rounded-xl">
+            <p className="text-white/50 text-sm mb-4 shrink-0">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
+            <div className="flex flex-wrap gap-1 mb-4 p-2 bg-white/5 rounded-xl shrink-0">
               {(['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as (keyof KnockoutBetConfig)[]).map(bet => (
                 <button
                   key={bet}
@@ -591,7 +591,7 @@ export default function GroupsPage() {
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
               </div>
             ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto pr-1 mb-4">
+              <div className="space-y-2 overflow-y-auto pr-1 mb-4 flex-1 min-h-0">
                 {matchBets.map((mb, i) => (
                   <div key={mb.matchId} className="bg-white/5 rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
@@ -613,7 +613,7 @@ export default function GroupsPage() {
                 ))}
               </div>
             )}
-            <div className="flex gap-3">
+            <div className="flex gap-3 shrink-0">
               <button onClick={saveMatchBets} disabled={savingMatchBets || loadingMatchBets} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
                 {savingMatchBets ? 'Guardando...' : 'Guardar'}
               </button>
