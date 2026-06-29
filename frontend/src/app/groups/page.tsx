@@ -655,7 +655,10 @@ export default function GroupsPage() {
                       </button>
                     </div>
                     <div className="flex flex-col gap-1">
-                      {BET_KEYS.map(bet => (
+                      {BET_KEYS.map(bet => {
+                        const mbRules = (mb as any).rules as KnockoutBetRules | undefined;
+                        const pts = bet !== 'score' ? (mbRules?.[bet as keyof KnockoutBetRules] ?? defaultKnockoutBetRules()[bet as keyof KnockoutBetRules]) : null;
+                        return (
                         <label key={bet} className="flex items-center gap-2 text-sm cursor-pointer select-none">
                           <input
                             type="checkbox"
@@ -666,8 +669,13 @@ export default function GroupsPage() {
                           <span className={mb[bet] as boolean ? 'text-emerald-400' : 'text-white/40'}>
                             {BET_LABELS[bet]}
                           </span>
+                          {pts !== null && (
+                            <span className={`text-xs ${mb[bet] as boolean ? 'text-emerald-500/70' : 'text-white/20'}`}>
+                              ({pts} pts)
+                            </span>
+                          )}
                         </label>
-                      ))}
+                      );})}
                     </div>
                   </div>
                 ))}
@@ -697,7 +705,12 @@ export default function GroupsPage() {
             </div>
             <p className="text-white/50 text-sm mb-4">Puntos que otorga cada acierto:</p>
             <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
-              {(Object.keys(defaultKnockoutBetRules()) as (keyof KnockoutBetRules)[]).map(key => (
+              {(Object.keys(defaultKnockoutBetRules()) as (keyof KnockoutBetRules)[])
+                .filter(key => {
+                  const mb = matchBets.find(m => m.matchId === rulesMatchId);
+                  return mb ? mb[key as keyof MatchBetEntry] as boolean : true;
+                })
+                .map(key => (
                 <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
                   <span className="text-white text-sm">{BET_LABELS[key] || key}</span>
                   <input
