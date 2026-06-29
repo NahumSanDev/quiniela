@@ -27,15 +27,38 @@ model User {
 }
 
 model Group {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  ownerId     String
-  rules       Json?
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  name         String
+  code         String   @unique
+  ownerId      String
+  useExtraBets Boolean  @default(false)
+  rules        Json?
+  createdAt    DateTime @default(now())
 
-  members     GroupMember[]
-  predictions Prediction[]
+  members          GroupMember[]
+  predictions      Prediction[]
+  matchBetConfigs  GroupMatchBetConfig[]
+}
+
+model GroupMatchBetConfig {
+  id              String  @id @default(cuid())
+  groupId         String
+  matchId         Int
+  totalGoals      Boolean @default(true)
+  bothTeamsScore  Boolean @default(true)
+  cleanSheet      Boolean @default(true)
+  halfTimeScore   Boolean @default(true)
+  firstGoalTeam   Boolean @default(true)
+  firstGoalMinute Boolean @default(true)
+  redCard         Boolean @default(true)
+  totalCards      Boolean @default(true)
+  extraTime       Boolean @default(true)
+  penaltyShootout Boolean @default(true)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, matchId])
 }
 
 model GroupMember {
@@ -78,8 +101,9 @@ model Match {
   createdAt         DateTime @default(now())
   updatedAt         DateTime  @updatedAt
 
-  predictions Prediction[]
-  matchLogs   MatchLog[]
+  predictions        Prediction[]
+  matchLogs          MatchLog[]
+  groupBetConfigs    GroupMatchBetConfig[]
 
   @@index([startTime])
   @@index([status])

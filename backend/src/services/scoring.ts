@@ -1,4 +1,4 @@
-import { PrismaClient, Match, Prediction, Group } from '@prisma/client';
+import { PrismaClient, Match, Prediction } from '@prisma/client';
 
 export interface KnockoutBetConfig {
   totalGoals: boolean;
@@ -28,10 +28,12 @@ export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   };
 }
 
-export function getGroupRules(group: Group | null): KnockoutBetConfig {
-  if (!group || !group.rules) return defaultKnockoutBetConfig();
-  const rules = group.rules as any;
-  return { ...defaultKnockoutBetConfig(), ...(rules.knockoutBets || {}) } as KnockoutBetConfig;
+export function disabledKnockoutBetConfig(): KnockoutBetConfig {
+  return {
+    totalGoals: false, bothTeamsScore: false, cleanSheet: false,
+    halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
+    redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
+  };
 }
 
 const prisma = new PrismaClient();
@@ -169,10 +171,30 @@ export function calculateKnockoutPoints(
   return extra;
 }
 
-async function getBetsForPrediction(groupId: string | null): Promise<KnockoutBetConfig> {
+async function getBetsForPrediction(groupId: string | null, matchId: number): Promise<KnockoutBetConfig> {
   if (!groupId) return defaultKnockoutBetConfig();
+
   const group = await prisma.group.findUnique({ where: { id: groupId } });
-  return getGroupRules(group);
+  if (!group || !group.useExtraBets) return disabledKnockoutBetConfig();
+
+  const config = await prisma.groupMatchBetConfig.findUnique({
+    where: { groupId_matchId: { groupId, matchId } }
+  });
+
+  if (!config) return defaultKnockoutBetConfig();
+
+  return {
+    totalGoals: config.totalGoals,
+    bothTeamsScore: config.bothTeamsScore,
+    cleanSheet: config.cleanSheet,
+    halfTimeScore: config.halfTimeScore,
+    firstGoalTeam: config.firstGoalTeam,
+    firstGoalMinute: config.firstGoalMinute,
+    redCard: config.redCard,
+    totalCards: config.totalCards,
+    extraTime: config.extraTime,
+    penaltyShootout: config.penaltyShootout,
+  };
 }
 
 export async function processMatchResults(matchId: number): Promise<void> {
@@ -199,7 +221,7 @@ export async function processMatchResults(matchId: number): Promise<void> {
 
     let extraPoints = 0;
     if (match.isKnockout) {
-      const enabledBets = await getBetsForPrediction(prediction.groupId);
+      const enabledBets = await getBetsForPrediction(prediction.groupId, match.id);
       extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
     }
 

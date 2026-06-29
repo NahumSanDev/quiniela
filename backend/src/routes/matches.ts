@@ -14,8 +14,13 @@ router.get('/', async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
+    const where: any = {};
+    if (req.query.isKnockout === 'true') where.isKnockout = true;
+    if (req.query.isKnockout === 'false') where.isKnockout = false;
+
     const [matches, total] = await Promise.all([
       prisma.match.findMany({
+        where,
         orderBy: { startTime: 'asc' },
         skip,
         take: limit,

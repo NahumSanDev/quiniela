@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-  import { MatchCard, KnockoutData } from '../components/MatchCard';
+import { MatchCard, KnockoutData } from '../components/MatchCard';
 import { RankingTable } from '../components/RankingTable';
-import { Match, RankingEntry } from '../types';
+import { Match, RankingEntry, KnockoutBetConfig } from '../types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -23,6 +23,7 @@ interface Group {
   code: string;
   isOwner: boolean;
   myRole: string;
+  useExtraBets?: boolean;
 }
 
 function HowItWorksModal({ onClose }: { onClose: () => void }) {
@@ -97,6 +98,7 @@ export default function Home() {
   const [matchFilter, setMatchFilter] = useState<string>('knockout');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
+  const [groupMatchConfigs, setGroupMatchConfigs] = useState<Record<number, KnockoutBetConfig>>({});
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -197,11 +199,32 @@ export default function Home() {
     }
   }
 
-  function selectGroup(groupId: string | null) {
+  async function selectGroup(groupId: string | null) {
     setSelectedGroup(groupId);
+    setGroupMatchConfigs({});
     if (groupId) {
       setRankingRound('all');
       localStorage.setItem('selectedGroup', groupId);
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`${API_URL}/api/groups/${groupId}/match-bets`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const configs = await res.json();
+          const map: Record<number, KnockoutBetConfig> = {};
+          for (const c of configs) {
+            map[c.matchId] = {
+              totalGoals: c.totalGoals, bothTeamsScore: c.bothTeamsScore,
+              cleanSheet: c.cleanSheet, halfTimeScore: c.halfTimeScore,
+              firstGoalTeam: c.firstGoalTeam, firstGoalMinute: c.firstGoalMinute,
+              redCard: c.redCard, totalCards: c.totalCards,
+              extraTime: c.extraTime, penaltyShootout: c.penaltyShootout,
+            };
+          }
+          setGroupMatchConfigs(map);
+        }
+      } catch {}
     } else {
       localStorage.removeItem('selectedGroup');
     }
@@ -552,6 +575,7 @@ export default function Home() {
                           match={match}
                           prediction={userPrediction}
                           onPredict={handlePredict}
+                          enabledBets={selectedGroup ? groupMatchConfigs[match.id] : undefined}
                         />
                       </motion.div>
                     );

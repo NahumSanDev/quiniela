@@ -64,6 +64,30 @@ export interface KnockoutBetConfig {
   penaltyShootout: boolean;
 }
 
+export interface GroupMatchBetConfig {
+  id: string;
+  groupId: string;
+  matchId: number;
+  match: {
+    id: number;
+    homeTeam: string;
+    awayTeam: string;
+    groupStage: string | null;
+    startTime: string;
+    isKnockout: boolean;
+  };
+  totalGoals: boolean;
+  bothTeamsScore: boolean;
+  cleanSheet: boolean;
+  halfTimeScore: boolean;
+  firstGoalTeam: boolean;
+  firstGoalMinute: boolean;
+  redCard: boolean;
+  totalCards: boolean;
+  extraTime: boolean;
+  penaltyShootout: boolean;
+}
+
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
     totalGoals: true,

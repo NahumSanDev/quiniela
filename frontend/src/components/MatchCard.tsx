@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Match, Prediction } from '../types';
+import { Match, Prediction, KnockoutBetConfig } from '../types';
 
 export interface KnockoutData {
   totalGoals: number | null;
@@ -20,9 +20,10 @@ interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
   onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) => void;
+  enabledBets?: KnockoutBetConfig;
 }
 
-export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
+export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCardProps) {
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
   const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
@@ -274,257 +275,277 @@ export function MatchCard({ match, prediction, onPredict }: MatchCardProps) {
           >
             <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Predicciones Extra — Eliminatorias</p>
 
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Goles Totales <span className="text-amber-400 font-semibold">+2 pts</span>
-              </label>
-              <input
-                type="number"
-                value={totalGoals ?? ''}
-                onChange={(e) => setTotalGoals(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
-                min="0" max="20"
-                placeholder="Ej: 3"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                ¿Ambos Equipos Anotan? <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2">
-                {[
-                  { value: true, label: 'Sí' },
-                  { value: false, label: 'No' },
-                ].map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    onClick={() => setBothTeamsScore(bothTeamsScore === opt.value ? null : opt.value)}
-                    className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      bothTeamsScore === opt.value
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-                {bothTeamsScore !== null && (
-                  <button
-                    onClick={() => setBothTeamsScore(null)}
-                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Portería en Cero <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  { value: 'home', label: match.homeTeam.substring(0, 12) },
-                  { value: 'away', label: match.awayTeam.substring(0, 12) },
-                  { value: 'both', label: 'Ambos' },
-                  { value: 'none', label: 'Ninguno' },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setCleanSheet(cleanSheet === opt.value ? null : opt.value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      cleanSheet === opt.value
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-                {cleanSheet !== null && (
-                  <button
-                    onClick={() => setCleanSheet(null)}
-                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Marcador al Medio Tiempo <span className="text-amber-400 font-semibold">+2 pts</span>
-              </label>
-              <div className="flex items-center gap-2 max-w-[200px]">
+            {(!enabledBets || enabledBets.totalGoals) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Goles Totales <span className="text-amber-400 font-semibold">+2 pts</span>
+                </label>
                 <input
                   type="number"
-                  value={htHomeScore ?? ''}
-                  onChange={(e) => setHtHomeScore(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white text-center outline-none focus:ring-2 focus:ring-amber-500"
-                  min="0" max="10" placeholder="Local"
+                  value={totalGoals ?? ''}
+                  onChange={(e) => setTotalGoals(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
+                  min="0" max="20"
+                  placeholder="Ej: 3"
                 />
-                <span className="text-white/40 font-bold">-</span>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.bothTeamsScore) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  ¿Ambos Equipos Anotan? <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { value: true, label: 'Sí' },
+                    { value: false, label: 'No' },
+                  ].map((opt) => (
+                    <button
+                      key={String(opt.value)}
+                      onClick={() => setBothTeamsScore(bothTeamsScore === opt.value ? null : opt.value)}
+                      className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        bothTeamsScore === opt.value
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {bothTeamsScore !== null && (
+                    <button
+                      onClick={() => setBothTeamsScore(null)}
+                      className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.cleanSheet) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Portería en Cero <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: 'home', label: match.homeTeam.substring(0, 12) },
+                    { value: 'away', label: match.awayTeam.substring(0, 12) },
+                    { value: 'both', label: 'Ambos' },
+                    { value: 'none', label: 'Ninguno' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setCleanSheet(cleanSheet === opt.value ? null : opt.value)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        cleanSheet === opt.value
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {cleanSheet !== null && (
+                    <button
+                      onClick={() => setCleanSheet(null)}
+                      className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.halfTimeScore) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Marcador al Medio Tiempo <span className="text-amber-400 font-semibold">+2 pts</span>
+                </label>
+                <div className="flex items-center gap-2 max-w-[200px]">
+                  <input
+                    type="number"
+                    value={htHomeScore ?? ''}
+                    onChange={(e) => setHtHomeScore(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-3 py-2 bg-white/10 rounded-lg text-white text-center outline-none focus:ring-2 focus:ring-amber-500"
+                    min="0" max="10" placeholder="Local"
+                  />
+                  <span className="text-white/40 font-bold">-</span>
+                  <input
+                    type="number"
+                    value={htAwayScore ?? ''}
+                    onChange={(e) => setHtAwayScore(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-3 py-2 bg-white/10 rounded-lg text-white text-center outline-none focus:ring-2 focus:ring-amber-500"
+                    min="0" max="10" placeholder="Visitante"
+                  />
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.firstGoalTeam) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { value: match.homeTeam, label: match.homeTeam.substring(0, 12) },
+                    { value: match.awayTeam, label: match.awayTeam.substring(0, 12) },
+                    { value: 'ninguno', label: 'Ninguno' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setFirstGoalTeam(firstGoalTeam === opt.value ? null : opt.value)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        firstGoalTeam === opt.value
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {firstGoalTeam !== null && (
+                    <button
+                      onClick={() => setFirstGoalTeam(null)}
+                      className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.firstGoalMinute) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Minuto del Primer Gol <span className="text-amber-400 font-semibold">+2 pts</span>
+                </label>
                 <input
                   type="number"
-                  value={htAwayScore ?? ''}
-                  onChange={(e) => setHtAwayScore(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white text-center outline-none focus:ring-2 focus:ring-amber-500"
-                  min="0" max="10" placeholder="Visitante"
+                  value={firstGoalMinute ?? ''}
+                  onChange={(e) => setFirstGoalMinute(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
+                  min="0" max="120"
+                  placeholder="Ej: 15"
                 />
               </div>
-            </div>
+            )}
 
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2">
-                {[
-                  { value: match.homeTeam, label: match.homeTeam.substring(0, 12) },
-                  { value: match.awayTeam, label: match.awayTeam.substring(0, 12) },
-                  { value: 'ninguno', label: 'Ninguno' },
-                ].map((opt) => (
+            {(!enabledBets || enabledBets.redCard) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { value: true, label: 'Sí' },
+                    { value: false, label: 'No' },
+                  ].map((opt) => (
+                    <button
+                      key={String(opt.value)}
+                      onClick={() => setRedCard(redCard === opt.value ? null : opt.value)}
+                      className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        redCard === opt.value
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  {redCard !== null && (
+                    <button
+                      onClick={() => setRedCard(null)}
+                      className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.totalCards) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  Total Tarjetas <span className="text-amber-400 font-semibold">+2 pts</span>
+                </label>
+                <input
+                  type="number"
+                  value={totalCards ?? ''}
+                  onChange={(e) => setTotalCards(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
+                  min="0" max="20"
+                  placeholder="Ej: 4"
+                />
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.extraTime) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2">
                   <button
-                    key={opt.value}
-                    onClick={() => setFirstGoalTeam(firstGoalTeam === opt.value ? null : opt.value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      firstGoalTeam === opt.value
-                        ? 'bg-amber-500 text-white'
+                    onClick={() => setExtraTime(extraTime === true ? null : true)}
+                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                      extraTime === true
+                        ? 'bg-emerald-500 text-white'
                         : 'bg-white/10 text-white/60 hover:bg-white/20'
                     }`}
                   >
-                    {opt.label}
+                    Sí
                   </button>
-                ))}
-                {firstGoalTeam !== null && (
                   <button
-                    onClick={() => setFirstGoalTeam(null)}
-                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Minuto del Primer Gol <span className="text-amber-400 font-semibold">+2 pts</span>
-              </label>
-              <input
-                type="number"
-                value={firstGoalMinute ?? ''}
-                onChange={(e) => setFirstGoalMinute(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
-                min="0" max="120"
-                placeholder="Ej: 15"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2">
-                {[
-                  { value: true, label: 'Sí' },
-                  { value: false, label: 'No' },
-                ].map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    onClick={() => setRedCard(redCard === opt.value ? null : opt.value)}
-                    className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      redCard === opt.value
-                        ? 'bg-amber-500 text-white'
+                    onClick={() => setExtraTime(extraTime === false ? null : false)}
+                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                      extraTime === false
+                        ? 'bg-red-500 text-white'
                         : 'bg-white/10 text-white/60 hover:bg-white/20'
                     }`}
                   >
-                    {opt.label}
+                    No
                   </button>
-                ))}
-                {redCard !== null && (
+                </div>
+              </div>
+            )}
+
+            {(!enabledBets || enabledBets.penaltyShootout) && (
+              <div>
+                <label className="block text-sm text-white/80 mb-1.5">
+                  ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+1 pt</span>
+                </label>
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setRedCard(null)}
-                    className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10"
+                    onClick={() => setPenaltyShootout(penaltyShootout === true ? null : true)}
+                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                      penaltyShootout === true
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
                   >
-                    ✕
+                    Sí
                   </button>
-                )}
+                  <button
+                    onClick={() => setPenaltyShootout(penaltyShootout === false ? null : false)}
+                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                      penaltyShootout === false
+                        ? 'bg-red-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                Total Tarjetas <span className="text-amber-400 font-semibold">+2 pts</span>
-              </label>
-              <input
-                type="number"
-                value={totalCards ?? ''}
-                onChange={(e) => setTotalCards(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 bg-white/10 rounded-lg text-white outline-none focus:ring-2 focus:ring-amber-500"
-                min="0" max="20"
-                placeholder="Ej: 4"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setExtraTime(extraTime === true ? null : true)}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                    extraTime === true
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  Sí
-                </button>
-                <button
-                  onClick={() => setExtraTime(extraTime === false ? null : false)}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                    extraTime === false
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-white/80 mb-1.5">
-                ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+1 pt</span>
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPenaltyShootout(penaltyShootout === true ? null : true)}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                    penaltyShootout === true
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  Sí
-                </button>
-                <button
-                  onClick={() => setPenaltyShootout(penaltyShootout === false ? null : false)}
-                  className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                    penaltyShootout === false
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20'
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-            </div>
+            )}
           </motion.div>
         )}
 

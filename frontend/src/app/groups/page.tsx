@@ -13,7 +13,23 @@ interface Group {
   ownerId: string;
   isOwner: boolean;
   myRole?: string;
+  useExtraBets?: boolean;
   members: { id: string; user: { id: string; name: string | null; image: string | null; points: number } }[];
+}
+
+interface MatchBetEntry {
+  matchId: number;
+  match: { id: number; homeTeam: string; awayTeam: string; groupStage: string | null; startTime: string; isKnockout: boolean };
+  totalGoals: boolean;
+  bothTeamsScore: boolean;
+  cleanSheet: boolean;
+  halfTimeScore: boolean;
+  firstGoalTeam: boolean;
+  firstGoalMinute: boolean;
+  redCard: boolean;
+  totalCards: boolean;
+  extraTime: boolean;
+  penaltyShootout: boolean;
 }
 
 interface RankingEntry {
@@ -40,9 +56,13 @@ export default function GroupsPage() {
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loadingRanking, setLoadingRanking] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
-  const [rulesGroup, setRulesGroup] = useState<string | null>(null);
-  const [rules, setRules] = useState<KnockoutBetConfig>(defaultKnockoutBetConfig());
-  const [savingRules, setSavingRules] = useState(false);
+  const [settingsGroup, setSettingsGroup] = useState<string | null>(null);
+  const [useExtraBets, setUseExtraBets] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [matchBetsGroup, setMatchBetsGroup] = useState<string | null>(null);
+  const [matchBets, setMatchBets] = useState<MatchBetEntry[]>([]);
+  const [loadingMatchBets, setLoadingMatchBets] = useState(false);
+  const [savingMatchBets, setSavingMatchBets] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -202,47 +222,125 @@ export default function GroupsPage() {
     setRanking([]);
   }
 
-  async function openRules(groupId: string) {
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch(`${API_URL}/api/groups/${groupId}/rules`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRules({ ...defaultKnockoutBetConfig(), ...(data.knockoutBets || {}) });
-        setRulesGroup(groupId);
-      }
-    } catch (error) {
-      console.error('Error loading rules:', error);
-    }
+  async function openSettings(group: Group) {
+    setSettingsGroup(group.id);
+    setUseExtraBets(group.useExtraBets ?? false);
   }
 
-  async function saveRules() {
-    if (!rulesGroup) return;
+  async function saveSettings() {
+    if (!settingsGroup) return;
     const token = localStorage.getItem('token');
-    setSavingRules(true);
+    setSavingSettings(true);
     try {
-      const res = await fetch(`${API_URL}/api/groups/${rulesGroup}/rules`, {
+      const res = await fetch(`${API_URL}/api/groups/${settingsGroup}/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ knockoutBets: rules })
+        body: JSON.stringify({ useExtraBets })
       });
       if (res.ok) {
-        setRulesGroup(null);
+        setSettingsGroup(null);
+        fetchGroups();
       }
     } catch (error) {
-      console.error('Error saving rules:', error);
+      console.error('Error saving settings:', error);
     } finally {
-      setSavingRules(false);
+      setSavingSettings(false);
     }
   }
 
-  function toggleBet(bet: keyof KnockoutBetConfig) {
-    setRules(prev => ({ ...prev, [bet]: !prev[bet] }));
+  async function openMatchBets(groupId: string) {
+    const token = localStorage.getItem('token');
+    setLoadingMatchBets(true);
+    setMatchBetsGroup(groupId);
+    try {
+      const res = await fetch(`${API_URL}/api/groups/${groupId}/match-bets`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+
+        const existing = new Map<number, any>(data.map((c: any) => [c.matchId, c]));
+
+        const matchesRes = await fetch(`${API_URL}/api/matches?isKnockout=true`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (matchesRes.ok) {
+          const matchesData = await matchesRes.json();
+          const allMatches = matchesData.data || matchesData;
+          const merged: MatchBetEntry[] = (Array.isArray(allMatches) ? allMatches : []).filter((m: any) => m.isKnockout).map((m: any) => {
+            const cfg = existing.get(m.id) as any;
+            return {
+              matchId: m.id,
+              match: m,
+              totalGoals: cfg?.totalGoals ?? true,
+              bothTeamsScore: cfg?.bothTeamsScore ?? true,
+              cleanSheet: cfg?.cleanSheet ?? true,
+              halfTimeScore: cfg?.halfTimeScore ?? true,
+              firstGoalTeam: cfg?.firstGoalTeam ?? true,
+              firstGoalMinute: cfg?.firstGoalMinute ?? true,
+              redCard: cfg?.redCard ?? true,
+              totalCards: cfg?.totalCards ?? true,
+              extraTime: cfg?.extraTime ?? true,
+              penaltyShootout: cfg?.penaltyShootout ?? true,
+            };
+          });
+          setMatchBets(merged);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading match bets:', error);
+    } finally {
+      setLoadingMatchBets(false);
+    }
+  }
+
+  function toggleMatchBet(index: number, bet: keyof KnockoutBetConfig) {
+    setMatchBets(prev => prev.map((mb, i) =>
+      i === index ? { ...mb, [bet]: !mb[bet] } : mb
+    ));
+  }
+
+  function toggleAllMatchBet(bet: keyof KnockoutBetConfig, value: boolean) {
+    setMatchBets(prev => prev.map(mb => ({ ...mb, [bet]: value })));
+  }
+
+  async function saveMatchBets() {
+    if (!matchBetsGroup) return;
+    const token = localStorage.getItem('token');
+    setSavingMatchBets(true);
+    try {
+      const configs = matchBets.map(mb => ({
+        matchId: mb.matchId,
+        totalGoals: mb.totalGoals,
+        bothTeamsScore: mb.bothTeamsScore,
+        cleanSheet: mb.cleanSheet,
+        halfTimeScore: mb.halfTimeScore,
+        firstGoalTeam: mb.firstGoalTeam,
+        firstGoalMinute: mb.firstGoalMinute,
+        redCard: mb.redCard,
+        totalCards: mb.totalCards,
+        extraTime: mb.extraTime,
+        penaltyShootout: mb.penaltyShootout,
+      }));
+      const res = await fetch(`${API_URL}/api/groups/${matchBetsGroup}/match-bets/batch`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ configs })
+      });
+      if (res.ok) {
+        setMatchBetsGroup(null);
+      }
+    } catch (error) {
+      console.error('Error saving match bets:', error);
+    } finally {
+      setSavingMatchBets(false);
+    }
   }
 
   if (loading) {
@@ -344,7 +442,7 @@ export default function GroupsPage() {
                     Ver Ranking
                   </button>
                   {(group.isOwner || group.myRole === 'ADMIN') && (
-                    <button onClick={() => openRules(group.id)} className="py-2 px-4 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 text-sm">
+                    <button onClick={() => openSettings(group)} className="py-2 px-4 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 text-sm">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     </button>
                   )}
@@ -422,48 +520,104 @@ export default function GroupsPage() {
           </motion.div>
         </div>
       )}
-      {rulesGroup && (
+      {settingsGroup && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Reglas del Grupo</h2>
-              <button onClick={() => setRulesGroup(null)} className="text-white/60 hover:text-white">
+              <h2 className="text-xl font-bold text-white">Configuración del Grupo</h2>
+              <button onClick={() => setSettingsGroup(null)} className="text-white/60 hover:text-white">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <p className="text-white/50 text-sm mb-4">Activa o desactiva las apuestas extra para eliminatorias:</p>
-            <div className="space-y-3 mb-6">
-              {[
-                { key: 'totalGoals' as keyof KnockoutBetConfig, label: 'Goles Totales', pts: '+2' },
-                { key: 'bothTeamsScore' as keyof KnockoutBetConfig, label: 'Ambos Anotan', pts: '+1' },
-                { key: 'cleanSheet' as keyof KnockoutBetConfig, label: 'Valla Invicta', pts: '+1' },
-                { key: 'halfTimeScore' as keyof KnockoutBetConfig, label: 'Marcador Medio Tiempo', pts: '+2' },
-                { key: 'firstGoalTeam' as keyof KnockoutBetConfig, label: 'Equipo Primer Gol', pts: '+1' },
-                { key: 'firstGoalMinute' as keyof KnockoutBetConfig, label: 'Minuto Primer Gol', pts: '+2' },
-                { key: 'redCard' as keyof KnockoutBetConfig, label: 'Tarjeta Roja', pts: '+1' },
-                { key: 'totalCards' as keyof KnockoutBetConfig, label: 'Total Tarjetas', pts: '+2' },
-                { key: 'extraTime' as keyof KnockoutBetConfig, label: 'Tiempos Extra', pts: '+1' },
-                { key: 'penaltyShootout' as keyof KnockoutBetConfig, label: 'Tanda de Penales', pts: '+1' },
-              ].map(bet => (
-                <div key={bet.key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                  <div>
-                    <span className="text-white font-medium">{bet.label}</span>
-                    <span className="text-amber-400 text-sm ml-2">{bet.pts}</span>
-                  </div>
-                  <button
-                    onClick={() => toggleBet(bet.key)}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${rules[bet.key] ? 'bg-emerald-500' : 'bg-white/20'}`}
-                  >
-                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${rules[bet.key] ? 'left-7' : 'left-1'}`} />
-                  </button>
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                <div>
+                  <p className="text-white font-medium">Apuestas Extra</p>
+                  <p className="text-white/50 text-sm">Activar apuestas adicionales en eliminatorias</p>
                 </div>
-              ))}
+                <button
+                  onClick={() => setUseExtraBets(!useExtraBets)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${useExtraBets ? 'bg-emerald-500' : 'bg-white/20'}`}
+                >
+                  <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${useExtraBets ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+              {useExtraBets && (
+                <button
+                  onClick={() => { setSettingsGroup(null); openMatchBets(settingsGroup); }}
+                  className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 font-semibold text-sm"
+                >
+                  Configurar Apuestas por Partido
+                </button>
+              )}
             </div>
             <div className="flex gap-3">
-              <button onClick={saveRules} disabled={savingRules} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
-                {savingRules ? 'Guardando...' : 'Guardar'}
+              <button onClick={saveSettings} disabled={savingSettings} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
+                {savingSettings ? 'Guardando...' : 'Guardar'}
               </button>
-              <button onClick={() => setRulesGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
+              <button onClick={() => setSettingsGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {matchBetsGroup && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Apuestas por Partido</h2>
+              <button onClick={() => setMatchBetsGroup(null)} className="text-white/60 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p className="text-white/50 text-sm mb-4">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
+            <div className="flex flex-wrap gap-1 mb-4 p-2 bg-white/5 rounded-xl">
+              {(['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as (keyof KnockoutBetConfig)[]).map(bet => (
+                <button
+                  key={bet}
+                  onClick={() => {
+                    const allOn = matchBets.every(mb => mb[bet]);
+                    toggleAllMatchBet(bet, !allOn);
+                  }}
+                  className="px-2 py-1 text-xs rounded-lg bg-white/10 text-white/70 hover:bg-white/20"
+                >
+                  {bet === 'totalGoals' ? 'Goles' : bet === 'bothTeamsScore' ? 'Ambos' : bet === 'cleanSheet' ? 'Valla' : bet === 'halfTimeScore' ? '1T' : bet === 'firstGoalTeam' ? '1er Gol Eq' : bet === 'firstGoalMinute' ? '1er Gol Min' : bet === 'redCard' ? 'Roja' : bet === 'totalCards' ? 'Tars' : bet === 'extraTime' ? 'TE' : 'Penales'}
+                </button>
+              ))}
+              <span className="text-white/30 text-xs ml-auto self-center">Click para toggle todos</span>
+            </div>
+            {loadingMatchBets ? (
+              <div className="flex justify-center py-8">
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-1 mb-4">
+                {matchBets.map((mb, i) => (
+                  <div key={mb.matchId} className="bg-white/5 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-medium text-sm">{mb.match.homeTeam} vs {mb.match.awayTeam}</span>
+                      <span className="text-white/40 text-xs">{mb.match.groupStage}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as (keyof KnockoutBetConfig)[]).map(bet => (
+                        <button
+                          key={bet}
+                          onClick={() => toggleMatchBet(i, bet)}
+                          className={`px-2 py-1 text-xs rounded-lg font-semibold transition-all ${mb[bet] ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-white/40 border border-white/5'}`}
+                        >
+                          {bet === 'totalGoals' ? 'Goles' : bet === 'bothTeamsScore' ? 'Ambos' : bet === 'cleanSheet' ? 'Valla' : bet === 'halfTimeScore' ? '1T' : bet === 'firstGoalTeam' ? '1er Gol' : bet === 'firstGoalMinute' ? 'Min' : bet === 'redCard' ? 'Roja' : bet === 'totalCards' ? 'Tarj' : bet === 'extraTime' ? 'TE' : 'Pen'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={saveMatchBets} disabled={savingMatchBets || loadingMatchBets} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
+                {savingMatchBets ? 'Guardando...' : 'Guardar'}
+              </button>
+              <button onClick={() => setMatchBetsGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
             </div>
           </motion.div>
         </div>

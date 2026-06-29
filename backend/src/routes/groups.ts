@@ -366,4 +366,111 @@ router.put('/:id/rules', async (req: Request, res: Response) => {
   }
 });
 
+router.put('/:id/settings', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id } = req.params;
+    const { useExtraBets } = req.body;
+
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!membership || (membership.role !== 'ADMIN' && group.ownerId !== userId)) {
+      res.status(403).json({ error: 'Solo administradores pueden modificar configuración' });
+      return;
+    }
+
+    const updated = await prisma.group.update({
+      where: { id },
+      data: { useExtraBets: useExtraBets === true }
+    });
+
+    res.json({ useExtraBets: updated.useExtraBets });
+  } catch (error) {
+    console.error('Error updating group settings:', error);
+    res.status(500).json({ error: 'Error al actualizar configuración' });
+  }
+});
+
+router.get('/:id/match-bets', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id } = req.params;
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!membership) {
+      res.status(403).json({ error: 'No eres miembro de este grupo' });
+      return;
+    }
+
+    const configs = await prisma.groupMatchBetConfig.findMany({
+      where: { groupId: id },
+      include: {
+        match: {
+          select: { id: true, homeTeam: true, awayTeam: true, groupStage: true, startTime: true, isKnockout: true }
+        }
+      },
+      orderBy: { match: { startTime: 'asc' } }
+    });
+
+    res.json(configs);
+  } catch (error) {
+    console.error('Error fetching match bets:', error);
+    res.status(500).json({ error: 'Error al obtener configuración de partidos' });
+  }
+});
+
+router.put('/:id/match-bets/batch', async (req: Request, res: Response) => {
+  const userId = authenticate(req, res);
+  if (!userId) return;
+
+  try {
+    const { id } = req.params;
+    const { configs } = req.body;
+
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
+
+    const membership = await prisma.groupMember.findUnique({
+      where: { userId_groupId: { userId, groupId: id } }
+    });
+
+    if (!membership || (membership.role !== 'ADMIN' && group.ownerId !== userId)) {
+      res.status(403).json({ error: 'Solo administradores pueden modificar configuración' });
+      return;
+    }
+
+    for (const cfg of configs) {
+      const { matchId, ...bets } = cfg;
+      await prisma.groupMatchBetConfig.upsert({
+        where: { groupId_matchId: { groupId: id, matchId } },
+        update: bets,
+        create: { groupId: id, matchId, ...bets }
+      });
+    }
+
+    res.json({ message: 'Configuración guardada' });
+  } catch (error) {
+    console.error('Error saving match bets:', error);
+    res.status(500).json({ error: 'Error al guardar configuración' });
+  }
+});
+
 export default router;
