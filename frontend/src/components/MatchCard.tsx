@@ -20,7 +20,7 @@ interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
   onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) => void;
-  enabledBets?: KnockoutBetConfig;
+  enabledBets: KnockoutBetConfig;
 }
 
 export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCardProps) {
@@ -275,7 +275,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
           >
             <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Predicciones Extra — Eliminatorias</p>
 
-            {(!enabledBets || enabledBets.totalGoals) && (
+            {enabledBets.totalGoals && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Goles Totales <span className="text-amber-400 font-semibold">+2 pts</span>
@@ -291,7 +291,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.bothTeamsScore) && (
+            {enabledBets.bothTeamsScore && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   ¿Ambos Equipos Anotan? <span className="text-amber-400 font-semibold">+1 pt</span>
@@ -325,7 +325,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.cleanSheet) && (
+            {enabledBets.cleanSheet && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Portería en Cero <span className="text-amber-400 font-semibold">+1 pt</span>
@@ -361,7 +361,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.halfTimeScore) && (
+            {enabledBets.halfTimeScore && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Marcador al Medio Tiempo <span className="text-amber-400 font-semibold">+2 pts</span>
@@ -386,7 +386,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.firstGoalTeam) && (
+            {enabledBets.firstGoalTeam && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+1 pt</span>
@@ -421,7 +421,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.firstGoalMinute) && (
+            {enabledBets.firstGoalMinute && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Minuto del Primer Gol <span className="text-amber-400 font-semibold">+2 pts</span>
@@ -437,7 +437,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.redCard) && (
+            {enabledBets.redCard && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+1 pt</span>
@@ -471,7 +471,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.totalCards) && (
+            {enabledBets.totalCards && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   Total Tarjetas <span className="text-amber-400 font-semibold">+2 pts</span>
@@ -487,7 +487,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.extraTime) && (
+            {enabledBets.extraTime && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+1 pt</span>
@@ -517,7 +517,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
               </div>
             )}
 
-            {(!enabledBets || enabledBets.penaltyShootout) && (
+            {enabledBets.penaltyShootout && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
                   ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+1 pt</span>

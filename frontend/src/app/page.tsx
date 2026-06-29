@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MatchCard, KnockoutData } from '../components/MatchCard';
+import { defaultKnockoutBetConfig } from '@/types';
 import { RankingTable } from '../components/RankingTable';
 import { Match, RankingEntry, KnockoutBetConfig } from '../types';
 
@@ -575,7 +576,7 @@ export default function Home() {
                           match={match}
                           prediction={userPrediction}
                           onPredict={handlePredict}
-                          enabledBets={selectedGroup ? groupMatchConfigs[match.id] : undefined}
+                          enabledBets={selectedGroup ? (groupMatchConfigs[match.id] ?? defaultKnockoutBetConfig()) : defaultKnockoutBetConfig()}
                         />
                       </motion.div>
                     );
