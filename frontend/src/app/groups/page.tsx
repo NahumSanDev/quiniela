@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { KnockoutBetConfig, defaultKnockoutBetConfig } from '@/types';
+import { KnockoutBetConfig, KnockoutBetRules, defaultKnockoutBetConfig, defaultKnockoutBetRules } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -84,6 +84,8 @@ export default function GroupsPage() {
   const [matchBets, setMatchBets] = useState<MatchBetEntry[]>([]);
   const [loadingMatchBets, setLoadingMatchBets] = useState(false);
   const [savingMatchBets, setSavingMatchBets] = useState(false);
+  const [rulesMatchId, setRulesMatchId] = useState<number | null>(null);
+  const [matchRules, setMatchRules] = useState<KnockoutBetRules>(defaultKnockoutBetRules());
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -329,6 +331,29 @@ export default function GroupsPage() {
     setMatchBets(prev => prev.map(mb => ({ ...mb, [bet]: value })));
   }
 
+  function openMatchRules(matchId: number) {
+    const mb = matchBets.find(m => m.matchId === matchId);
+    if (!mb) return;
+    setRulesMatchId(matchId);
+    const savedRules = (mb as any).rules as KnockoutBetRules | undefined;
+    setMatchRules(savedRules || defaultKnockoutBetRules());
+  }
+
+  function saveMatchRules() {
+    if (rulesMatchId === null) return;
+    setMatchBets(prev => prev.map(mb =>
+      mb.matchId === rulesMatchId ? { ...mb, rules: matchRules } : mb
+    ));
+    setRulesMatchId(null);
+  }
+
+  function updateRule(key: keyof KnockoutBetRules, value: string) {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num >= 0) {
+      setMatchRules(prev => ({ ...prev, [key]: num }));
+    }
+  }
+
   async function saveMatchBets() {
     if (!matchBetsGroup) return;
     const token = localStorage.getItem('token');
@@ -347,6 +372,7 @@ export default function GroupsPage() {
         totalCards: mb.totalCards,
         extraTime: mb.extraTime,
         penaltyShootout: mb.penaltyShootout,
+        ...((mb as any).rules ? { rules: (mb as any).rules } : {}),
       }));
       const res = await fetch(`${API_URL}/api/groups/${matchBetsGroup}/match-bets/batch`, {
         method: 'PUT',
@@ -594,9 +620,10 @@ export default function GroupsPage() {
               </button>
             </div>
             <p className="text-white/50 text-sm mb-4 shrink-0">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
-            <div className="flex flex-wrap gap-3 mb-4 p-3 bg-white/5 rounded-xl shrink-0">
+            <div className="flex flex-col gap-1 mb-4 p-3 bg-white/5 rounded-xl shrink-0">
+              <span className="text-xs text-white/40 mb-1">Activar/Desactivar para todos:</span>
               {BET_KEYS.map(bet => (
-                <label key={bet} className="flex items-center gap-1.5 text-xs text-white/70 cursor-pointer select-none">
+                <label key={bet} className="flex items-center gap-2 text-sm text-white/70 cursor-pointer select-none hover:text-white">
                   <input
                     type="checkbox"
                     checked={matchBets.length > 0 && matchBets.every(mb => mb[bet])}
@@ -604,7 +631,7 @@ export default function GroupsPage() {
                       const allOn = matchBets.every(mb => mb[bet]);
                       toggleAllMatchBet(bet, !allOn);
                     }}
-                    className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                    className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
                   />
                   {BET_LABELS[bet]}
                 </label>
@@ -620,16 +647,21 @@ export default function GroupsPage() {
                   <div key={mb.matchId} className="bg-white/5 rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-white font-medium text-sm">{mb.match.homeTeam} vs {mb.match.awayTeam}</span>
-                      <span className="text-white/40 text-xs">{mb.match.groupStage}</span>
+                      <button
+                        onClick={() => openMatchRules(mb.matchId)}
+                        className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
+                      >
+                        Editar Reglas
+                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-col gap-1">
                       {BET_KEYS.map(bet => (
-                        <label key={bet} className="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                        <label key={bet} className="flex items-center gap-2 text-sm cursor-pointer select-none">
                           <input
                             type="checkbox"
                             checked={mb[bet] as boolean}
                             onChange={() => toggleMatchBet(i, bet as keyof KnockoutBetConfig)}
-                            className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
                           />
                           <span className={mb[bet] as boolean ? 'text-emerald-400' : 'text-white/40'}>
                             {BET_LABELS[bet]}
@@ -646,6 +678,43 @@ export default function GroupsPage() {
                 {savingMatchBets ? 'Guardando...' : 'Guardar'}
               </button>
               <button onClick={() => setMatchBetsGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {rulesMatchId !== null && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60]">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-white">
+                Reglas - {matchBets.find(m => m.matchId === rulesMatchId)?.match.homeTeam} vs{' '}
+                {matchBets.find(m => m.matchId === rulesMatchId)?.match.awayTeam}
+              </h2>
+              <button onClick={() => setRulesMatchId(null)} className="text-white/60 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p className="text-white/50 text-sm mb-4">Puntos que otorga cada acierto:</p>
+            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
+              {(Object.keys(defaultKnockoutBetRules()) as (keyof KnockoutBetRules)[]).map(key => (
+                <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <span className="text-white text-sm">{BET_LABELS[key] || key}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={matchRules[key]}
+                    onChange={(e) => updateRule(key, e.target.value)}
+                    className="w-16 text-center px-2 py-1 bg-white/10 border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { saveMatchRules(); }} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400">
+                Guardar Reglas
+              </button>
+              <button onClick={() => setRulesMatchId(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
             </div>
           </motion.div>
         </div>

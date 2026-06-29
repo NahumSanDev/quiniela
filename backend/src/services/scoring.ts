@@ -92,6 +92,27 @@ export interface KnockoutPredictionInput {
   penaltyShootout?: boolean | null;
 }
 
+export interface KnockoutBetRules {
+  totalGoals: number;
+  bothTeamsScore: number;
+  cleanSheet: number;
+  halfTimeScore: number;
+  firstGoalTeam: number;
+  firstGoalMinute: number;
+  redCard: number;
+  totalCards: number;
+  extraTime: number;
+  penaltyShootout: number;
+}
+
+export function defaultKnockoutBetRules(): KnockoutBetRules {
+  return {
+    totalGoals: 2, bothTeamsScore: 1, cleanSheet: 1, halfTimeScore: 2,
+    firstGoalTeam: 1, firstGoalMinute: 2, redCard: 1, totalCards: 2,
+    extraTime: 1, penaltyShootout: 1,
+  };
+}
+
 export function calculateKnockoutPoints(
   prediction: KnockoutPredictionInput,
   match: {
@@ -106,21 +127,23 @@ export function calculateKnockoutPoints(
     extraTime: boolean | null;
     penaltyShootout: boolean | null;
   },
-  enabledBets?: KnockoutBetConfig | null
+  enabledBets?: KnockoutBetConfig | null,
+  rules?: KnockoutBetRules | null
 ): number {
   let extra = 0;
   const bets = enabledBets || defaultKnockoutBetConfig();
+  const pts = rules || defaultKnockoutBetRules();
 
   if (match.homeScore === null || match.awayScore === null) return 0;
 
   const actualTotal = match.homeScore + match.awayScore;
   if (bets.totalGoals && prediction.totalGoals !== null && prediction.totalGoals !== undefined) {
-    if (prediction.totalGoals === actualTotal) extra += 2;
+    if (prediction.totalGoals === actualTotal) extra += pts.totalGoals;
   }
 
   const bothScored = match.homeScore > 0 && match.awayScore > 0;
   if (bets.bothTeamsScore && prediction.bothTeamsScore !== null && prediction.bothTeamsScore !== undefined) {
-    if (prediction.bothTeamsScore === bothScored) extra += 1;
+    if (prediction.bothTeamsScore === bothScored) extra += pts.bothTeamsScore;
   }
 
   if (bets.cleanSheet && prediction.cleanSheet) {
@@ -129,7 +152,7 @@ export function calculateKnockoutPoints(
     else if (match.homeScore === 0) actualClean = 'home';
     else if (match.awayScore === 0) actualClean = 'away';
     else actualClean = 'none';
-    if (prediction.cleanSheet === actualClean) extra += 1;
+    if (prediction.cleanSheet === actualClean) extra += pts.cleanSheet;
   }
 
   if (bets.halfTimeScore &&
@@ -139,54 +162,57 @@ export function calculateKnockoutPoints(
   ) {
     if (prediction.halfTimeHomeScore === match.halfTimeHomeScore &&
         prediction.halfTimeAwayScore === match.halfTimeAwayScore) {
-      extra += 2;
+      extra += pts.halfTimeScore;
     }
   }
 
   if (bets.firstGoalTeam && prediction.firstGoalTeam && match.firstGoalTeam) {
-    if (prediction.firstGoalTeam === match.firstGoalTeam) extra += 1;
+    if (prediction.firstGoalTeam === match.firstGoalTeam) extra += pts.firstGoalTeam;
   }
 
   if (bets.firstGoalMinute &&
     prediction.firstGoalMinute !== null && prediction.firstGoalMinute !== undefined &&
     match.firstGoalMinute !== null
   ) {
-    if (Math.abs(prediction.firstGoalMinute - match.firstGoalMinute) <= 2) extra += 2;
+    if (Math.abs(prediction.firstGoalMinute - match.firstGoalMinute) <= 2) extra += pts.firstGoalMinute;
   }
 
   if (bets.redCard && prediction.redCard !== null && prediction.redCard !== undefined && match.redCard !== null) {
-    if (prediction.redCard === match.redCard) extra += 1;
+    if (prediction.redCard === match.redCard) extra += pts.redCard;
   }
 
   if (bets.totalCards && prediction.totalCards !== null && prediction.totalCards !== undefined && match.totalCards !== null) {
     const diff = Math.abs(prediction.totalCards - match.totalCards);
-    if (diff <= 1) extra += 2;
+    if (diff <= 1) extra += pts.totalCards;
   }
 
   if (bets.extraTime && prediction.extraTime !== null && prediction.extraTime !== undefined && match.extraTime !== null) {
-    if (prediction.extraTime === match.extraTime) extra += 1;
+    if (prediction.extraTime === match.extraTime) extra += pts.extraTime;
   }
 
   if (bets.penaltyShootout && prediction.penaltyShootout !== null && prediction.penaltyShootout !== undefined && match.penaltyShootout !== null) {
-    if (prediction.penaltyShootout === match.penaltyShootout) extra += 1;
+    if (prediction.penaltyShootout === match.penaltyShootout) extra += pts.penaltyShootout;
   }
 
   return extra;
 }
 
-async function getBetsForPrediction(groupId: string | null, matchId: number): Promise<KnockoutBetConfig> {
-  if (!groupId) return defaultKnockoutBetConfig();
+async function getBetsForPrediction(groupId: string | null, matchId: number): Promise<{
+  bets: KnockoutBetConfig;
+  rules: KnockoutBetRules | null;
+}> {
+  if (!groupId) return { bets: defaultKnockoutBetConfig(), rules: null };
 
   const group = await prisma.group.findUnique({ where: { id: groupId } });
-  if (!group || !group.useExtraBets) return disabledKnockoutBetConfig();
+  if (!group || !group.useExtraBets) return { bets: disabledKnockoutBetConfig(), rules: null };
 
   const config = await prisma.groupMatchBetConfig.findUnique({
     where: { groupId_matchId: { groupId, matchId } }
   });
 
-  if (!config) return defaultKnockoutBetConfig();
+  if (!config) return { bets: defaultKnockoutBetConfig(), rules: null };
 
-  return {
+  const bets: KnockoutBetConfig = {
     score: config.score,
     totalGoals: config.totalGoals,
     bothTeamsScore: config.bothTeamsScore,
@@ -199,6 +225,9 @@ async function getBetsForPrediction(groupId: string | null, matchId: number): Pr
     extraTime: config.extraTime,
     penaltyShootout: config.penaltyShootout,
   };
+  const rules: KnockoutBetRules | null = config.rules as KnockoutBetRules | null;
+
+  return { bets, rules };
 }
 
 export async function processMatchResults(matchId: number): Promise<void> {
@@ -218,9 +247,9 @@ export async function processMatchResults(matchId: number): Promise<void> {
   });
 
   for (const prediction of predictions) {
-    const enabledBets = match.isKnockout
+    const { bets: enabledBets, rules } = match.isKnockout
       ? await getBetsForPrediction(prediction.groupId, match.id)
-      : defaultKnockoutBetConfig();
+      : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
     const { points, bonus } = enabledBets.score
       ? calculatePoints(
@@ -231,7 +260,7 @@ export async function processMatchResults(matchId: number): Promise<void> {
 
     let extraPoints = 0;
     if (match.isKnockout) {
-      extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
+      extraPoints = calculateKnockoutPoints(prediction, match, enabledBets, rules);
     }
 
     const totalNewPoints = points + extraPoints;

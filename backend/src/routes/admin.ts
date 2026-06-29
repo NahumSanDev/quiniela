@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { calculateKnockoutPoints, defaultKnockoutBetConfig, disabledKnockoutBetConfig } from '../services/scoring';
+import { calculateKnockoutPoints, defaultKnockoutBetConfig, disabledKnockoutBetConfig, type KnockoutBetRules } from '../services/scoring';
 
 const execAsync = promisify(exec);
 
@@ -148,6 +148,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
 
       for (const prediction of predictions) {
         let enabledBets = match.isKnockout ? defaultKnockoutBetConfig() : disabledKnockoutBetConfig();
+        let rules = null as KnockoutBetRules | null;
         if (prediction.groupId) {
           const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
           if (!group || !group.useExtraBets) {
@@ -170,6 +171,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
                 extraTime: config.extraTime,
                 penaltyShootout: config.penaltyShootout,
               };
+              rules = config.rules as KnockoutBetRules | null;
             }
           }
         }
@@ -192,7 +194,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
 
         let extraPoints = 0;
         if (match.isKnockout) {
-          extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
+          extraPoints = calculateKnockoutPoints(prediction, match, enabledBets, rules);
         }
 
         const totalNewPoints = points + extraPoints;

@@ -90,6 +90,27 @@ export interface GroupMatchBetConfig {
   penaltyShootout: boolean;
 }
 
+export interface KnockoutBetRules {
+  totalGoals: number;
+  bothTeamsScore: number;
+  cleanSheet: number;
+  halfTimeScore: number;
+  firstGoalTeam: number;
+  firstGoalMinute: number;
+  redCard: number;
+  totalCards: number;
+  extraTime: number;
+  penaltyShootout: number;
+}
+
+export function defaultKnockoutBetRules(): KnockoutBetRules {
+  return {
+    totalGoals: 2, bothTeamsScore: 1, cleanSheet: 1, halfTimeScore: 2,
+    firstGoalTeam: 1, firstGoalMinute: 2, redCard: 1, totalCards: 2,
+    extraTime: 1, penaltyShootout: 1,
+  };
+}
+
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
     score: true,

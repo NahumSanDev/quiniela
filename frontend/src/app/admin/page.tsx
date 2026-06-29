@@ -707,69 +707,6 @@ export default function AdminPanel() {
                         </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            defaultValue={(match as any).halfTimeHomeScore ?? ''}
-                            className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
-                            min="0"
-                            id={`hthome-${match.id}`}
-                            placeholder="HT"
-                          />
-                          <span className="text-white/30 text-xs">-</span>
-                          <input
-                            type="number"
-                            defaultValue={(match as any).halfTimeAwayScore ?? ''}
-                            className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
-                            min="0"
-                            id={`htaway-${match.id}`}
-                            placeholder="HT"
-                          />
-                        </div>
-                        <label className="flex items-center gap-1 text-xs text-white/40 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            defaultChecked={match.isKnockout}
-                            id={`isko-${match.id}`}
-                            className="w-3.5 h-3.5 rounded accent-amber-500"
-                          />
-                          KO
-                        </label>
-                        <select
-                          id={`fgteam-${match.id}`}
-                          defaultValue={(match as any).firstGoalTeam ?? ''}
-                          className="bg-white/10 text-white px-1 py-2 rounded-xl text-xs max-w-[80px]"
-                        >
-                          <option value="">1er Gol</option>
-                          <option value={match.homeTeam}>{match.homeTeam.substring(0, 10)}</option>
-                          <option value={match.awayTeam}>{match.awayTeam.substring(0, 10)}</option>
-                          <option value="ninguno">Ninguno</option>
-                        </select>
-                        <input
-                          type="number"
-                          defaultValue={(match as any).firstGoalMinute ?? ''}
-                          className="w-10 text-center bg-white/10 rounded-lg text-white text-xs"
-                          min="0" max="120"
-                          id={`fgmin-${match.id}`}
-                          placeholder="Min"
-                        />
-                        <label className="flex items-center gap-1 text-xs text-white/40 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            defaultChecked={(match as any).redCard ?? false}
-                            id={`rc-${match.id}`}
-                            className="w-3.5 h-3.5 rounded accent-red-500"
-                          />
-                          RC
-                        </label>
-                        <input
-                          type="number"
-                          defaultValue={(match as any).totalCards ?? ''}
-                          className="w-8 text-center bg-white/10 rounded-lg text-white text-xs"
-                          min="0" max="20"
-                          id={`tc-${match.id}`}
-                          placeholder="TC"
-                        />
                         <select
                           defaultValue={match.status}
                           className="bg-white/10 text-white px-2 py-2 rounded-xl text-sm"
