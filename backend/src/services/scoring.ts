@@ -1,6 +1,7 @@
 import { PrismaClient, Match, Prediction } from '@prisma/client';
 
 export interface KnockoutBetConfig {
+  score: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
   cleanSheet: boolean;
@@ -15,6 +16,7 @@ export interface KnockoutBetConfig {
 
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
+    score: true,
     totalGoals: true,
     bothTeamsScore: true,
     cleanSheet: true,
@@ -30,6 +32,7 @@ export function defaultKnockoutBetConfig(): KnockoutBetConfig {
 
 export function disabledKnockoutBetConfig(): KnockoutBetConfig {
   return {
+    score: false,
     totalGoals: false, bothTeamsScore: false, cleanSheet: false,
     halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
     redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
@@ -184,6 +187,7 @@ async function getBetsForPrediction(groupId: string | null, matchId: number): Pr
   if (!config) return defaultKnockoutBetConfig();
 
   return {
+    score: config.score,
     totalGoals: config.totalGoals,
     bothTeamsScore: config.bothTeamsScore,
     cleanSheet: config.cleanSheet,
@@ -214,14 +218,19 @@ export async function processMatchResults(matchId: number): Promise<void> {
   });
 
   for (const prediction of predictions) {
-    const { points, bonus } = calculatePoints(
-      { homeScore: prediction.homeScore, awayScore: prediction.awayScore },
-      { homeScore: match.homeScore, awayScore: match.awayScore }
-    );
+    const enabledBets = match.isKnockout
+      ? await getBetsForPrediction(prediction.groupId, match.id)
+      : defaultKnockoutBetConfig();
+
+    const { points, bonus } = enabledBets.score
+      ? calculatePoints(
+          { homeScore: prediction.homeScore, awayScore: prediction.awayScore },
+          { homeScore: match.homeScore, awayScore: match.awayScore }
+        )
+      : { points: 0, bonus: false };
 
     let extraPoints = 0;
     if (match.isKnockout) {
-      const enabledBets = await getBetsForPrediction(prediction.groupId, match.id);
       extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
     }
 

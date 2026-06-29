@@ -20,6 +20,7 @@ interface Group {
 interface MatchBetEntry {
   matchId: number;
   match: { id: number; homeTeam: string; awayTeam: string; groupStage: string | null; startTime: string; isKnockout: boolean };
+  score: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
   cleanSheet: boolean;
@@ -31,6 +32,26 @@ interface MatchBetEntry {
   extraTime: boolean;
   penaltyShootout: boolean;
 }
+
+const BET_KEYS: (keyof KnockoutBetConfig & keyof MatchBetEntry)[] = [
+  'score', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
+  'firstGoalTeam', 'firstGoalMinute', 'redCard', 'totalCards',
+  'extraTime', 'penaltyShootout',
+];
+
+const BET_LABELS: Record<string, string> = {
+  score: 'Marcador',
+  totalGoals: 'Goles Totales',
+  bothTeamsScore: 'Ambos Anotan',
+  cleanSheet: 'Valla Invicta',
+  halfTimeScore: 'Marcador 1T',
+  firstGoalTeam: '1er Gol Eq',
+  firstGoalMinute: 'Minuto 1er Gol',
+  redCard: 'Tarjeta Roja',
+  totalCards: 'Total Tarjetas',
+  extraTime: 'Tiempos Extra',
+  penaltyShootout: 'Penales',
+};
 
 interface RankingEntry {
   rank: number;
@@ -275,6 +296,7 @@ export default function GroupsPage() {
             return {
               matchId: m.id,
               match: m,
+              score: cfg?.score ?? true,
               totalGoals: cfg?.totalGoals ?? true,
               bothTeamsScore: cfg?.bothTeamsScore ?? true,
               cleanSheet: cfg?.cleanSheet ?? true,
@@ -314,6 +336,7 @@ export default function GroupsPage() {
     try {
       const configs = matchBets.map(mb => ({
         matchId: mb.matchId,
+        score: mb.score,
         totalGoals: mb.totalGoals,
         bothTeamsScore: mb.bothTeamsScore,
         cleanSheet: mb.cleanSheet,
@@ -571,20 +594,21 @@ export default function GroupsPage() {
               </button>
             </div>
             <p className="text-white/50 text-sm mb-4 shrink-0">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
-            <div className="flex flex-wrap gap-1 mb-4 p-2 bg-white/5 rounded-xl shrink-0">
-              {(['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as (keyof KnockoutBetConfig)[]).map(bet => (
-                <button
-                  key={bet}
-                  onClick={() => {
-                    const allOn = matchBets.every(mb => mb[bet]);
-                    toggleAllMatchBet(bet, !allOn);
-                  }}
-                  className="px-2 py-1 text-xs rounded-lg bg-white/10 text-white/70 hover:bg-white/20"
-                >
-                  {bet === 'totalGoals' ? 'Goles' : bet === 'bothTeamsScore' ? 'Ambos' : bet === 'cleanSheet' ? 'Valla' : bet === 'halfTimeScore' ? '1T' : bet === 'firstGoalTeam' ? '1er Gol Eq' : bet === 'firstGoalMinute' ? '1er Gol Min' : bet === 'redCard' ? 'Roja' : bet === 'totalCards' ? 'Tars' : bet === 'extraTime' ? 'TE' : 'Penales'}
-                </button>
+            <div className="flex flex-wrap gap-3 mb-4 p-3 bg-white/5 rounded-xl shrink-0">
+              {BET_KEYS.map(bet => (
+                <label key={bet} className="flex items-center gap-1.5 text-xs text-white/70 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={matchBets.length > 0 && matchBets.every(mb => mb[bet])}
+                    onChange={() => {
+                      const allOn = matchBets.every(mb => mb[bet]);
+                      toggleAllMatchBet(bet, !allOn);
+                    }}
+                    className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                  />
+                  {BET_LABELS[bet]}
+                </label>
               ))}
-              <span className="text-white/30 text-xs ml-auto self-center">Click para toggle todos</span>
             </div>
             {loadingMatchBets ? (
               <div className="flex justify-center py-8">
@@ -598,15 +622,19 @@ export default function GroupsPage() {
                       <span className="text-white font-medium text-sm">{mb.match.homeTeam} vs {mb.match.awayTeam}</span>
                       <span className="text-white/40 text-xs">{mb.match.groupStage}</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as (keyof KnockoutBetConfig)[]).map(bet => (
-                        <button
-                          key={bet}
-                          onClick={() => toggleMatchBet(i, bet)}
-                          className={`px-2 py-1 text-xs rounded-lg font-semibold transition-all ${mb[bet] ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-white/40 border border-white/5'}`}
-                        >
-                          {bet === 'totalGoals' ? 'Goles' : bet === 'bothTeamsScore' ? 'Ambos' : bet === 'cleanSheet' ? 'Valla' : bet === 'halfTimeScore' ? '1T' : bet === 'firstGoalTeam' ? '1er Gol' : bet === 'firstGoalMinute' ? 'Min' : bet === 'redCard' ? 'Roja' : bet === 'totalCards' ? 'Tarj' : bet === 'extraTime' ? 'TE' : 'Pen'}
-                        </button>
+                    <div className="flex flex-wrap gap-3">
+                      {BET_KEYS.map(bet => (
+                        <label key={bet} className="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={mb[bet] as boolean}
+                            onChange={() => toggleMatchBet(i, bet as keyof KnockoutBetConfig)}
+                            className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <span className={mb[bet] as boolean ? 'text-emerald-400' : 'text-white/40'}>
+                            {BET_LABELS[bet]}
+                          </span>
+                        </label>
                       ))}
                     </div>
                   </div>

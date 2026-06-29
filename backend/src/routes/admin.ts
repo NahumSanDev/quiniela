@@ -147,47 +147,51 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
       });
 
       for (const prediction of predictions) {
+        let enabledBets = match.isKnockout ? defaultKnockoutBetConfig() : disabledKnockoutBetConfig();
+        if (prediction.groupId) {
+          const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
+          if (!group || !group.useExtraBets) {
+            enabledBets = disabledKnockoutBetConfig();
+          } else {
+            const config = await prisma.groupMatchBetConfig.findUnique({
+              where: { groupId_matchId: { groupId: prediction.groupId, matchId } }
+            });
+            if (config) {
+              enabledBets = {
+                score: config.score,
+                totalGoals: config.totalGoals,
+                bothTeamsScore: config.bothTeamsScore,
+                cleanSheet: config.cleanSheet,
+                halfTimeScore: config.halfTimeScore,
+                firstGoalTeam: config.firstGoalTeam,
+                firstGoalMinute: config.firstGoalMinute,
+                redCard: config.redCard,
+                totalCards: config.totalCards,
+                extraTime: config.extraTime,
+                penaltyShootout: config.penaltyShootout,
+              };
+            }
+          }
+        }
+
         let points = 0;
         let bonus = false;
 
-        const predictedWinner = prediction.homeScore > prediction.awayScore ? 'HOME' :
-                               prediction.awayScore > prediction.homeScore ? 'AWAY' : 'DRAW';
-        const actualWinner = homeScore > awayScore ? 'HOME' :
-                            awayScore > homeScore ? 'AWAY' : 'DRAW';
+        if (enabledBets.score) {
+          const predictedWinner = prediction.homeScore > prediction.awayScore ? 'HOME' :
+                                 prediction.awayScore > prediction.homeScore ? 'AWAY' : 'DRAW';
+          const actualWinner = homeScore > awayScore ? 'HOME' :
+                              awayScore > homeScore ? 'AWAY' : 'DRAW';
 
-        if (predictedWinner === actualWinner) points += 3;
-        if (prediction.homeScore === homeScore && prediction.awayScore === awayScore) {
-          points += 1;
-          bonus = true;
+          if (predictedWinner === actualWinner) points += 3;
+          if (prediction.homeScore === homeScore && prediction.awayScore === awayScore) {
+            points += 1;
+            bonus = true;
+          }
         }
 
         let extraPoints = 0;
         if (match.isKnockout) {
-          let enabledBets = defaultKnockoutBetConfig();
-          if (prediction.groupId) {
-            const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
-            if (!group || !group.useExtraBets) {
-              enabledBets = disabledKnockoutBetConfig();
-            } else {
-              const config = await prisma.groupMatchBetConfig.findUnique({
-                where: { groupId_matchId: { groupId: prediction.groupId, matchId } }
-              });
-              if (config) {
-                enabledBets = {
-                  totalGoals: config.totalGoals,
-                  bothTeamsScore: config.bothTeamsScore,
-                  cleanSheet: config.cleanSheet,
-                  halfTimeScore: config.halfTimeScore,
-                  firstGoalTeam: config.firstGoalTeam,
-                  firstGoalMinute: config.firstGoalMinute,
-                  redCard: config.redCard,
-                  totalCards: config.totalCards,
-                  extraTime: config.extraTime,
-                  penaltyShootout: config.penaltyShootout,
-                };
-              }
-            }
-          }
           extraPoints = calculateKnockoutPoints(prediction, match, enabledBets);
         }
 

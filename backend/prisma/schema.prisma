@@ -44,6 +44,7 @@ model GroupMatchBetConfig {
   id              String  @id @default(cuid())
   groupId         String
   matchId         Int
+  score           Boolean @default(true)
   totalGoals      Boolean @default(true)
   bothTeamsScore  Boolean @default(true)
   cleanSheet      Boolean @default(true)

@@ -215,7 +215,7 @@ export default function Home() {
           const map: Record<number, KnockoutBetConfig> = {};
           for (const c of configs) {
             map[c.matchId] = {
-              totalGoals: c.totalGoals, bothTeamsScore: c.bothTeamsScore,
+              score: c.score, totalGoals: c.totalGoals, bothTeamsScore: c.bothTeamsScore,
               cleanSheet: c.cleanSheet, halfTimeScore: c.halfTimeScore,
               firstGoalTeam: c.firstGoalTeam, firstGoalMinute: c.firstGoalMinute,
               redCard: c.redCard, totalCards: c.totalCards,

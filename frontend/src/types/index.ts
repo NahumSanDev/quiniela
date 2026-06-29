@@ -52,6 +52,7 @@ export interface User {
 }
 
 export interface KnockoutBetConfig {
+  score: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
   cleanSheet: boolean;
@@ -76,6 +77,7 @@ export interface GroupMatchBetConfig {
     startTime: string;
     isKnockout: boolean;
   };
+  score: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
   cleanSheet: boolean;
@@ -90,6 +92,7 @@ export interface GroupMatchBetConfig {
 
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
+    score: true,
     totalGoals: true,
     bothTeamsScore: true,
     cleanSheet: true,
