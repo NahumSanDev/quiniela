@@ -332,21 +332,30 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {[
-                    { value: 'home', label: match.homeTeam.substring(0, 12) },
-                    { value: 'away', label: match.awayTeam.substring(0, 12) },
-                    { value: 'both', label: 'Ambos' },
-                    { value: 'none', label: 'Ninguno' },
+                    { value: 'home', team: match.homeTeam, flag: match.homeFlag },
+                    { value: 'away', team: match.awayTeam, flag: match.awayFlag },
+                    { value: 'both', team: 'Ambos', flag: null },
+                    { value: 'none', team: 'Ninguno', flag: null },
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setCleanSheet(cleanSheet === opt.value ? null : opt.value)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                         cleanSheet === opt.value
                           ? 'bg-amber-500 text-white'
                           : 'bg-white/10 text-white/60 hover:bg-white/20'
                       }`}
                     >
-                      {opt.label}
+                      {opt.flag && (
+                        opt.flag.includes(',') ? (
+                          <div className="w-4 h-3 rounded-sm overflow-hidden flex">
+                            {opt.flag.split(',').map((c, i) => <div key={i} style={{ backgroundColor: c, flex: 1 }} />)}
+                          </div>
+                        ) : (
+                          <img src={`https://flagcdn.com/w40/${opt.flag}.png`} alt="" className="w-4 h-3 rounded-sm object-cover" />
+                        )
+                      )}
+                      {opt.team.substring(0, 12)}
                     </button>
                   ))}
                   {cleanSheet !== null && (
@@ -393,20 +402,29 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
                 </label>
                 <div className="flex gap-2">
                   {[
-                    { value: match.homeTeam, label: match.homeTeam.substring(0, 12) },
-                    { value: match.awayTeam, label: match.awayTeam.substring(0, 12) },
-                    { value: 'ninguno', label: 'Ninguno' },
+                    { value: match.homeTeam, team: match.homeTeam, flag: match.homeFlag },
+                    { value: match.awayTeam, team: match.awayTeam, flag: match.awayFlag },
+                    { value: 'ninguno', team: 'Ninguno', flag: null },
                   ].map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setFirstGoalTeam(firstGoalTeam === opt.value ? null : opt.value)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                         firstGoalTeam === opt.value
                           ? 'bg-amber-500 text-white'
                           : 'bg-white/10 text-white/60 hover:bg-white/20'
                       }`}
                     >
-                      {opt.label}
+                      {opt.flag && (
+                        opt.flag.includes(',') ? (
+                          <div className="w-4 h-3 rounded-sm overflow-hidden flex">
+                            {opt.flag.split(',').map((c, i) => <div key={i} style={{ backgroundColor: c, flex: 1 }} />)}
+                          </div>
+                        ) : (
+                          <img src={`https://flagcdn.com/w40/${opt.flag}.png`} alt="" className="w-4 h-3 rounded-sm object-cover" />
+                        )
+                      )}
+                      {opt.team.substring(0, 12)}
                     </button>
                   ))}
                   {firstGoalTeam !== null && (
