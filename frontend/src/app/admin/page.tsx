@@ -337,7 +337,7 @@ export default function AdminPanel() {
     const isEdit = !!match;
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={onClose}>
-        <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-white">{isEdit ? 'Editar Partido' : 'Crear Partido'}</h2>
             <button onClick={onClose} className="text-white/60 hover:text-white">
