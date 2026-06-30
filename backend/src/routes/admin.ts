@@ -74,7 +74,7 @@ router.post('/matches', adminAuth, async (req: Request, res: Response) => {
 router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry, isKnockout, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout, betConfig } = req.body;
+    const { homeTeam, homeFlag, awayTeam, awayFlag, startTime, homeScore, awayScore, status, groupStage, venueName, venueCity, venueCountry, isKnockout, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
 
     const matchId = parseInt(id);
     const before = await prisma.match.findUnique({
@@ -117,7 +117,6 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
     if (totalCards !== undefined) updateData.totalCards = totalCards;
     if (extraTime !== undefined) updateData.extraTime = extraTime;
     if (penaltyShootout !== undefined) updateData.penaltyShootout = penaltyShootout;
-    if (betConfig !== undefined) updateData.betConfig = betConfig;
 
     const match = await prisma.match.update({
       where: { id: matchId },
@@ -154,26 +153,22 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
           const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
           if (!group || !group.useExtraBets) {
             enabledBets = disabledKnockoutBetConfig();
-          } else {
-            const config = await prisma.groupMatchBetConfig.findUnique({
-              where: { groupId_matchId: { groupId: prediction.groupId, matchId } }
-            });
-            if (config) {
-              enabledBets = {
-                score: config.score,
-                totalGoals: config.totalGoals,
-                bothTeamsScore: config.bothTeamsScore,
-                cleanSheet: config.cleanSheet,
-                halfTimeScore: config.halfTimeScore,
-                firstGoalTeam: config.firstGoalTeam,
-                firstGoalMinute: config.firstGoalMinute,
-                redCard: config.redCard,
-                totalCards: config.totalCards,
-                extraTime: config.extraTime,
-                penaltyShootout: config.penaltyShootout,
-              };
-              rules = config.rules as KnockoutBetRules | null;
-            }
+          } else if (group.betRules) {
+            const bc = group.betRules as any;
+            enabledBets = {
+              score: bc.score ?? true,
+              totalGoals: bc.totalGoals ?? true,
+              bothTeamsScore: bc.bothTeamsScore ?? true,
+              cleanSheet: bc.cleanSheet ?? true,
+              halfTimeScore: bc.halfTimeScore ?? true,
+              firstGoalTeam: bc.firstGoalTeam ?? true,
+              firstGoalMinute: bc.firstGoalMinute ?? true,
+              redCard: bc.redCard ?? true,
+              totalCards: bc.totalCards ?? true,
+              extraTime: bc.extraTime ?? true,
+              penaltyShootout: bc.penaltyShootout ?? true,
+            };
+            rules = (bc.rules as KnockoutBetRules) ?? null;
           }
         }
 

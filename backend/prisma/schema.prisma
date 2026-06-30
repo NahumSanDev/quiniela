@@ -33,6 +33,7 @@ model Group {
   ownerId      String
   useExtraBets Boolean  @default(false)
   rules        Json?
+  betRules     Json?
   createdAt    DateTime @default(now())
 
   members          GroupMember[]

@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MatchCard, KnockoutData } from '../components/MatchCard';
-import { defaultKnockoutBetConfig } from '@/types';
 import { RankingTable } from '../components/RankingTable';
-import { Match, RankingEntry, KnockoutBetConfig } from '../types';
+import { Match, RankingEntry, KnockoutBetConfig, KnockoutBetRules, defaultKnockoutBetConfig } from '../types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -99,7 +98,7 @@ export default function Home() {
   const [matchFilter, setMatchFilter] = useState<string>('knockout');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [rankingRound, setRankingRound] = useState<string>('all');
-  const [groupMatchConfigs, setGroupMatchConfigs] = useState<Record<number, KnockoutBetConfig>>({});
+  const [groupBetRules, setGroupBetRules] = useState<any>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -202,33 +201,57 @@ export default function Home() {
 
   async function selectGroup(groupId: string | null) {
     setSelectedGroup(groupId);
-    setGroupMatchConfigs({});
+    setGroupBetRules(null);
     if (groupId) {
       setRankingRound('all');
       localStorage.setItem('selectedGroup', groupId);
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch(`${API_URL}/api/groups/${groupId}/match-bets`, {
+        const res = await fetch(`${API_URL}/api/groups/${groupId}/bet-rules`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-          const configs = await res.json();
-          const map: Record<number, KnockoutBetConfig> = {};
-          for (const c of configs) {
-            map[c.matchId] = {
-              score: c.score, totalGoals: c.totalGoals, bothTeamsScore: c.bothTeamsScore,
-              cleanSheet: c.cleanSheet, halfTimeScore: c.halfTimeScore,
-              firstGoalTeam: c.firstGoalTeam, firstGoalMinute: c.firstGoalMinute,
-              redCard: c.redCard, totalCards: c.totalCards,
-              extraTime: c.extraTime, penaltyShootout: c.penaltyShootout,
-            };
-          }
-          setGroupMatchConfigs(map);
+          setGroupBetRules(await res.json());
         }
       } catch {}
     } else {
       localStorage.removeItem('selectedGroup');
     }
+  }
+
+  function getGroupEnabledBets(): KnockoutBetConfig {
+    const group = groups.find(g => g.id === selectedGroup);
+    if (!group) return defaultKnockoutBetConfig();
+    if (!group.useExtraBets) {
+      return {
+        score: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
+        halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
+        redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
+      };
+    }
+    if (!groupBetRules || Object.keys(groupBetRules).length === 0) {
+      return defaultKnockoutBetConfig();
+    }
+    return {
+      score: groupBetRules.score ?? true,
+      totalGoals: groupBetRules.totalGoals ?? true,
+      bothTeamsScore: groupBetRules.bothTeamsScore ?? true,
+      cleanSheet: groupBetRules.cleanSheet ?? true,
+      halfTimeScore: groupBetRules.halfTimeScore ?? true,
+      firstGoalTeam: groupBetRules.firstGoalTeam ?? true,
+      firstGoalMinute: groupBetRules.firstGoalMinute ?? true,
+      redCard: groupBetRules.redCard ?? true,
+      totalCards: groupBetRules.totalCards ?? true,
+      extraTime: groupBetRules.extraTime ?? true,
+      penaltyShootout: groupBetRules.penaltyShootout ?? true,
+    };
+  }
+
+  function getGroupPointValues(): KnockoutBetRules | null {
+    if (!selectedGroup) return null;
+    const group = groups.find(g => g.id === selectedGroup);
+    if (!group || !group.useExtraBets) return null;
+    return groupBetRules?.rules || null;
   }
 
   async function handlePredict(matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) {
@@ -576,7 +599,8 @@ export default function Home() {
                           match={match}
                           prediction={userPrediction}
                           onPredict={handlePredict}
-                          enabledBets={selectedGroup ? (groupMatchConfigs[match.id] ?? defaultKnockoutBetConfig()) : defaultKnockoutBetConfig()}
+                          enabledBets={getGroupEnabledBets()}
+                          pointValues={getGroupPointValues()}
                         />
                       </motion.div>
                     );

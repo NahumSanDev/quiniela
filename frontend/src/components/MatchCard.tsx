@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Match, Prediction, KnockoutBetConfig } from '../types';
+import { Match, Prediction, KnockoutBetConfig, KnockoutBetRules, defaultKnockoutBetRules } from '../types';
 
 export interface KnockoutData {
   totalGoals: number | null;
@@ -21,9 +21,11 @@ interface MatchCardProps {
   prediction?: Prediction;
   onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) => void;
   enabledBets: KnockoutBetConfig;
+  pointValues?: KnockoutBetRules | null;
 }
 
-export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCardProps) {
+export function MatchCard({ match, prediction, onPredict, enabledBets, pointValues }: MatchCardProps) {
+  const pts = pointValues ?? defaultKnockoutBetRules();
   const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
   const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
@@ -278,7 +280,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.totalGoals && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Goles Totales <span className="text-amber-400 font-semibold">+2 pts</span>
+                  Goles Totales <span className="text-amber-400 font-semibold">+{pts.totalGoals} pts</span>
                 </label>
                 <input
                   type="number"
@@ -294,7 +296,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.bothTeamsScore && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  ¿Ambos Equipos Anotan? <span className="text-amber-400 font-semibold">+1 pt</span>
+                  ¿Ambos Equipos Anotan? <span className="text-amber-400 font-semibold">+{pts.bothTeamsScore} pt</span>
                 </label>
                 <div className="flex gap-2">
                   {[
@@ -328,7 +330,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.cleanSheet && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Portería en Cero <span className="text-amber-400 font-semibold">+1 pt</span>
+                  Portería en Cero <span className="text-amber-400 font-semibold">+{pts.cleanSheet} pt</span>
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {[
@@ -373,7 +375,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.halfTimeScore && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Marcador al Medio Tiempo <span className="text-amber-400 font-semibold">+2 pts</span>
+                  Marcador al Medio Tiempo <span className="text-amber-400 font-semibold">+{pts.halfTimeScore} pts</span>
                 </label>
                 <div className="flex items-center gap-2 max-w-[200px]">
                   <input
@@ -398,7 +400,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.firstGoalTeam && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+1 pt</span>
+                  Primer Equipo en Anotar <span className="text-amber-400 font-semibold">+{pts.firstGoalTeam} pt</span>
                 </label>
                 <div className="flex gap-2">
                   {[
@@ -442,7 +444,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.firstGoalMinute && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Minuto del Primer Gol <span className="text-amber-400 font-semibold">+2 pts</span>
+                  Minuto del Primer Gol <span className="text-amber-400 font-semibold">+{pts.firstGoalMinute} pts</span>
                 </label>
                 <input
                   type="number"
@@ -458,7 +460,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.redCard && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+1 pt</span>
+                  ¿Tarjeta Roja? <span className="text-amber-400 font-semibold">+{pts.redCard} pt</span>
                 </label>
                 <div className="flex gap-2">
                   {[
@@ -492,7 +494,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.totalCards && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  Total Tarjetas <span className="text-amber-400 font-semibold">+2 pts</span>
+                  Total Tarjetas <span className="text-amber-400 font-semibold">+{pts.totalCards} pts</span>
                 </label>
                 <input
                   type="number"
@@ -508,7 +510,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.extraTime && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+1 pt</span>
+                  ¿Tiempos Extra? <span className="text-amber-400 font-semibold">+{pts.extraTime} pt</span>
                 </label>
                 <div className="flex gap-2">
                   <button
@@ -538,7 +540,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets }: MatchCa
             {enabledBets.penaltyShootout && (
               <div>
                 <label className="block text-sm text-white/80 mb-1.5">
-                  ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+1 pt</span>
+                  ¿Tanda de Penales? <span className="text-amber-400 font-semibold">+{pts.penaltyShootout} pt</span>
                 </label>
                 <div className="flex gap-2">
                   <button

@@ -197,7 +197,7 @@ export function calculateKnockoutPoints(
   return extra;
 }
 
-async function getBetsForPrediction(groupId: string | null, matchId: number): Promise<{
+async function getGroupBetConfig(groupId: string | null): Promise<{
   bets: KnockoutBetConfig;
   rules: KnockoutBetRules | null;
 }> {
@@ -206,32 +206,8 @@ async function getBetsForPrediction(groupId: string | null, matchId: number): Pr
   const group = await prisma.group.findUnique({ where: { id: groupId } });
   if (!group || !group.useExtraBets) return { bets: disabledKnockoutBetConfig(), rules: null };
 
-  const config = await prisma.groupMatchBetConfig.findUnique({
-    where: { groupId_matchId: { groupId, matchId } }
-  });
-
-  if (config) {
-    const bets: KnockoutBetConfig = {
-      score: config.score,
-      totalGoals: config.totalGoals,
-      bothTeamsScore: config.bothTeamsScore,
-      cleanSheet: config.cleanSheet,
-      halfTimeScore: config.halfTimeScore,
-      firstGoalTeam: config.firstGoalTeam,
-      firstGoalMinute: config.firstGoalMinute,
-      redCard: config.redCard,
-      totalCards: config.totalCards,
-      extraTime: config.extraTime,
-      penaltyShootout: config.penaltyShootout,
-    };
-    const rules: KnockoutBetRules | null = config.rules as KnockoutBetRules | null;
-    return { bets, rules };
-  }
-
-  // fall back to match-level default betConfig
-  const match = await prisma.match.findUnique({ where: { id: matchId } });
-  if (match?.betConfig) {
-    const bc = match.betConfig as any;
+  if (group.betRules) {
+    const bc = group.betRules as any;
     return {
       bets: {
         score: bc.score ?? true,
@@ -271,7 +247,7 @@ export async function processMatchResults(matchId: number): Promise<void> {
 
   for (const prediction of predictions) {
     const { bets: enabledBets, rules } = match.isKnockout
-      ? await getBetsForPrediction(prediction.groupId, match.id)
+      ? await getGroupBetConfig(prediction.groupId)
       : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
     const { points, bonus } = enabledBets.score

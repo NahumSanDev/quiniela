@@ -305,15 +305,6 @@ export default function AdminPanel() {
         penaltyShootout: formData.get('penaltyShootout') === 'on'
       };
 
-      const betKeys = ['totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'] as const;
-      const betConfig: any = { rules: {} };
-      for (const key of betKeys) {
-        betConfig[key] = formData.get(`betEnabled_${key}`) === 'on';
-        const ruleVal = formData.get(`betRule_${key}`);
-        betConfig.rules[key] = ruleVal ? parseInt(ruleVal as string) : 0;
-      }
-      betConfig.score = formData.get('betEnabled_score') === 'on';
-      body.betConfig = betConfig;
       const res = await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
         headers: {
@@ -433,18 +424,7 @@ export default function AdminPanel() {
                     Partido de Eliminatoria (predicciones extra)
                   </label>
                 </div>
-                <div className="mb-4 p-3 bg-white/5 rounded-xl">
-                  <p className="text-white/60 text-sm mb-2 font-semibold">Apuestas por Defecto</p>
-                  {['score','totalGoals','bothTeamsScore','cleanSheet','halfTimeScore','firstGoalTeam','firstGoalMinute','redCard','totalCards','extraTime','penaltyShootout'].map(key => (
-                    <label key={key} className="flex items-center gap-2 text-sm text-white/70 cursor-pointer select-none py-0.5">
-                      <input name={`betEnabled_${key}`} type="checkbox" defaultChecked={true} className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer" />
-                      {key === 'score' ? 'Marcador' : key === 'totalGoals' ? 'Goles Totales' : key === 'bothTeamsScore' ? 'Ambos Anotan' : key === 'cleanSheet' ? 'Valla Invicta' : key === 'halfTimeScore' ? 'Marcador 1T' : key === 'firstGoalTeam' ? '1er Gol Eq' : key === 'firstGoalMinute' ? 'Minuto 1er Gol' : key === 'redCard' ? 'Tarjeta Roja' : key === 'totalCards' ? 'Total Tarjetas' : key === 'extraTime' ? 'Tiempos Extra' : 'Penales'}
-                      {key !== 'score' && (
-                        <input name={`betRule_${key}`} type="number" min="0" defaultValue={2} className="w-14 text-center px-1 py-0.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs outline-none focus:border-emerald-500 ml-auto" />
-                      )}
-                    </label>
-                  ))}
-                </div>
+
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-white/60 text-sm mb-1">Primer Gol (Equipo)</label>

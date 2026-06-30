@@ -401,7 +401,7 @@ router.put('/:id/settings', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/:id/match-bets', async (req: Request, res: Response) => {
+router.get('/:id/bet-rules', async (req: Request, res: Response) => {
   const userId = authenticate(req, res);
   if (!userId) return;
 
@@ -417,30 +417,26 @@ router.get('/:id/match-bets', async (req: Request, res: Response) => {
       return;
     }
 
-    const configs = await prisma.groupMatchBetConfig.findMany({
-      where: { groupId: id },
-      include: {
-        match: {
-          select: { id: true, homeTeam: true, awayTeam: true, groupStage: true, startTime: true, isKnockout: true }
-        }
-      },
-      orderBy: { match: { startTime: 'asc' } }
-    });
+    const group = await prisma.group.findUnique({ where: { id } });
+    if (!group) {
+      res.status(404).json({ error: 'Grupo no encontrado' });
+      return;
+    }
 
-    res.json(configs);
+    res.json(group.betRules || {});
   } catch (error) {
-    console.error('Error fetching match bets:', error);
-    res.status(500).json({ error: 'Error al obtener configuración de partidos' });
+    console.error('Error fetching bet rules:', error);
+    res.status(500).json({ error: 'Error al obtener reglas de apuestas' });
   }
 });
 
-router.put('/:id/match-bets/batch', async (req: Request, res: Response) => {
+router.put('/:id/bet-rules', async (req: Request, res: Response) => {
   const userId = authenticate(req, res);
   if (!userId) return;
 
   try {
     const { id } = req.params;
-    const { configs } = req.body;
+    const betRules = req.body;
 
     const group = await prisma.group.findUnique({ where: { id } });
     if (!group) {
@@ -453,23 +449,19 @@ router.put('/:id/match-bets/batch', async (req: Request, res: Response) => {
     });
 
     if (!membership || (membership.role !== 'ADMIN' && group.ownerId !== userId)) {
-      res.status(403).json({ error: 'Solo administradores pueden modificar configuración' });
+      res.status(403).json({ error: 'Solo administradores pueden modificar reglas' });
       return;
     }
 
-    for (const cfg of configs) {
-      const { matchId, ...bets } = cfg;
-      await prisma.groupMatchBetConfig.upsert({
-        where: { groupId_matchId: { groupId: id, matchId } },
-        update: bets,
-        create: { groupId: id, matchId, ...bets }
-      });
-    }
+    const updated = await prisma.group.update({
+      where: { id },
+      data: { betRules }
+    });
 
-    res.json({ message: 'Configuración guardada' });
+    res.json(updated.betRules || {});
   } catch (error) {
-    console.error('Error saving match bets:', error);
-    res.status(500).json({ error: 'Error al guardar configuración' });
+    console.error('Error saving bet rules:', error);
+    res.status(500).json({ error: 'Error al guardar reglas de apuestas' });
   }
 });
 

@@ -17,23 +17,18 @@ interface Group {
   members: { id: string; user: { id: string; name: string | null; image: string | null; points: number } }[];
 }
 
-interface MatchBetEntry {
-  matchId: number;
-  match: { id: number; homeTeam: string; awayTeam: string; groupStage: string | null; startTime: string; isKnockout: boolean };
-  score: boolean;
-  totalGoals: boolean;
-  bothTeamsScore: boolean;
-  cleanSheet: boolean;
-  halfTimeScore: boolean;
-  firstGoalTeam: boolean;
-  firstGoalMinute: boolean;
-  redCard: boolean;
-  totalCards: boolean;
-  extraTime: boolean;
-  penaltyShootout: boolean;
+interface RankingEntry {
+  rank: number;
+  userId: string;
+  name: string | null;
+  avatarUrl: string | null;
+  points: number;
+  predictionsCount: number;
+  correctPredictions: number;
+  exactScores: number;
 }
 
-const BET_KEYS: (keyof KnockoutBetConfig & keyof MatchBetEntry)[] = [
+const BET_KEYS: (keyof KnockoutBetConfig)[] = [
   'score', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
   'firstGoalTeam', 'firstGoalMinute', 'redCard', 'totalCards',
   'extraTime', 'penaltyShootout',
@@ -53,17 +48,6 @@ const BET_LABELS: Record<string, string> = {
   penaltyShootout: 'Penales',
 };
 
-interface RankingEntry {
-  rank: number;
-  userId: string;
-  name: string | null;
-  avatarUrl: string | null;
-  points: number;
-  predictionsCount: number;
-  correctPredictions: number;
-  exactScores: number;
-}
-
 export default function GroupsPage() {
   const [user, setUser] = useState<any>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -80,12 +64,8 @@ export default function GroupsPage() {
   const [settingsGroup, setSettingsGroup] = useState<string | null>(null);
   const [useExtraBets, setUseExtraBets] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
-  const [matchBetsGroup, setMatchBetsGroup] = useState<string | null>(null);
-  const [matchBets, setMatchBets] = useState<MatchBetEntry[]>([]);
-  const [loadingMatchBets, setLoadingMatchBets] = useState(false);
-  const [savingMatchBets, setSavingMatchBets] = useState(false);
-  const [rulesMatchId, setRulesMatchId] = useState<number | null>(null);
-  const [matchRules, setMatchRules] = useState<KnockoutBetRules>(defaultKnockoutBetRules());
+  const [betRules, setBetRules] = useState<any>({});
+  const [loadingBetRules, setLoadingBetRules] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -248,12 +228,52 @@ export default function GroupsPage() {
   async function openSettings(group: Group) {
     setSettingsGroup(group.id);
     setUseExtraBets(group.useExtraBets ?? false);
+    setBetRules({});
+    if (group.useExtraBets) {
+      setLoadingBetRules(true);
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`${API_URL}/api/groups/${group.id}/bet-rules`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setBetRules(await res.json());
+        }
+      } catch {} finally {
+        setLoadingBetRules(false);
+      }
+    }
+  }
+
+  function toggleBetRule(key: string) {
+    setBetRules((prev: any) => ({ ...prev, [key]: !(prev[key] ?? true) }));
+  }
+
+  function updateBetRulePoints(key: string, value: string) {
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num >= 0) {
+      setBetRules((prev: any) => {
+        const rules = { ...(prev.rules || defaultKnockoutBetRules()) };
+        rules[key] = num;
+        return { ...prev, rules };
+      });
+    }
   }
 
   async function saveSettings() {
     if (!settingsGroup) return;
     const token = localStorage.getItem('token');
     setSavingSettings(true);
+
+    const betRulesPayload = useExtraBets ? betRules : null;
+    if (useExtraBets && betRulesPayload && Object.keys(betRulesPayload).length > 0) {
+      await fetch(`${API_URL}/api/groups/${settingsGroup}/bet-rules`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(betRulesPayload)
+      });
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/groups/${settingsGroup}/settings`, {
         method: 'PUT',
@@ -271,124 +291,6 @@ export default function GroupsPage() {
       console.error('Error saving settings:', error);
     } finally {
       setSavingSettings(false);
-    }
-  }
-
-  async function openMatchBets(groupId: string) {
-    const token = localStorage.getItem('token');
-    setLoadingMatchBets(true);
-    setMatchBetsGroup(groupId);
-    try {
-      const res = await fetch(`${API_URL}/api/groups/${groupId}/match-bets`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-
-        const existing = new Map<number, any>(data.map((c: any) => [c.matchId, c]));
-
-        const matchesRes = await fetch(`${API_URL}/api/matches?isKnockout=true`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (matchesRes.ok) {
-          const matchesData = await matchesRes.json();
-          const allMatches = matchesData.data || matchesData;
-          const merged: MatchBetEntry[] = (Array.isArray(allMatches) ? allMatches : []).filter((m: any) => m.isKnockout).map((m: any) => {
-            const cfg = existing.get(m.id) as any;
-            return {
-              matchId: m.id,
-              match: m,
-              score: cfg?.score ?? true,
-              totalGoals: cfg?.totalGoals ?? true,
-              bothTeamsScore: cfg?.bothTeamsScore ?? true,
-              cleanSheet: cfg?.cleanSheet ?? true,
-              halfTimeScore: cfg?.halfTimeScore ?? true,
-              firstGoalTeam: cfg?.firstGoalTeam ?? true,
-              firstGoalMinute: cfg?.firstGoalMinute ?? true,
-              redCard: cfg?.redCard ?? true,
-              totalCards: cfg?.totalCards ?? true,
-              extraTime: cfg?.extraTime ?? true,
-              penaltyShootout: cfg?.penaltyShootout ?? true,
-            };
-          });
-          setMatchBets(merged);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading match bets:', error);
-    } finally {
-      setLoadingMatchBets(false);
-    }
-  }
-
-  function toggleMatchBet(index: number, bet: keyof KnockoutBetConfig) {
-    setMatchBets(prev => prev.map((mb, i) =>
-      i === index ? { ...mb, [bet]: !mb[bet] } : mb
-    ));
-  }
-
-  function toggleAllMatchBet(bet: keyof KnockoutBetConfig, value: boolean) {
-    setMatchBets(prev => prev.map(mb => ({ ...mb, [bet]: value })));
-  }
-
-  function openMatchRules(matchId: number) {
-    const mb = matchBets.find(m => m.matchId === matchId);
-    if (!mb) return;
-    setRulesMatchId(matchId);
-    const savedRules = (mb as any).rules as KnockoutBetRules | undefined;
-    setMatchRules(savedRules || defaultKnockoutBetRules());
-  }
-
-  function saveMatchRules() {
-    if (rulesMatchId === null) return;
-    setMatchBets(prev => prev.map(mb =>
-      mb.matchId === rulesMatchId ? { ...mb, rules: matchRules } : mb
-    ));
-    setRulesMatchId(null);
-  }
-
-  function updateRule(key: keyof KnockoutBetRules, value: string) {
-    const num = parseInt(value, 10);
-    if (!isNaN(num) && num >= 0) {
-      setMatchRules(prev => ({ ...prev, [key]: num }));
-    }
-  }
-
-  async function saveMatchBets() {
-    if (!matchBetsGroup) return;
-    const token = localStorage.getItem('token');
-    setSavingMatchBets(true);
-    try {
-      const configs = matchBets.map(mb => ({
-        matchId: mb.matchId,
-        score: mb.score,
-        totalGoals: mb.totalGoals,
-        bothTeamsScore: mb.bothTeamsScore,
-        cleanSheet: mb.cleanSheet,
-        halfTimeScore: mb.halfTimeScore,
-        firstGoalTeam: mb.firstGoalTeam,
-        firstGoalMinute: mb.firstGoalMinute,
-        redCard: mb.redCard,
-        totalCards: mb.totalCards,
-        extraTime: mb.extraTime,
-        penaltyShootout: mb.penaltyShootout,
-        ...((mb as any).rules ? { rules: (mb as any).rules } : {}),
-      }));
-      const res = await fetch(`${API_URL}/api/groups/${matchBetsGroup}/match-bets/batch`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ configs })
-      });
-      if (res.ok) {
-        setMatchBetsGroup(null);
-      }
-    } catch (error) {
-      console.error('Error saving match bets:', error);
-    } finally {
-      setSavingMatchBets(false);
     }
   }
 
@@ -569,9 +471,10 @@ export default function GroupsPage() {
           </motion.div>
         </div>
       )}
+
       {settingsGroup && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-white">Configuración del Grupo</h2>
               <button onClick={() => setSettingsGroup(null)} className="text-white/60 hover:text-white">
@@ -591,13 +494,43 @@ export default function GroupsPage() {
                   <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${useExtraBets ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
+
               {useExtraBets && (
-                <button
-                  onClick={() => { setSettingsGroup(null); openMatchBets(settingsGroup); }}
-                  className="w-full py-3 bg-amber-500/20 text-amber-400 rounded-xl hover:bg-amber-500/30 font-semibold text-sm"
-                >
-                  Configurar Apuestas por Partido
-                </button>
+                <div className="p-4 bg-white/5 rounded-xl space-y-2">
+                  <p className="text-white/80 text-sm font-semibold mb-2">Reglas de Apuestas</p>
+                  {loadingBetRules ? (
+                    <div className="flex justify-center py-4">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full" />
+                    </div>
+                  ) : (
+                    BET_KEYS.map(key => {
+                      const enabled = betRules[key] ?? true;
+                      const pts = key !== 'score' ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={enabled}
+                            onChange={() => toggleBetRule(key)}
+                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <span className={`text-sm flex-1 ${enabled ? 'text-white' : 'text-white/40'}`}>
+                            {BET_LABELS[key]}
+                          </span>
+                          {pts !== null && (
+                            <input
+                              type="number"
+                              min="0"
+                              value={pts}
+                              onChange={(e) => updateBetRulePoints(key, e.target.value)}
+                              className={`w-14 text-center px-1 py-0.5 rounded-lg text-xs outline-none ${enabled ? 'bg-white/10 border border-white/10 text-white focus:border-emerald-500' : 'bg-white/5 border border-white/5 text-white/30'}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               )}
             </div>
             <div className="flex gap-3">
@@ -605,129 +538,6 @@ export default function GroupsPage() {
                 {savingSettings ? 'Guardando...' : 'Guardar'}
               </button>
               <button onClick={() => setSettingsGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {matchBetsGroup && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center mb-4 shrink-0">
-              <h2 className="text-xl font-bold text-white">Apuestas por Partido</h2>
-              <button onClick={() => setMatchBetsGroup(null)} className="text-white/60 hover:text-white">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <p className="text-white/50 text-sm mb-4 shrink-0">Activa o desactiva cada apuesta por partido de eliminatorias:</p>
-            <div className="flex flex-col gap-1 mb-4 p-3 bg-white/5 rounded-xl shrink-0">
-              <span className="text-xs text-white/40 mb-1">Activar/Desactivar para todos:</span>
-              {BET_KEYS.map(bet => (
-                <label key={bet} className="flex items-center gap-2 text-sm text-white/70 cursor-pointer select-none hover:text-white">
-                  <input
-                    type="checkbox"
-                    checked={matchBets.length > 0 && matchBets.every(mb => mb[bet])}
-                    onChange={() => {
-                      const allOn = matchBets.every(mb => mb[bet]);
-                      toggleAllMatchBet(bet, !allOn);
-                    }}
-                    className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                  />
-                  {BET_LABELS[bet]}
-                </label>
-              ))}
-            </div>
-            {loadingMatchBets ? (
-              <div className="flex justify-center py-8">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
-              </div>
-            ) : (
-              <div className="space-y-2 overflow-y-auto pr-1 mb-4 flex-1 min-h-0" style={{ maxHeight: 'calc(85vh - 220px)' }}>
-                {matchBets.map((mb, i) => (
-                  <div key={mb.matchId} className="bg-white/5 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-medium text-sm">{mb.match.homeTeam} vs {mb.match.awayTeam}</span>
-                      <button
-                        onClick={() => openMatchRules(mb.matchId)}
-                        className="text-xs text-amber-400 hover:text-amber-300 font-semibold"
-                      >
-                        Editar Reglas
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      {BET_KEYS.map(bet => {
-                        const mbRules = (mb as any).rules as KnockoutBetRules | undefined;
-                        const pts = bet !== 'score' ? (mbRules?.[bet as keyof KnockoutBetRules] ?? defaultKnockoutBetRules()[bet as keyof KnockoutBetRules]) : null;
-                        return (
-                        <label key={bet} className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={mb[bet] as boolean}
-                            onChange={() => toggleMatchBet(i, bet as keyof KnockoutBetConfig)}
-                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                          />
-                          <span className={mb[bet] as boolean ? 'text-emerald-400' : 'text-white/40'}>
-                            {BET_LABELS[bet]}
-                          </span>
-                          {pts !== null && (
-                            <span className={`text-xs ${mb[bet] as boolean ? 'text-emerald-500/70' : 'text-white/20'}`}>
-                              ({pts} pts)
-                            </span>
-                          )}
-                        </label>
-                      );})}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-3 shrink-0">
-              <button onClick={saveMatchBets} disabled={savingMatchBets || loadingMatchBets} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400 disabled:opacity-50">
-                {savingMatchBets ? 'Guardando...' : 'Guardar'}
-              </button>
-              <button onClick={() => setMatchBetsGroup(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {rulesMatchId !== null && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60]">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gray-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-white">
-                Reglas - {matchBets.find(m => m.matchId === rulesMatchId)?.match.homeTeam} vs{' '}
-                {matchBets.find(m => m.matchId === rulesMatchId)?.match.awayTeam}
-              </h2>
-              <button onClick={() => setRulesMatchId(null)} className="text-white/60 hover:text-white">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <p className="text-white/50 text-sm mb-4">Puntos que otorga cada acierto:</p>
-            <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
-              {(Object.keys(defaultKnockoutBetRules()) as (keyof KnockoutBetRules)[])
-                .filter(key => {
-                  const mb = matchBets.find(m => m.matchId === rulesMatchId);
-                  return mb ? mb[key as keyof MatchBetEntry] as boolean : true;
-                })
-                .map(key => (
-                <div key={key} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                  <span className="text-white text-sm">{BET_LABELS[key] || key}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={matchRules[key]}
-                    onChange={(e) => updateRule(key, e.target.value)}
-                    className="w-16 text-center px-2 py-1 bg-white/10 border border-white/10 rounded-lg text-white text-sm outline-none focus:border-emerald-500"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => { saveMatchRules(); }} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-400">
-                Guardar Reglas
-              </button>
-              <button onClick={() => setRulesMatchId(null)} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Cancelar</button>
             </div>
           </motion.div>
         </div>
