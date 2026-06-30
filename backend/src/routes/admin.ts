@@ -450,6 +450,8 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
       'Australia': 'au', 'Qatar': 'qa', 'Morocco': 'ma'
     };
 
+    const knockoutKeywords = ['Round of 32', 'Round of 16', 'Quarter', 'Semi', 'Third Place', 'Final'];
+
     let synced = 0;
 
     for (const match of response.data.response) {
@@ -459,6 +461,8 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
       const awayFlag = countryFlags[awayTeamName] || awayTeamName.substring(0, 2).toLowerCase();
 
       const venue = match.fixture.venue;
+      const round = match.league?.round || match.league?.name || 'World Cup 2026';
+      const isKnockout = knockoutKeywords.some(k => round.includes(k));
 
       try {
         await prisma.match.upsert({
@@ -469,6 +473,8 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
             awayTeam: awayTeamName,
             awayFlag,
             startTime: new Date(match.fixture.date),
+            groupStage: round,
+            isKnockout,
             venueName: venue?.name || null,
             venueCity: venue?.city || null,
             venueCountry: venue?.country || null
@@ -480,7 +486,8 @@ router.post('/sync', adminAuth, async (req: Request, res: Response) => {
             awayTeam: awayTeamName,
             awayFlag,
             startTime: new Date(match.fixture.date),
-            groupStage: match.league?.name || 'World Cup 2026',
+            groupStage: round,
+            isKnockout,
             venueName: venue?.name || null,
             venueCity: venue?.city || null,
             venueCountry: venue?.country || null
