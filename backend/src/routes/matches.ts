@@ -18,6 +18,8 @@ router.get('/', async (req: Request, res: Response) => {
     if (req.query.isKnockout === 'true') where.isKnockout = true;
     if (req.query.isKnockout === 'false') where.isKnockout = false;
 
+    const knockoutStages = ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Third Place', 'Final'];
+
     const [matches, total] = await Promise.all([
       prisma.match.findMany({
         where,
@@ -40,8 +42,13 @@ router.get('/', async (req: Request, res: Response) => {
       prisma.match.count()
     ]);
 
+    const fixedMatches = matches.map(m => ({
+      ...m,
+      isKnockout: knockoutStages.includes(m.groupStage || '') || m.isKnockout
+    }));
+
     res.json({
-      data: matches,
+      data: fixedMatches,
       pagination: {
         page,
         limit,
