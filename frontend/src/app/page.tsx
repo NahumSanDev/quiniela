@@ -137,9 +137,9 @@ export default function Home() {
         setGroups(data);
         const savedGroup = localStorage.getItem('selectedGroup');
         if (savedGroup && data.some((g: Group) => g.id === savedGroup)) {
-          setSelectedGroup(savedGroup);
+          selectGroup(savedGroup);
         } else if (data.length === 1) {
-          setSelectedGroup(data[0].id);
+          selectGroup(data[0].id);
           localStorage.setItem('selectedGroup', data[0].id);
         }
         return data;
