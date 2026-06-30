@@ -16,18 +16,24 @@ export interface KnockoutData {
   penaltyShootout: boolean | null;
 }
 
+export type PredictionMode = 'score' | 'winner';
+
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
-  onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) => void;
+  onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData, winner?: string | null, isWinnerOnly?: boolean | null) => void;
   enabledBets: KnockoutBetConfig;
   pointValues?: KnockoutBetRules | null;
 }
 
 export function MatchCard({ match, prediction, onPredict, enabledBets, pointValues }: MatchCardProps) {
   const pts = pointValues ?? defaultKnockoutBetRules();
-  const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
-  const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
+  const [predictionMode, setPredictionMode] = useState<PredictionMode>(
+    prediction?.isWinnerOnly ? 'winner' : (!enabledBets.score && enabledBets.winnerOnly) ? 'winner' : 'score'
+  );
+  const [homeScore, setHomeScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.homeScore ?? ''));
+  const [awayScore, setAwayScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.awayScore ?? ''));
+  const [winner, setWinner] = useState<string | null>(prediction?.winner ?? null);
   const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
   const [bothTeamsScore, setBothTeamsScore] = useState<boolean | null>(prediction?.bothTeamsScore ?? null);
   const [cleanSheet, setCleanSheet] = useState<string | null>(prediction?.cleanSheet ?? null);
@@ -97,9 +103,17 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
       penaltyShootout,
     } : undefined;
 
+    const isWinnerMode = predictionMode === 'winner';
+    const submitWinner = isWinnerMode ? winner : null;
+    const submitIsWinnerOnly = isWinnerMode ? true : null;
+
     setIsSubmitting(true);
     try {
-      await onPredict(match.id, home, away, knockout);
+      if (isWinnerMode) {
+        await onPredict(match.id, 0, 0, knockout, submitWinner, submitIsWinnerOnly);
+      } else {
+        await onPredict(match.id, home, away, knockout, null, null);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -203,10 +217,37 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           </div>
         </div>
 
+        {!isLocked && enabledBets.winnerOnly && enabledBets.score && (
+          <div className="flex justify-center mt-4">
+            <div className="flex bg-white/5 rounded-lg p-0.5">
+              <button
+                onClick={() => setPredictionMode('score')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  predictionMode === 'score'
+                    ? 'bg-emerald-500 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Marcador
+              </button>
+              <button
+                onClick={() => setPredictionMode('winner')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  predictionMode === 'winner'
+                    ? 'bg-amber-500 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Ganador
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <span className="text-xs text-white/40">{formatDate(match.startTime)}</span>
 
-          {!isLocked && (
+          {!isLocked && predictionMode === 'score' && (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <button
@@ -255,6 +296,37 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
                   +
                 </button>
               </div>
+            </div>
+          )}
+
+          {!isLocked && predictionMode === 'winner' && (
+            <div className="flex items-center gap-2">
+              {[
+                { value: match.homeTeam, label: match.homeTeam.substring(0, 12), flag: match.homeFlag },
+                { value: 'draw', label: 'Empate', flag: null },
+                { value: match.awayTeam, label: match.awayTeam.substring(0, 12), flag: match.awayFlag },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setWinner(winner === opt.value ? null : opt.value)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    winner === opt.value
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  {opt.flag && (
+                    opt.flag.includes(',') ? (
+                      <div className="w-4 h-3 rounded-sm overflow-hidden flex">
+                        {opt.flag.split(',').map((c, i) => <div key={i} style={{ backgroundColor: c, flex: 1 }} />)}
+                      </div>
+                    ) : (
+                      <img src={`https://flagcdn.com/w40/${opt.flag}.png`} alt="" className="w-4 h-3 rounded-sm object-cover" />
+                    )
+                  )}
+                  {opt.label}
+                </button>
+              ))}
             </div>
           )}
 
@@ -574,7 +646,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
-            disabled={isSubmitting || homeScore === '' || awayScore === ''}
+            disabled={isSubmitting || (predictionMode === 'score' ? (homeScore === '' || awayScore === '') : !winner)}
             className="w-full mt-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:from-gray-500 disabled:to-gray-600 rounded-xl font-semibold text-white transition-all duration-300 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Guardando...' : prediction ? 'Actualizar' : 'Guardar'}

@@ -2,6 +2,7 @@ import { PrismaClient, Match, Prediction } from '@prisma/client';
 
 export interface KnockoutBetConfig {
   score: boolean;
+  winnerOnly: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
   cleanSheet: boolean;
@@ -17,6 +18,7 @@ export interface KnockoutBetConfig {
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
     score: true,
+    winnerOnly: true,
     totalGoals: true,
     bothTeamsScore: true,
     cleanSheet: true,
@@ -32,7 +34,7 @@ export function defaultKnockoutBetConfig(): KnockoutBetConfig {
 
 export function disabledKnockoutBetConfig(): KnockoutBetConfig {
   return {
-    score: false,
+    score: false, winnerOnly: false,
     totalGoals: false, bothTeamsScore: false, cleanSheet: false,
     halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
     redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
@@ -47,26 +49,33 @@ interface ScoringResult {
 }
 
 export function calculatePoints(
-  prediction: { homeScore: number; awayScore: number },
+  prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null },
   match: { homeScore: number | null; awayScore: number | null }
 ): ScoringResult {
   if (match.homeScore === null || match.awayScore === null) {
     return { points: 0, bonus: false };
   }
 
-  const predictedWinner = getWinner(prediction.homeScore, prediction.awayScore);
-  const actualWinner = getWinner(match.homeScore, match.awayScore);
-
   let points = 0;
   let bonus = false;
 
-  if (predictedWinner === actualWinner) {
-    points += 3;
-  }
+  if (prediction.isWinnerOnly && prediction.winner) {
+    const actualWinner = getWinner(match.homeScore, match.awayScore);
+    if (prediction.winner === actualWinner) {
+      points += 3;
+    }
+  } else {
+    const predictedWinner = getWinner(prediction.homeScore, prediction.awayScore);
+    const actualWinner = getWinner(match.homeScore, match.awayScore);
 
-  if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
-    points += 1;
-    bonus = true;
+    if (predictedWinner === actualWinner) {
+      points += 3;
+    }
+
+    if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
+      points += 1;
+      bonus = true;
+    }
   }
 
   return { points, bonus };
@@ -211,6 +220,7 @@ async function getGroupBetConfig(groupId: string | null): Promise<{
     return {
       bets: {
         score: bc.score ?? true,
+        winnerOnly: bc.winnerOnly ?? true,
         totalGoals: bc.totalGoals ?? true,
         bothTeamsScore: bc.bothTeamsScore ?? true,
         cleanSheet: bc.cleanSheet ?? true,
@@ -250,9 +260,9 @@ export async function processMatchResults(matchId: number): Promise<void> {
       ? await getGroupBetConfig(prediction.groupId)
       : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
-    const { points, bonus } = enabledBets.score
+    const { points, bonus } = enabledBets.score || enabledBets.winnerOnly
       ? calculatePoints(
-          { homeScore: prediction.homeScore, awayScore: prediction.awayScore },
+          { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly },
           { homeScore: match.homeScore, awayScore: match.awayScore }
         )
       : { points: 0, bonus: false };

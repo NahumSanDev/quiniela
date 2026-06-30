@@ -32,6 +32,8 @@ router.get('/', async (req: Request, res: Response) => {
               id: true,
               homeScore: true,
               awayScore: true,
+              winner: true,
+              isWinnerOnly: true,
               points: true,
               bonus: true,
               userId: true
@@ -117,7 +119,7 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
+    const { homeScore, awayScore, winner, isWinnerOnly, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
 
     let groupId = rawGroupId;
 
@@ -153,8 +155,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
 
     const match = await prisma.match.findUnique({ where: { id: parseInt(matchId) }, select: { isKnockout: true } });
 
-    const updateData: any = { homeScore, awayScore };
-    const createData: any = { userId, matchId: parseInt(matchId), groupId, homeScore, awayScore };
+    const updateData: any = { homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly };
+    const createData: any = { userId, matchId: parseInt(matchId), groupId, homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly };
 
     if (match?.isKnockout) {
       if (totalGoals !== undefined) { updateData.totalGoals = totalGoals; createData.totalGoals = totalGoals; }
@@ -188,6 +190,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
         id: prediction.id,
         homeScore: prediction.homeScore,
         awayScore: prediction.awayScore,
+        winner: prediction.winner,
+        isWinnerOnly: prediction.isWinnerOnly,
         updatedAt: prediction.updatedAt
       }
     });

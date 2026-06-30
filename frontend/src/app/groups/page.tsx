@@ -29,13 +29,14 @@ interface RankingEntry {
 }
 
 const BET_KEYS: (keyof KnockoutBetConfig)[] = [
-  'score', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
+  'score', 'winnerOnly', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
   'firstGoalTeam', 'firstGoalMinute', 'redCard', 'totalCards',
   'extraTime', 'penaltyShootout',
 ];
 
 const BET_LABELS: Record<string, string> = {
   score: 'Marcador',
+  winnerOnly: 'Solo Ganador',
   totalGoals: 'Goles Totales',
   bothTeamsScore: 'Ambos Anotan',
   cleanSheet: 'Valla Invicta',

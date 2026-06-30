@@ -118,8 +118,10 @@ model Prediction {
   userId            String
   matchId           Int
   groupId           String?
-  homeScore         Int
-  awayScore         Int
+  homeScore         Int      @default(0)
+  awayScore         Int      @default(0)
+  winner            String?
+  isWinnerOnly      Boolean  @default(false)
   points            Int      @default(0)
   bonus             Boolean  @default(false)
   totalGoals        Int?

@@ -224,7 +224,7 @@ export default function Home() {
     if (!group) return defaultKnockoutBetConfig();
     if (!group.useExtraBets) {
       return {
-        score: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
+        score: false, winnerOnly: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
         halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
         redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
       };
@@ -234,6 +234,7 @@ export default function Home() {
     }
     return {
       score: groupBetRules.score ?? true,
+      winnerOnly: groupBetRules.winnerOnly ?? true,
       totalGoals: groupBetRules.totalGoals ?? true,
       bothTeamsScore: groupBetRules.bothTeamsScore ?? true,
       cleanSheet: groupBetRules.cleanSheet ?? true,
@@ -254,7 +255,7 @@ export default function Home() {
     return groupBetRules?.rules || null;
   }
 
-  async function handlePredict(matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData) {
+  async function handlePredict(matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData, winner?: string | null, isWinnerOnly?: boolean | null) {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (!token || !storedUser) {
@@ -275,6 +276,10 @@ export default function Home() {
 
     try {
       const body: any = { homeScore, awayScore, groupId };
+      if (isWinnerOnly) {
+        body.winner = winner;
+        body.isWinnerOnly = true;
+      }
       if (knockout) {
         body.totalGoals = knockout.totalGoals;
         body.bothTeamsScore = knockout.bothTeamsScore;
