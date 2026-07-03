@@ -1,4 +1,5 @@
 ALTER TABLE "Prediction" ADD COLUMN "winner" TEXT;
 ALTER TABLE "Prediction" ADD COLUMN "isWinnerOnly" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Prediction" ADD COLUMN "isSimpleScore" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "Prediction" ALTER COLUMN "homeScore" SET DEFAULT 0;
 ALTER TABLE "Prediction" ALTER COLUMN "awayScore" SET DEFAULT 0;

@@ -122,6 +122,7 @@ model Prediction {
   awayScore         Int      @default(0)
   winner            String?
   isWinnerOnly      Boolean  @default(false)
+  isSimpleScore     Boolean  @default(false)
   points            Int      @default(0)
   bonus             Boolean  @default(false)
   totalGoals        Int?

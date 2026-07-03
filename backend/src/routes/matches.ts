@@ -34,6 +34,7 @@ router.get('/', async (req: Request, res: Response) => {
               awayScore: true,
               winner: true,
               isWinnerOnly: true,
+              isSimpleScore: true,
               points: true,
               bonus: true,
               userId: true
@@ -119,7 +120,7 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
     const userId = decoded.userId;
     
     const { matchId } = req.params;
-    const { homeScore, awayScore, winner, isWinnerOnly, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
+    const { homeScore, awayScore, winner, isWinnerOnly, isSimpleScore, groupId: rawGroupId, totalGoals, bothTeamsScore, cleanSheet, halfTimeHomeScore, halfTimeAwayScore, firstGoalTeam, firstGoalMinute, redCard, totalCards, extraTime, penaltyShootout } = req.body;
 
     let groupId = rawGroupId;
 
@@ -155,8 +156,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
 
     const match = await prisma.match.findUnique({ where: { id: parseInt(matchId) }, select: { isKnockout: true } });
 
-    const updateData: any = { homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly };
-    const createData: any = { userId, matchId: parseInt(matchId), groupId, homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly };
+    const updateData: any = { homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly, isSimpleScore: !!isSimpleScore };
+    const createData: any = { userId, matchId: parseInt(matchId), groupId, homeScore, awayScore, winner, isWinnerOnly: !!isWinnerOnly, isSimpleScore: !!isSimpleScore };
 
     if (match?.isKnockout) {
       if (totalGoals !== undefined) { updateData.totalGoals = totalGoals; createData.totalGoals = totalGoals; }
@@ -192,6 +193,7 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
         awayScore: prediction.awayScore,
         winner: prediction.winner,
         isWinnerOnly: prediction.isWinnerOnly,
+        isSimpleScore: prediction.isSimpleScore,
         updatedAt: prediction.updatedAt
       }
     });

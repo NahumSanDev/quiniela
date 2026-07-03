@@ -16,21 +16,24 @@ export interface KnockoutData {
   penaltyShootout: boolean | null;
 }
 
-export type PredictionMode = 'score' | 'winner';
+export type PredictionMode = 'score' | 'simpleScore' | 'winner';
 
 interface MatchCardProps {
   match: Match;
   prediction?: Prediction;
-  onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData, winner?: string | null, isWinnerOnly?: boolean | null) => void;
+  onPredict: (matchId: number, homeScore: number, awayScore: number, knockout?: KnockoutData, winner?: string | null, isWinnerOnly?: boolean | null, isSimpleScore?: boolean | null) => void;
   enabledBets: KnockoutBetConfig;
   pointValues?: KnockoutBetRules | null;
 }
 
 export function MatchCard({ match, prediction, onPredict, enabledBets, pointValues }: MatchCardProps) {
   const pts = pointValues ?? defaultKnockoutBetRules();
-  const [predictionMode, setPredictionMode] = useState<PredictionMode>(
-    prediction?.isWinnerOnly ? 'winner' : (!enabledBets.score && enabledBets.winnerOnly) ? 'winner' : 'score'
-  );
+  const [predictionMode, setPredictionMode] = useState<PredictionMode>(() => {
+    if (prediction?.isWinnerOnly) return 'winner';
+    if (!enabledBets.score && !enabledBets.simpleScore && enabledBets.winnerOnly) return 'winner';
+    if (!enabledBets.score && enabledBets.simpleScore) return 'simpleScore';
+    return 'score';
+  });
   const [homeScore, setHomeScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.homeScore ?? ''));
   const [awayScore, setAwayScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.awayScore ?? ''));
   const [winner, setWinner] = useState<string | null>(prediction?.winner ?? null);
@@ -104,16 +107,14 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
     } : undefined;
 
     const isWinnerMode = predictionMode === 'winner';
+    const isSimpleMode = predictionMode === 'simpleScore';
     const submitWinner = isWinnerMode ? winner : null;
     const submitIsWinnerOnly = isWinnerMode ? true : null;
+    const submitIsSimpleScore = isSimpleMode ? true : null;
 
     setIsSubmitting(true);
     try {
-      if (isWinnerMode) {
-        await onPredict(match.id, 0, 0, knockout, submitWinner, submitIsWinnerOnly);
-      } else {
-        await onPredict(match.id, home, away, knockout, null, null);
-      }
+      await onPredict(match.id, isWinnerMode ? 0 : home, isWinnerMode ? 0 : away, knockout, submitWinner, submitIsWinnerOnly, submitIsSimpleScore);
     } finally {
       setIsSubmitting(false);
     }
@@ -217,29 +218,45 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           </div>
         </div>
 
-        {!isLocked && enabledBets.winnerOnly && enabledBets.score && (
+        {!isLocked && (enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly) && (
           <div className="flex justify-center mt-4">
             <div className="flex bg-white/5 rounded-lg p-0.5">
-              <button
-                onClick={() => setPredictionMode('score')}
-                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                  predictionMode === 'score'
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                Marcador
-              </button>
-              <button
-                onClick={() => setPredictionMode('winner')}
-                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                  predictionMode === 'winner'
-                    ? 'bg-amber-500 text-white'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                Ganador
-              </button>
+              {enabledBets.score && (
+                <button
+                  onClick={() => setPredictionMode('score')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    predictionMode === 'score'
+                      ? 'bg-emerald-500 text-white'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Completo
+                </button>
+              )}
+              {enabledBets.simpleScore && (
+                <button
+                  onClick={() => setPredictionMode('simpleScore')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    predictionMode === 'simpleScore'
+                      ? 'bg-emerald-500 text-white'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Simple
+                </button>
+              )}
+              {enabledBets.winnerOnly && (
+                <button
+                  onClick={() => setPredictionMode('winner')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    predictionMode === 'winner'
+                      ? 'bg-amber-500 text-white'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  Ganador
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -303,7 +320,6 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
             <div className="flex items-center gap-2">
               {[
                 { value: match.homeTeam, label: match.homeTeam.substring(0, 12), flag: match.homeFlag },
-                { value: 'draw', label: 'Empate', flag: null },
                 { value: match.awayTeam, label: match.awayTeam.substring(0, 12), flag: match.awayFlag },
               ].map((opt) => (
                 <button
@@ -327,6 +343,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
                   {opt.label}
                 </button>
               ))}
+              <span className="text-amber-400 text-xs font-semibold">+{pts.winnerPoints ?? 3} pts</span>
             </div>
           )}
 

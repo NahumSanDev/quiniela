@@ -29,13 +29,14 @@ interface RankingEntry {
 }
 
 const BET_KEYS: (keyof KnockoutBetConfig)[] = [
-  'score', 'winnerOnly', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
+  'score', 'simpleScore', 'winnerOnly', 'totalGoals', 'bothTeamsScore', 'cleanSheet', 'halfTimeScore',
   'firstGoalTeam', 'firstGoalMinute', 'redCard', 'totalCards',
   'extraTime', 'penaltyShootout',
 ];
 
 const BET_LABELS: Record<string, string> = {
-  score: 'Marcador',
+  score: 'Marcador Completo',
+  simpleScore: 'Marcador Simple',
   winnerOnly: 'Solo Ganador',
   totalGoals: 'Goles Totales',
   bothTeamsScore: 'Ambos Anotan',
@@ -506,7 +507,8 @@ export default function GroupsPage() {
                   ) : (
                     BET_KEYS.map(key => {
                       const enabled = betRules[key] ?? true;
-                      const pts = key !== 'score' ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
+                      const hasPoints = key !== 'score' && key !== 'simpleScore';
+                      const pts = hasPoints ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
                       return (
                         <div key={key} className="flex items-center gap-2">
                           <input

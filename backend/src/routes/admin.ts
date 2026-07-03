@@ -157,6 +157,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
             const bc = group.betRules as any;
             enabledBets = {
               score: bc.score ?? true,
+              simpleScore: bc.simpleScore ?? false,
               winnerOnly: bc.winnerOnly ?? true,
               totalGoals: bc.totalGoals ?? true,
               bothTeamsScore: bc.bothTeamsScore ?? true,

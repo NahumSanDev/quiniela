@@ -19,7 +19,7 @@ export interface Match {
   totalCards: number | null;
   extraTime: boolean | null;
   penaltyShootout: boolean | null;
-  predictions?: { id: number; homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; points: number; bonus: boolean; userId: string }[];
+  predictions?: { id: number; homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; isSimpleScore?: boolean | null; points: number; bonus: boolean; userId: string }[];
 }
 
 export interface Prediction {
@@ -28,6 +28,7 @@ export interface Prediction {
   awayScore: number;
   winner?: string | null;
   isWinnerOnly?: boolean | null;
+  isSimpleScore?: boolean | null;
   points: number;
   bonus: boolean;
   extraPoints?: number;
@@ -55,6 +56,7 @@ export interface User {
 
 export interface KnockoutBetConfig {
   score: boolean;
+  simpleScore: boolean;
   winnerOnly: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
@@ -81,6 +83,7 @@ export interface GroupMatchBetConfig {
     isKnockout: boolean;
   };
   score: boolean;
+  simpleScore: boolean;
   winnerOnly: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
@@ -105,19 +108,21 @@ export interface KnockoutBetRules {
   totalCards: number;
   extraTime: number;
   penaltyShootout: number;
+  winnerPoints?: number;
 }
 
 export function defaultKnockoutBetRules(): KnockoutBetRules {
   return {
     totalGoals: 2, bothTeamsScore: 1, cleanSheet: 1, halfTimeScore: 2,
     firstGoalTeam: 1, firstGoalMinute: 2, redCard: 1, totalCards: 2,
-    extraTime: 1, penaltyShootout: 1,
+    extraTime: 1, penaltyShootout: 1, winnerPoints: 3,
   };
 }
 
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
     score: true,
+    simpleScore: false,
     winnerOnly: true,
     totalGoals: true,
     bothTeamsScore: true,

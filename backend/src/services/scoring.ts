@@ -2,6 +2,7 @@ import { PrismaClient, Match, Prediction } from '@prisma/client';
 
 export interface KnockoutBetConfig {
   score: boolean;
+  simpleScore: boolean;
   winnerOnly: boolean;
   totalGoals: boolean;
   bothTeamsScore: boolean;
@@ -18,6 +19,7 @@ export interface KnockoutBetConfig {
 export function defaultKnockoutBetConfig(): KnockoutBetConfig {
   return {
     score: true,
+    simpleScore: false,
     winnerOnly: true,
     totalGoals: true,
     bothTeamsScore: true,
@@ -34,7 +36,7 @@ export function defaultKnockoutBetConfig(): KnockoutBetConfig {
 
 export function disabledKnockoutBetConfig(): KnockoutBetConfig {
   return {
-    score: false, winnerOnly: false,
+    score: false, simpleScore: false, winnerOnly: false,
     totalGoals: false, bothTeamsScore: false, cleanSheet: false,
     halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
     redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
@@ -49,8 +51,9 @@ interface ScoringResult {
 }
 
 export function calculatePoints(
-  prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null },
-  match: { homeScore: number | null; awayScore: number | null }
+  prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; isSimpleScore?: boolean | null },
+  match: { homeScore: number | null; awayScore: number | null },
+  config?: { simpleScore?: boolean | null; winnerPoints?: number | null }
 ): ScoringResult {
   if (match.homeScore === null || match.awayScore === null) {
     return { points: 0, bonus: false };
@@ -62,7 +65,11 @@ export function calculatePoints(
   if (prediction.isWinnerOnly && prediction.winner) {
     const actualWinner = getWinner(match.homeScore, match.awayScore);
     if (prediction.winner === actualWinner) {
-      points += 3;
+      points += config?.winnerPoints ?? 3;
+    }
+  } else if (prediction.isSimpleScore || config?.simpleScore) {
+    if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
+      points += 1;
     }
   } else {
     const predictedWinner = getWinner(prediction.homeScore, prediction.awayScore);
@@ -112,13 +119,14 @@ export interface KnockoutBetRules {
   totalCards: number;
   extraTime: number;
   penaltyShootout: number;
+  winnerPoints?: number;
 }
 
 export function defaultKnockoutBetRules(): KnockoutBetRules {
   return {
     totalGoals: 2, bothTeamsScore: 1, cleanSheet: 1, halfTimeScore: 2,
     firstGoalTeam: 1, firstGoalMinute: 2, redCard: 1, totalCards: 2,
-    extraTime: 1, penaltyShootout: 1,
+    extraTime: 1, penaltyShootout: 1, winnerPoints: 3,
   };
 }
 
@@ -220,6 +228,7 @@ async function getGroupBetConfig(groupId: string | null): Promise<{
     return {
       bets: {
         score: bc.score ?? true,
+        simpleScore: bc.simpleScore ?? false,
         winnerOnly: bc.winnerOnly ?? true,
         totalGoals: bc.totalGoals ?? true,
         bothTeamsScore: bc.bothTeamsScore ?? true,
@@ -260,10 +269,11 @@ export async function processMatchResults(matchId: number): Promise<void> {
       ? await getGroupBetConfig(prediction.groupId)
       : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
-    const { points, bonus } = enabledBets.score || enabledBets.winnerOnly
+    const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
       ? calculatePoints(
-          { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly },
-          { homeScore: match.homeScore, awayScore: match.awayScore }
+          { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
+          { homeScore: match.homeScore, awayScore: match.awayScore },
+          { simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
         )
       : { points: 0, bonus: false };
 
