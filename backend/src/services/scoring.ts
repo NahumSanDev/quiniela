@@ -67,7 +67,7 @@ export function calculatePoints(
     if (prediction.winner === actualWinner) {
       points += config?.winnerPoints ?? 3;
     }
-  } else if (prediction.isSimpleScore || config?.simpleScore) {
+  } else if (prediction.isSimpleScore) {
     if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
       points += 1;
     }
