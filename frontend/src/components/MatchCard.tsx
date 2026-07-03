@@ -218,27 +218,8 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           </div>
         </div>
 
-        <div className="flex flex-col items-center">
-          {!isLocked && enabledBets.score && enabledBets.simpleScore && (
-            <div className="flex gap-1 mb-1">
-              <button onClick={() => setPredictionMode('score')} className={`px-2 py-0.5 rounded text-xs font-semibold transition-all ${predictionMode === 'score' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}>Completo +3+1</button>
-              <button onClick={() => setPredictionMode('simpleScore')} className={`px-2 py-0.5 rounded text-xs font-semibold transition-all ${predictionMode === 'simpleScore' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}>Simple +1</button>
-            </div>
-          )}
-          <div className="flex items-center justify-between w-full">
-            <span className="text-xs text-white/40">{formatDate(match.startTime)}</span>
-
-            {!isLocked && (enabledBets.score || enabledBets.simpleScore) && (
-              <div className="flex items-center gap-1">
-                <button onClick={() => setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1)))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
-                <input type="number" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
-                <span className="text-white/40 text-sm">:</span>
-                <input type="number" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
-                <button onClick={() => setAwayScore(String((parseInt(String(awayScore)) || 0) + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
-                <span className="text-amber-400 text-xs font-semibold">{predictionMode === 'simpleScore' ? '+1' : '+3+1'}</span>
-              </div>
-            )}
-
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-white/40">{formatDate(match.startTime)}</span>
           {badge && (
             <motion.span
               initial={{ scale: 0 }}
@@ -248,33 +229,78 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
               {badge.text}
             </motion.span>
           )}
-          </div>
         </div>
+
+        {!isLocked && (enabledBets.score || enabledBets.simpleScore) && (
+          <div className="mt-3 space-y-3">
+            {enabledBets.score && (
+              <div onClick={() => { setPredictionMode('score'); if (predictionMode !== 'score') setWinner(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${predictionMode === 'score' ? 'bg-emerald-500/20 ring-2 ring-emerald-500' : 'bg-white/5 hover:bg-white/10 opacity-70'}`}
+              >
+                <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Completo</span>
+                {predictionMode === 'score' ? (
+                  <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1)))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
+                    <input type="number" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
+                    <span className="text-white/40 text-sm">:</span>
+                    <input type="number" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
+                    <button onClick={() => setAwayScore(String((parseInt(String(awayScore)) || 0) + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
+                    <span className="text-amber-400 text-xs font-semibold">+3+1</span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-white/40 ml-auto">3+1 pts</span>
+                )}
+              </div>
+            )}
+
+            {enabledBets.simpleScore && (
+              <div onClick={() => { setPredictionMode('simpleScore'); if (predictionMode !== 'simpleScore') setWinner(null); }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${predictionMode === 'simpleScore' ? 'bg-emerald-500/20 ring-2 ring-emerald-500' : 'bg-white/5 hover:bg-white/10 opacity-70'}`}
+              >
+                <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Simple</span>
+                {predictionMode === 'simpleScore' ? (
+                  <div className="flex items-center gap-1 ml-auto" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1)))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
+                    <input type="number" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
+                    <span className="text-white/40 text-sm">:</span>
+                    <input type="number" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
+                    <button onClick={() => setAwayScore(String((parseInt(String(awayScore)) || 0) + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
+                    <span className="text-amber-400 text-xs font-semibold">+1</span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-white/40 ml-auto">1 pt</span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {!isLocked && match.isKnockout && enabledBets.winnerOnly && (
           <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Ganador</span>
-              <span className="text-amber-400 text-xs font-semibold">+{pts.winnerPoints ?? 3} pts</span>
-              <div className="flex gap-1 ml-auto">
-                {[
-                  { value: match.homeTeam, flag: match.homeFlag },
-                  { value: match.awayTeam, flag: match.awayFlag },
-                ].map((opt) => (
-                  <button key={opt.value} onClick={() => {
-                    const newWinner = winner === opt.value ? null : opt.value;
-                    setWinner(newWinner);
-                    if (newWinner) { setPredictionMode('winner'); setHomeScore(''); setAwayScore(''); }
-                  }}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      winner === opt.value ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {opt.flag && !opt.flag.includes(',') && <img src={`https://flagcdn.com/w40/${opt.flag}.png`} alt="" className="w-3 h-2 rounded-sm object-cover" />}
-                    {opt.value.substring(0, 10)}
-                  </button>
-                ))}
-              </div>
+            <label className="block text-sm text-white/80 mb-1.5">
+              Solo Ganador <span className="text-amber-400 font-semibold">+{pts.winnerPoints ?? 3} pts</span>
+            </label>
+            <div className="flex gap-2">
+              {[
+                { value: match.homeTeam, flag: match.homeFlag },
+                { value: match.awayTeam, flag: match.awayFlag },
+              ].map((opt) => (
+                <button key={opt.value} onClick={() => {
+                  const newWinner = winner === opt.value ? null : opt.value;
+                  setWinner(newWinner);
+                  if (newWinner) { setPredictionMode('winner'); setHomeScore(''); setAwayScore(''); }
+                }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    winner === opt.value ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  {opt.flag && !opt.flag.includes(',') && <img src={`https://flagcdn.com/w40/${opt.flag}.png`} alt="" className="w-4 h-3 rounded-sm object-cover" />}
+                  {opt.value.substring(0, 12)}
+                </button>
+              ))}
+              {winner !== null && (
+                <button onClick={() => setWinner(null)} className="px-3 py-2 rounded-lg text-sm bg-white/5 text-white/40 hover:bg-white/10">✕</button>
+              )}
             </div>
           </div>
         )}
