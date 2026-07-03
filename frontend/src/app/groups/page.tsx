@@ -267,12 +267,15 @@ export default function GroupsPage() {
     const token = localStorage.getItem('token');
     setSavingSettings(true);
 
-    const betRulesPayload = useExtraBets ? betRules : null;
-    if (useExtraBets && betRulesPayload && Object.keys(betRulesPayload).length > 0) {
+    if (useExtraBets) {
+      const fullPayload: any = { ...betRules };
+      BET_KEYS.forEach(key => {
+        fullPayload[key] = betRules[key] ?? true;
+      });
       await fetch(`${API_URL}/api/groups/${settingsGroup}/bet-rules`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(betRulesPayload)
+        body: JSON.stringify(fullPayload)
       });
     }
 
