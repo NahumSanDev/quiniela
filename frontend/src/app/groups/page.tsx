@@ -513,7 +513,11 @@ export default function GroupsPage() {
                         <button onClick={() => { BET_KEYS.forEach(k => toggleBetRule(k, true)); }} className="px-3 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-semibold">Seleccionar todo</button>
                         <button onClick={() => { BET_KEYS.forEach(k => toggleBetRule(k, false)); }} className="px-3 py-1 text-xs rounded-lg bg-white/10 text-white/60 hover:bg-white/20 font-semibold">Deseleccionar todo</button>
                       </div>
-                    {BET_KEYS.map(key => {
+                    {[...BET_KEYS].sort((a, b) => {
+                      const ptsA = a !== 'score' && a !== 'simpleScore' ? (betRules.rules?.[a] ?? defaultKnockoutBetRules()[a as keyof KnockoutBetRules]) : -1;
+                      const ptsB = b !== 'score' && b !== 'simpleScore' ? (betRules.rules?.[b] ?? defaultKnockoutBetRules()[b as keyof KnockoutBetRules]) : -1;
+                      return (ptsB as number) - (ptsA as number);
+                    }).map(key => {
                       const enabled = betRules[key] ?? true;
                       const hasPoints = key !== 'score' && key !== 'simpleScore';
                       const pts = hasPoints ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
