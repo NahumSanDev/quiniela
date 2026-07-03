@@ -224,7 +224,7 @@ export default function Home() {
     if (!group) return defaultKnockoutBetConfig();
     if (!group.useExtraBets) {
       return {
-        score: false, simpleScore: false, winnerOnly: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
+        score: true, simpleScore: false, winnerOnly: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
         halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
         redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
       };
