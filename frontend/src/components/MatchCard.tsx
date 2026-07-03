@@ -248,13 +248,13 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           <div onClick={() => { setPredictionMode('simpleScore'); setWinner(null); }}
             className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all"
           >
-            <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Simple</span>
+            <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Marcador Exacto</span>
             <span className="text-xs text-white/40">1 pt</span>
           </div>
         )}
         {!isLocked && match.isKnockout && enabledBets.simpleScore && predictionMode === 'simpleScore' && (
           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 ring-2 ring-emerald-500">
-            <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Simple</span>
+            <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Marcador Exacto</span>
             <span className="text-amber-400 text-xs font-semibold">+1</span>
             {enabledBets.score && <button onClick={() => setPredictionMode('score')} className="ml-auto text-xs text-white/40 hover:text-white/70">Usar Completo</button>}
           </div>

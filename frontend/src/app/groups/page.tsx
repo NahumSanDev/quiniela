@@ -36,7 +36,7 @@ const BET_KEYS: (keyof KnockoutBetConfig)[] = [
 
 const BET_LABELS: Record<string, string> = {
   score: 'Marcador Completo',
-  simpleScore: 'Marcador Simple',
+  simpleScore: 'Marcador Exacto',
   winnerOnly: 'Solo Ganador',
   totalGoals: 'Goles Totales',
   bothTeamsScore: 'Ambos Anotan',
