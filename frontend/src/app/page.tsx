@@ -219,33 +219,33 @@ export default function Home() {
     }
   }
 
+  function disabledExtraBets(): KnockoutBetConfig {
+    return {
+      score: true, simpleScore: false, winnerOnly: false,
+      totalGoals: false, bothTeamsScore: false, cleanSheet: false,
+      halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
+      redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
+    };
+  }
+
   function getGroupEnabledBets(): KnockoutBetConfig {
     const group = groups.find(g => g.id === selectedGroup);
-    if (!group) return defaultKnockoutBetConfig();
-    if (!group.useExtraBets) {
-      return {
-        score: true, simpleScore: false, winnerOnly: false, totalGoals: false, bothTeamsScore: false, cleanSheet: false,
-        halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
-        redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
-      };
-    }
-    if (!groupBetRules || Object.keys(groupBetRules).length === 0) {
-      return defaultKnockoutBetConfig();
-    }
+    if (!group || !group.useExtraBets || !groupBetRules) return disabledExtraBets();
+    if (Object.keys(groupBetRules).length === 0) return disabledExtraBets();
     return {
       score: groupBetRules.score ?? true,
       simpleScore: groupBetRules.simpleScore ?? false,
-      winnerOnly: groupBetRules.winnerOnly ?? true,
-      totalGoals: groupBetRules.totalGoals ?? true,
-      bothTeamsScore: groupBetRules.bothTeamsScore ?? true,
-      cleanSheet: groupBetRules.cleanSheet ?? true,
-      halfTimeScore: groupBetRules.halfTimeScore ?? true,
-      firstGoalTeam: groupBetRules.firstGoalTeam ?? true,
-      firstGoalMinute: groupBetRules.firstGoalMinute ?? true,
-      redCard: groupBetRules.redCard ?? true,
-      totalCards: groupBetRules.totalCards ?? true,
-      extraTime: groupBetRules.extraTime ?? true,
-      penaltyShootout: groupBetRules.penaltyShootout ?? true,
+      winnerOnly: groupBetRules.winnerOnly ?? false,
+      totalGoals: groupBetRules.totalGoals ?? false,
+      bothTeamsScore: groupBetRules.bothTeamsScore ?? false,
+      cleanSheet: groupBetRules.cleanSheet ?? false,
+      halfTimeScore: groupBetRules.halfTimeScore ?? false,
+      firstGoalTeam: groupBetRules.firstGoalTeam ?? false,
+      firstGoalMinute: groupBetRules.firstGoalMinute ?? false,
+      redCard: groupBetRules.redCard ?? false,
+      totalCards: groupBetRules.totalCards ?? false,
+      extraTime: groupBetRules.extraTime ?? false,
+      penaltyShootout: groupBetRules.penaltyShootout ?? false,
     };
   }
 
