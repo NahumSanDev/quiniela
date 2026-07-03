@@ -247,8 +247,8 @@ export default function GroupsPage() {
     }
   }
 
-  function toggleBetRule(key: string) {
-    setBetRules((prev: any) => ({ ...prev, [key]: !(prev[key] ?? true) }));
+  function toggleBetRule(key: string, forceValue?: boolean) {
+    setBetRules((prev: any) => ({ ...prev, [key]: forceValue ?? !(prev[key] ?? true) }));
   }
 
   function updateBetRulePoints(key: string, value: string) {
@@ -505,7 +505,12 @@ export default function GroupsPage() {
                       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full" />
                     </div>
                   ) : (
-                    BET_KEYS.map(key => {
+                    <>
+                      <div className="flex gap-2 mb-3">
+                        <button onClick={() => { BET_KEYS.forEach(k => toggleBetRule(k, true)); }} className="px-3 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 font-semibold">Seleccionar todo</button>
+                        <button onClick={() => { BET_KEYS.forEach(k => toggleBetRule(k, false)); }} className="px-3 py-1 text-xs rounded-lg bg-white/10 text-white/60 hover:bg-white/20 font-semibold">Deseleccionar todo</button>
+                      </div>
+                    {BET_KEYS.map(key => {
                       const enabled = betRules[key] ?? true;
                       const hasPoints = key !== 'score' && key !== 'simpleScore';
                       const pts = hasPoints ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
@@ -529,11 +534,12 @@ export default function GroupsPage() {
                               className={`w-14 text-center px-1 py-0.5 rounded-lg text-xs outline-none ${enabled ? 'bg-white/10 border border-white/10 text-white focus:border-emerald-500' : 'bg-white/5 border border-white/5 text-white/30'}`}
                             />
                           )}
-                        </div>
-                      );
-                    })
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
-                </div>
+                  </div>
               )}
             </div>
             <div className="flex gap-3">
