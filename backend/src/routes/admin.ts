@@ -143,7 +143,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
 
     if (status === 'FINISHED' && homeScore !== undefined && awayScore !== undefined) {
       const predictions = await prisma.prediction.findMany({
-        where: { matchId, points: 0 }
+        where: { matchId }
       });
 
       for (const prediction of predictions) {
