@@ -518,7 +518,7 @@ export default function GroupsPage() {
                       const ptsB = b !== 'score' && b !== 'simpleScore' ? (betRules.rules?.[b] ?? defaultKnockoutBetRules()[b as keyof KnockoutBetRules]) : -1;
                       return (ptsB as number) - (ptsA as number);
                     }).map(key => {
-                      const enabled = betRules[key] ?? true;
+                      const enabled = betRules[key] ?? (key === 'score' ? false : true);
                       const hasPoints = key !== 'score' && key !== 'simpleScore';
                       const pts = hasPoints ? (betRules.rules?.[key] ?? defaultKnockoutBetRules()[key as keyof KnockoutBetRules]) : null;
                       return (

@@ -233,7 +233,7 @@ export default function Home() {
     if (!group || !group.useExtraBets || !groupBetRules) return disabledExtraBets();
     if (Object.keys(groupBetRules).length === 0) return disabledExtraBets();
     return {
-      score: groupBetRules.score ?? true,
+      score: groupBetRules.score ?? false,
       simpleScore: groupBetRules.simpleScore ?? false,
       winnerOnly: groupBetRules.winnerOnly ?? false,
       totalGoals: groupBetRules.totalGoals ?? false,
