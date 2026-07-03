@@ -223,7 +223,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-white/40">{formatDate(match.startTime)}</span>
-          {!isLocked && (enabledBets.score || enabledBets.simpleScore) && (
+          {!isLocked && enabledBets.score && (
             <div className="flex items-center gap-1">
               <button onClick={(e) => { e.stopPropagation(); setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1))); }} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
               <input type="number" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
