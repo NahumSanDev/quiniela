@@ -214,7 +214,7 @@ export function calculateKnockoutPoints(
   return extra;
 }
 
-async function getGroupBetConfig(groupId: string | null): Promise<{
+export async function getGroupBetConfig(groupId: string | null): Promise<{
   bets: KnockoutBetConfig;
   rules: KnockoutBetRules | null;
 }> {

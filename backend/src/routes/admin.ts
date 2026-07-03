@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { calculateKnockoutPoints, defaultKnockoutBetConfig, disabledKnockoutBetConfig, type KnockoutBetRules } from '../services/scoring';
+import { calculateKnockoutPoints, calculatePoints, getGroupBetConfig, defaultKnockoutBetConfig, disabledKnockoutBetConfig, type KnockoutBetRules } from '../services/scoring';
 
 const execAsync = promisify(exec);
 
@@ -147,48 +147,17 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
       });
 
       for (const prediction of predictions) {
-        let enabledBets = match.isKnockout ? defaultKnockoutBetConfig() : disabledKnockoutBetConfig();
-        let rules = null as KnockoutBetRules | null;
-        if (prediction.groupId) {
-          const group = await prisma.group.findUnique({ where: { id: prediction.groupId } });
-          if (!group || !group.useExtraBets) {
-            enabledBets = disabledKnockoutBetConfig();
-          } else if (group.betRules) {
-            const bc = group.betRules as any;
-            enabledBets = {
-              score: bc.score ?? true,
-              simpleScore: bc.simpleScore ?? false,
-              winnerOnly: bc.winnerOnly ?? true,
-              totalGoals: bc.totalGoals ?? true,
-              bothTeamsScore: bc.bothTeamsScore ?? true,
-              cleanSheet: bc.cleanSheet ?? true,
-              halfTimeScore: bc.halfTimeScore ?? true,
-              firstGoalTeam: bc.firstGoalTeam ?? true,
-              firstGoalMinute: bc.firstGoalMinute ?? true,
-              redCard: bc.redCard ?? true,
-              totalCards: bc.totalCards ?? true,
-              extraTime: bc.extraTime ?? true,
-              penaltyShootout: bc.penaltyShootout ?? true,
-            };
-            rules = (bc.rules as KnockoutBetRules) ?? null;
-          }
-        }
+        const { bets: enabledBets, rules } = match.isKnockout
+          ? await getGroupBetConfig(prediction.groupId)
+          : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
-        let points = 0;
-        let bonus = false;
-
-        if (enabledBets.score) {
-          const predictedWinner = prediction.homeScore > prediction.awayScore ? 'HOME' :
-                                 prediction.awayScore > prediction.homeScore ? 'AWAY' : 'DRAW';
-          const actualWinner = homeScore > awayScore ? 'HOME' :
-                              awayScore > homeScore ? 'AWAY' : 'DRAW';
-
-          if (predictedWinner === actualWinner) points += 3;
-          if (prediction.homeScore === homeScore && prediction.awayScore === awayScore) {
-            points += 1;
-            bonus = true;
-          }
-        }
+        const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
+          ? calculatePoints(
+              { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
+              { homeScore, awayScore },
+              { simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
+            )
+          : { points: 0, bonus: false };
 
         let extraPoints = 0;
         if (match.isKnockout) {
@@ -199,18 +168,16 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
         const oldTotal = prediction.points + (prediction as any).extraPoints || 0;
         const pointsDiff = totalNewPoints - oldTotal;
 
-        if (points > 0 || extraPoints > 0) {
-          await prisma.prediction.update({
-            where: { id: prediction.id },
-            data: { points, bonus, extraPoints }
-          });
+        await prisma.prediction.update({
+          where: { id: prediction.id },
+          data: { points, bonus, extraPoints }
+        });
 
-          if (pointsDiff > 0) {
-            await prisma.user.update({
-              where: { id: prediction.userId },
-              data: { points: { increment: pointsDiff } }
-            });
-          }
+        if (pointsDiff !== 0) {
+          await prisma.user.update({
+            where: { id: prediction.userId },
+            data: { points: { increment: pointsDiff } }
+          });
         }
       }
     }
