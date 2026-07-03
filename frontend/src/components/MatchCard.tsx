@@ -121,6 +121,9 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
   }
 
   const badge = getPointsBadge();
+  const hasExtraBets = enabledBets.totalGoals || enabledBets.bothTeamsScore || enabledBets.cleanSheet ||
+    enabledBets.halfTimeScore || enabledBets.firstGoalTeam || enabledBets.firstGoalMinute ||
+    enabledBets.redCard || enabledBets.totalCards || enabledBets.extraTime || enabledBets.penaltyShootout;
 
   return (
     <motion.div
@@ -241,7 +244,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           )}
         </div>
 
-        {!isLocked && enabledBets.simpleScore && predictionMode !== 'simpleScore' && (
+        {!isLocked && match.isKnockout && enabledBets.simpleScore && predictionMode !== 'simpleScore' && (
           <div onClick={() => { setPredictionMode('simpleScore'); setWinner(null); }}
             className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all"
           >
@@ -249,7 +252,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
             <span className="text-xs text-white/40">1 pt</span>
           </div>
         )}
-        {!isLocked && enabledBets.simpleScore && predictionMode === 'simpleScore' && (
+        {!isLocked && match.isKnockout && enabledBets.simpleScore && predictionMode === 'simpleScore' && (
           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/20 ring-2 ring-emerald-500">
             <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">Simple</span>
             <span className="text-amber-400 text-xs font-semibold">+1</span>
@@ -297,7 +300,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           </div>
         )}
 
-        {!isLocked && match.isKnockout && (
+        {!isLocked && match.isKnockout && hasExtraBets && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
