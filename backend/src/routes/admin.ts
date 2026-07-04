@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { calculateKnockoutPoints, calculatePoints, getGroupBetConfig, defaultKnockoutBetConfig, disabledKnockoutBetConfig, type KnockoutBetRules } from '../services/scoring';
+import { calculateKnockoutPoints, calculatePoints, getGroupBetConfig, defaultKnockoutBetConfig, type KnockoutBetRules } from '../services/scoring';
 
 const execAsync = promisify(exec);
 

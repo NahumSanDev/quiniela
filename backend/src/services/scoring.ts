@@ -36,7 +36,7 @@ export function defaultKnockoutBetConfig(): KnockoutBetConfig {
 
 export function disabledKnockoutBetConfig(): KnockoutBetConfig {
   return {
-    score: false, simpleScore: false, winnerOnly: false,
+    score: true, simpleScore: false, winnerOnly: false,
     totalGoals: false, bothTeamsScore: false, cleanSheet: false,
     halfTimeScore: false, firstGoalTeam: false, firstGoalMinute: false,
     redCard: false, totalCards: false, extraTime: false, penaltyShootout: false,
