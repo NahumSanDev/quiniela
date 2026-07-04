@@ -37,7 +37,19 @@ router.get('/', async (req: Request, res: Response) => {
               isSimpleScore: true,
               points: true,
               bonus: true,
-              userId: true
+              extraPoints: true,
+              userId: true,
+              totalGoals: true,
+              bothTeamsScore: true,
+              cleanSheet: true,
+              halfTimeHomeScore: true,
+              halfTimeAwayScore: true,
+              firstGoalTeam: true,
+              firstGoalMinute: true,
+              redCard: true,
+              totalCards: true,
+              extraTime: true,
+              penaltyShootout: true
             }
           }
         }
