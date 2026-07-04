@@ -53,7 +53,7 @@ interface ScoringResult {
 export function calculatePoints(
   prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; isSimpleScore?: boolean | null },
   match: { homeScore: number | null; awayScore: number | null },
-  config?: { simpleScore?: boolean | null; winnerPoints?: number | null }
+  config?: { score?: boolean | null; simpleScore?: boolean | null; winnerPoints?: number | null }
 ): ScoringResult {
   if (match.homeScore === null || match.awayScore === null) {
     return { points: 0, bonus: false };
@@ -62,16 +62,8 @@ export function calculatePoints(
   let points = 0;
   let bonus = false;
 
-  if (prediction.isWinnerOnly && prediction.winner) {
-    const actualWinner = getWinner(match.homeScore, match.awayScore);
-    if (prediction.winner === actualWinner) {
-      points += config?.winnerPoints ?? 3;
-    }
-  } else if (prediction.isSimpleScore) {
-    if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
-      points += 1;
-    }
-  } else {
+  // Completo scoring (3+1): applies when not simpleScore mode, or when both score+simpleScore enabled
+  if (!prediction.isSimpleScore || config?.score) {
     const predictedWinner = getWinner(prediction.homeScore, prediction.awayScore);
     const actualWinner = getWinner(match.homeScore, match.awayScore);
 
@@ -82,6 +74,21 @@ export function calculatePoints(
     if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
       points += 1;
       bonus = true;
+    }
+  }
+
+  // SimpleScore scoring (+1): applies when isSimpleScore is set
+  if (prediction.isSimpleScore) {
+    if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
+      points += 1;
+    }
+  }
+
+  // Winner scoring: always independent
+  if (prediction.isWinnerOnly && prediction.winner) {
+    const actualWinner = getWinner(match.homeScore, match.awayScore);
+    if (prediction.winner === actualWinner) {
+      points += config?.winnerPoints ?? 3;
     }
   }
 
@@ -269,13 +276,13 @@ export async function processMatchResults(matchId: number): Promise<void> {
       ? await getGroupBetConfig(prediction.groupId)
       : { bets: defaultKnockoutBetConfig(), rules: null as KnockoutBetRules | null };
 
-    const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
-      ? calculatePoints(
-          { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
-          { homeScore: match.homeScore, awayScore: match.awayScore },
-          { simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
-        )
-      : { points: 0, bonus: false };
+      const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
+        ? calculatePoints(
+            { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
+            { homeScore: match.homeScore, awayScore: match.awayScore },
+            { score: enabledBets.score, simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
+          )
+        : { points: 0, bonus: false };
 
     let extraPoints = 0;
     if (match.isKnockout) {

@@ -16,7 +16,6 @@ export interface KnockoutData {
   penaltyShootout: boolean | null;
 }
 
-export type PredictionMode = 'score' | 'simpleScore' | 'winner';
 
 interface MatchCardProps {
   match: Match;
@@ -28,14 +27,8 @@ interface MatchCardProps {
 
 export function MatchCard({ match, prediction, onPredict, enabledBets, pointValues }: MatchCardProps) {
   const pts = pointValues ?? defaultKnockoutBetRules();
-  const [predictionMode, setPredictionMode] = useState<PredictionMode>(() => {
-    if (prediction?.isWinnerOnly) return 'winner';
-    if (!enabledBets.score && !enabledBets.simpleScore && enabledBets.winnerOnly) return 'winner';
-    if (!enabledBets.score && enabledBets.simpleScore) return 'simpleScore';
-    return 'score';
-  });
-  const [homeScore, setHomeScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.homeScore ?? ''));
-  const [awayScore, setAwayScore] = useState(prediction?.isWinnerOnly ? '' : (prediction?.awayScore ?? ''));
+  const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
+  const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
   const [winner, setWinner] = useState<string | null>(prediction?.winner ?? null);
   const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
   const [bothTeamsScore, setBothTeamsScore] = useState<boolean | null>(prediction?.bothTeamsScore ?? null);
@@ -106,15 +99,14 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
       penaltyShootout,
     } : undefined;
 
-    const isWinnerMode = predictionMode === 'winner';
-    const isSimpleMode = predictionMode === 'simpleScore';
-    const submitWinner = isWinnerMode ? winner : null;
-    const submitIsWinnerOnly = isWinnerMode ? true : null;
-    const submitIsSimpleScore = isSimpleMode ? true : null;
+    const hasScores = !isNaN(home) && !isNaN(away) && home >= 0 && away >= 0;
+    const submitIsSimpleScore = enabledBets.simpleScore && hasScores ? true : null;
+    const submitIsWinnerOnly = enabledBets.winnerOnly && winner ? true : null;
+    const submitWinner = submitIsWinnerOnly ? winner : null;
 
     setIsSubmitting(true);
     try {
-      await onPredict(match.id, isWinnerMode ? 0 : home, isWinnerMode ? 0 : away, knockout, submitWinner, submitIsWinnerOnly, submitIsSimpleScore);
+      await onPredict(match.id, home, away, knockout, submitWinner, submitIsWinnerOnly, submitIsSimpleScore);
     } finally {
       setIsSubmitting(false);
     }
@@ -230,7 +222,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
               <span className="text-white/40 text-sm">:</span>
               <input type="number" value={awayScore} onChange={(e) => setAwayScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
               <button onClick={() => setAwayScore(String((parseInt(String(awayScore)) || 0) + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
-              <span className="text-amber-400 text-xs font-semibold">{predictionMode === 'simpleScore' ? '+1' : '+3+1'}</span>
+              <span className="text-amber-400 text-xs font-semibold">+3+1</span>
             </div>
           )}
           {badge && (
@@ -268,11 +260,11 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
             ].filter(s => s.enabled).sort((a, b) => b.pts - a.pts).map(s => {
               if (s.key === 'simpleScore') {
                 return (
-                  <div key="simpleScore" onClick={() => { setPredictionMode('simpleScore'); if (predictionMode !== 'simpleScore') setWinner(null); }}>
+                  <div key="simpleScore">
                     <label className="block text-sm text-white/80 mb-1.5">
                       Marcador Exacto <span className="text-amber-400 font-semibold">+1 pt</span>
                     </label>
-                    <div className={`flex items-center gap-1 ${predictionMode === 'simpleScore' ? 'opacity-100' : 'opacity-60'}`}>
+                    <div className="flex items-center gap-1">
                       <button onClick={(e) => { e.stopPropagation(); setHomeScore(String(Math.max(0, (parseInt(String(homeScore)) || 0) - 1))); }} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
                       <input type="number" value={homeScore} onChange={(e) => setHomeScore(e.target.value)} className="w-10 h-8 text-center bg-white/10 rounded-lg text-white font-bold outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" max="20" />
                       <span className="text-white/40 text-sm">:</span>
@@ -294,9 +286,7 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
                         { value: match.awayTeam, flag: match.awayFlag },
                       ].map((opt) => (
                         <button key={opt.value} onClick={() => {
-                          const newWinner = winner === opt.value ? null : opt.value;
-                          setWinner(newWinner);
-                          if (newWinner) { setPredictionMode('winner'); setHomeScore(''); setAwayScore(''); }
+                          setWinner(winner === opt.value ? null : opt.value);
                         }}
                           className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                             winner === opt.value ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'
@@ -439,7 +429,10 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
-            disabled={isSubmitting || (predictionMode === 'winner' ? !winner : (homeScore === '' || awayScore === ''))}
+              disabled={isSubmitting || (
+                !((enabledBets.score || enabledBets.simpleScore) && homeScore !== '' && awayScore !== '') &&
+                !(enabledBets.winnerOnly && winner !== null)
+              )}
             className="w-full mt-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:from-gray-500 disabled:to-gray-600 rounded-xl font-semibold text-white transition-all duration-300 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Guardando...' : prediction ? 'Actualizar' : 'Guardar'}
