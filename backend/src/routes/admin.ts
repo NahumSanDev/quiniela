@@ -188,6 +188,36 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.post('/update-r16', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const updates = [
+      { homeTeam: 'Canada', homeFlag: 'ca', awayTeam: 'Morocco', awayFlag: 'ma', startTime: new Date('2026-07-04T17:00:00Z'), venueName: 'NRG Stadium', venueCity: 'Houston' },
+      { homeTeam: 'Paraguay', homeFlag: 'py', awayTeam: 'France', awayFlag: 'fr', startTime: new Date('2026-07-04T21:00:00Z'), venueName: 'Lincoln Financial Field', venueCity: 'Philadelphia' },
+      { homeTeam: 'Brazil', homeFlag: 'br', awayTeam: 'Norway', awayFlag: 'no', startTime: new Date('2026-07-05T20:00:00Z'), venueName: 'MetLife Stadium', venueCity: 'East Rutherford' },
+      { homeTeam: 'Mexico', homeFlag: 'mx', awayTeam: 'England', awayFlag: 'gb', startTime: new Date('2026-07-06T00:00:00Z'), venueName: 'Estadio Azteca', venueCity: 'Mexico City' },
+      { homeTeam: 'Portugal', homeFlag: 'pt', awayTeam: 'Spain', awayFlag: 'es', startTime: new Date('2026-07-06T19:00:00Z'), venueName: 'AT&T Stadium', venueCity: 'Arlington' },
+      { homeTeam: 'USA', homeFlag: 'us', awayTeam: 'Belgium', awayFlag: 'be', startTime: new Date('2026-07-07T00:00:00Z'), venueName: 'Lumen Field', venueCity: 'Seattle' },
+      { homeTeam: 'Argentina', homeFlag: 'ar', awayTeam: 'Egypt', awayFlag: 'eg', startTime: new Date('2026-07-07T16:00:00Z'), venueName: 'Mercedes-Benz Stadium', venueCity: 'Atlanta' },
+      { homeTeam: 'Switzerland', homeFlag: 'ch', awayTeam: 'Colombia', awayFlag: 'co', startTime: new Date('2026-07-07T20:00:00Z'), venueName: 'BC Place', venueCity: 'Vancouver' },
+    ];
+    let count = 0;
+    for (const u of updates) {
+      const match = await prisma.match.findFirst({ where: { groupStage: 'Round of 16', venueName: u.venueName } });
+      if (match) {
+        await prisma.match.update({
+          where: { id: match.id },
+          data: { homeTeam: u.homeTeam, homeFlag: u.homeFlag, awayTeam: u.awayTeam, awayFlag: u.awayFlag, startTime: u.startTime, isKnockout: true }
+        });
+        count++;
+      }
+    }
+    res.json({ message: `Updated ${count} Round of 16 matches` });
+  } catch (error) {
+    console.error('Error updating R16:', error);
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
 router.delete('/matches/:id', adminAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
