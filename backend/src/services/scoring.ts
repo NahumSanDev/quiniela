@@ -52,7 +52,7 @@ interface ScoringResult {
 
 export function calculatePoints(
   prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; isSimpleScore?: boolean | null },
-  match: { homeScore: number | null; awayScore: number | null },
+  match: { homeScore: number | null; awayScore: number | null; homeTeam?: string | null; awayTeam?: string | null },
   config?: { score?: boolean | null; simpleScore?: boolean | null; winnerPoints?: number | null }
 ): ScoringResult {
   if (match.homeScore === null || match.awayScore === null) {
@@ -86,7 +86,10 @@ export function calculatePoints(
 
   // Winner scoring: always independent
   if (prediction.isWinnerOnly && prediction.winner) {
-    const actualWinner = getWinner(match.homeScore, match.awayScore);
+    const actualWinner = match.homeTeam && match.awayTeam
+      ? (match.homeScore > match.awayScore ? match.homeTeam :
+         match.awayScore > match.homeScore ? match.awayTeam : null)
+      : null;
     if (prediction.winner === actualWinner) {
       points += config?.winnerPoints ?? 3;
     }
@@ -279,7 +282,7 @@ export async function processMatchResults(matchId: number): Promise<void> {
       const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
         ? calculatePoints(
             { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
-            { homeScore: match.homeScore, awayScore: match.awayScore },
+            { homeScore: match.homeScore, awayScore: match.awayScore, homeTeam: match.homeTeam, awayTeam: match.awayTeam },
             { score: enabledBets.score, simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
           )
         : { points: 0, bonus: false };

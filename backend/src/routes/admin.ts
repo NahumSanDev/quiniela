@@ -154,7 +154,7 @@ router.put('/matches/:id', adminAuth, async (req: Request, res: Response) => {
         const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
           ? calculatePoints(
               { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
-              { homeScore, awayScore },
+              { homeScore, awayScore, homeTeam: match.homeTeam, awayTeam: match.awayTeam },
               { score: enabledBets.score, simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
             )
           : { points: 0, bonus: false };
