@@ -956,4 +956,33 @@ router.get('/logs', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.get('/prediction-logs/:userId', adminAuth, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const matchIds = req.query.matchId ? { matchId: parseInt(req.query.matchId as string) } : {};
+
+    const [logs, total] = await Promise.all([
+      prisma.predictionLog.findMany({
+        where: { userId, ...matchIds },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.predictionLog.count({ where: { userId, ...matchIds } })
+    ]);
+
+    res.json({
+      data: logs,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+    });
+  } catch (error) {
+    console.error('Error fetching prediction logs:', error);
+    res.status(500).json({ error: 'Error al obtener historial de predicciones' });
+  }
+});
+
 export default router;

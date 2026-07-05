@@ -185,6 +185,10 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
       if (penaltyShootout !== undefined) { updateData.penaltyShootout = penaltyShootout; createData.penaltyShootout = penaltyShootout; }
     }
 
+    const oldPrediction = await prisma.prediction.findUnique({
+      where: { userId_matchId_groupId: { userId, matchId: parseInt(matchId), groupId } }
+    });
+
     const prediction = await prisma.prediction.upsert({
       where: {
         userId_matchId_groupId: {
@@ -196,6 +200,36 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
       update: updateData,
       create: createData
     });
+
+    if (prediction) {
+      const beforeVal = oldPrediction ? {
+        homeScore: oldPrediction.homeScore, awayScore: oldPrediction.awayScore,
+        winner: oldPrediction.winner, isWinnerOnly: oldPrediction.isWinnerOnly,
+        isSimpleScore: oldPrediction.isSimpleScore, extraTime: oldPrediction.extraTime,
+        penaltyShootout: oldPrediction.penaltyShootout, totalGoals: oldPrediction.totalGoals,
+        bothTeamsScore: oldPrediction.bothTeamsScore, cleanSheet: oldPrediction.cleanSheet,
+        halfTimeHomeScore: oldPrediction.halfTimeHomeScore, halfTimeAwayScore: oldPrediction.halfTimeAwayScore,
+        firstGoalTeam: oldPrediction.firstGoalTeam, firstGoalMinute: oldPrediction.firstGoalMinute,
+        redCard: oldPrediction.redCard, totalCards: oldPrediction.totalCards
+      } : null;
+      const afterVal = {
+        homeScore: prediction.homeScore, awayScore: prediction.awayScore,
+        winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly,
+        isSimpleScore: prediction.isSimpleScore, extraTime: prediction.extraTime,
+        penaltyShootout: prediction.penaltyShootout, totalGoals: prediction.totalGoals,
+        bothTeamsScore: prediction.bothTeamsScore, cleanSheet: prediction.cleanSheet,
+        halfTimeHomeScore: prediction.halfTimeHomeScore, halfTimeAwayScore: prediction.halfTimeAwayScore,
+        firstGoalTeam: prediction.firstGoalTeam, firstGoalMinute: prediction.firstGoalMinute,
+        redCard: prediction.redCard, totalCards: prediction.totalCards
+      };
+      await prisma.predictionLog.create({
+        data: {
+          userId, matchId: parseInt(matchId), groupId,
+          action: oldPrediction ? 'UPDATE' : 'CREATE',
+          before: beforeVal, after: afterVal
+        }
+      });
+    }
 
     res.status(200).json({
       message: 'Prediction saved successfully',
@@ -245,6 +279,10 @@ router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
       return;
     }
 
+    const oldPrediction = await prisma.prediction.findFirst({
+      where: { userId, matchId: parseInt(matchId), ...(groupId && { groupId }) }
+    });
+
     await prisma.prediction.deleteMany({
       where: {
         userId,
@@ -252,6 +290,26 @@ router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
         ...(groupId && { groupId })
       }
     });
+
+    if (oldPrediction) {
+      await prisma.predictionLog.create({
+        data: {
+          userId, matchId: parseInt(matchId), groupId,
+          action: 'DELETE',
+          before: {
+            homeScore: oldPrediction.homeScore, awayScore: oldPrediction.awayScore,
+            winner: oldPrediction.winner, isWinnerOnly: oldPrediction.isWinnerOnly,
+            isSimpleScore: oldPrediction.isSimpleScore, extraTime: oldPrediction.extraTime,
+            penaltyShootout: oldPrediction.penaltyShootout, totalGoals: oldPrediction.totalGoals,
+            bothTeamsScore: oldPrediction.bothTeamsScore, cleanSheet: oldPrediction.cleanSheet,
+            halfTimeHomeScore: oldPrediction.halfTimeHomeScore, halfTimeAwayScore: oldPrediction.halfTimeAwayScore,
+            firstGoalTeam: oldPrediction.firstGoalTeam, firstGoalMinute: oldPrediction.firstGoalMinute,
+            redCard: oldPrediction.redCard, totalCards: oldPrediction.totalCards
+          },
+          after: null
+        }
+      });
+    }
 
     res.json({ message: 'Prediction deleted successfully' });
   } catch (error) {

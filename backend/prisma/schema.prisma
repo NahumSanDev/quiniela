@@ -150,6 +150,20 @@ model Prediction {
   @@index([updatedAt])
 }
 
+model PredictionLog {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  matchId   Int
+  groupId   String?
+  action    String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, matchId])
+  @@index([createdAt])
+}
+
 model MatchLog {
   id          Int      @id @default(autoincrement())
   matchId     Int
