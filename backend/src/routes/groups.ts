@@ -182,7 +182,7 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
             image: true,
             predictions: {
               where: predictionWhere,
-              select: { points: true, bonus: true }
+              select: { points: true, bonus: true, extraPoints: true }
             }
           }
         }
@@ -191,7 +191,7 @@ router.get('/:id/ranking', async (req: Request, res: Response) => {
 
     const ranking = members
       .map(m => {
-        const totalPoints = m.user.predictions.reduce((sum, p) => sum + p.points, 0);
+        const totalPoints = m.user.predictions.reduce((sum, p) => sum + p.points + (p.extraPoints || 0), 0);
         const correct = m.user.predictions.filter(p => p.points > 0).length;
         const exact = m.user.predictions.filter(p => p.bonus).length;
         return {

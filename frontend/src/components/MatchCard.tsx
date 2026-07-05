@@ -236,6 +236,60 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
           )}
         </div>
 
+        {isFinished && prediction && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-4 pt-4 border-t border-white/10 space-y-2"
+          >
+            <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Tu predicción</p>
+            <div className="flex flex-wrap gap-2">
+              {!prediction.isWinnerOnly && prediction.homeScore !== null && prediction.awayScore !== null && (
+                <span className="px-3 py-1.5 bg-white/5 rounded-lg text-sm text-white/80">
+                  {prediction.homeScore}-{prediction.awayScore}
+                  {match.homeScore !== null && match.awayScore !== null && (
+                    <span className="ml-1.5">
+                      {prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore ? (
+                        <span className="text-emerald-400">✓ exacto</span>
+                      ) : (
+                        <span className="text-white/40">({match.homeScore}-{match.awayScore})</span>
+                      )}
+                    </span>
+                  )}
+                </span>
+              )}
+              {prediction.winner && (
+                <span className="px-3 py-1.5 bg-white/5 rounded-lg text-sm text-white/80">
+                  Ganador: {prediction.winner}
+                  {match.homeScore !== null && match.awayScore !== null && (
+                    <span className="ml-1.5">
+                      {(() => {
+                        const actualWinner = match.homeScore > match.awayScore ? match.homeTeam
+                          : match.awayScore > match.homeScore ? match.awayTeam : null;
+                        return actualWinner === prediction.winner
+                          ? <span className="text-emerald-400">✓</span>
+                          : actualWinner ? <span className="text-red-400">✗</span> : null;
+                      })()}
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {prediction.points > 0 && (
+                <span className="px-3 py-1.5 bg-emerald-500/10 rounded-lg text-sm text-emerald-400 font-semibold">
+                  +{prediction.points} pts
+                </span>
+              )}
+              {prediction.extraPoints > 0 && (
+                <span className="px-3 py-1.5 bg-amber-500/10 rounded-lg text-sm text-amber-400 font-semibold">
+                  +{prediction.extraPoints} extra
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {!isLocked && match.isKnockout && (enabledBets.simpleScore || enabledBets.winnerOnly || hasExtraBets) && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}

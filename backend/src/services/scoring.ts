@@ -376,7 +376,7 @@ export async function getRanking(limit: number = 10, round?: string): Promise<Ra
       image: true,
       predictions: {
         where: { matchId: { in: roundMatchIds } },
-        select: { points: true }
+        select: { points: true, extraPoints: true }
       }
     }
   });
@@ -386,7 +386,7 @@ export async function getRanking(limit: number = 10, round?: string): Promise<Ra
       userId: user.id,
       name: user.name,
       avatarUrl: user.image,
-      points: user.predictions.reduce((sum, p) => sum + p.points, 0)
+        points: user.predictions.reduce((sum, p) => sum + p.points + (p.extraPoints || 0), 0)
     }))
     .sort((a, b) => b.points - a.points)
     .slice(0, limit)

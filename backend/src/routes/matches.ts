@@ -326,7 +326,7 @@ router.get('/user/:userId/stats', async (req: Request, res: Response) => {
     const finishedPredictions = predictions.filter(p => p.match.status === 'FINISHED');
     const correctPredictions = finishedPredictions.filter(p => p.points > 0);
     const exactScores = finishedPredictions.filter(p => p.bonus);
-    const totalPoints = finishedPredictions.reduce((sum, p) => sum + p.points, 0);
+    const totalPoints = finishedPredictions.reduce((sum, p) => sum + p.points + (p.extraPoints || 0), 0);
 
     const accuracy = finishedPredictions.length > 0
       ? Math.round((correctPredictions.length / finishedPredictions.length) * 100)
