@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { validatePredictionTime, validatePredictionData, requireAuth, PredictionRequest } from '../middleware/prediction';
 import { calculatePoints, processMatchResults, getRanking, getUserPosition } from '../services/scoring';
 import jwt from 'jsonwebtoken';
@@ -226,7 +226,8 @@ router.post('/:matchId/prediction', validatePredictionTime, validatePredictionDa
         data: {
           userId, matchId: parseInt(matchId), groupId,
           action: oldPrediction ? 'UPDATE' : 'CREATE',
-          before: beforeVal, after: afterVal
+          before: beforeVal ?? Prisma.DbNull,
+          after: afterVal ?? Prisma.DbNull
         }
       });
     }
@@ -306,7 +307,7 @@ router.delete('/:matchId/prediction', async (req: Request, res: Response) => {
             firstGoalTeam: oldPrediction.firstGoalTeam, firstGoalMinute: oldPrediction.firstGoalMinute,
             redCard: oldPrediction.redCard, totalCards: oldPrediction.totalCards
           },
-          after: null
+          after: Prisma.DbNull
         }
       });
     }
