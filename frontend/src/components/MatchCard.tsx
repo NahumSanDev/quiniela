@@ -69,8 +69,8 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
   }
 
   function getPointsBadge(): { text: string; color: string } | null {
-    if (!prediction || (prediction.points === 0 && !prediction.extraPoints)) return null;
-    const total = prediction.points + (prediction.extraPoints || 0);
+    if (!prediction || ((prediction.points ?? 0) === 0 && !prediction.extraPoints)) return null;
+    const total = (prediction.points ?? 0) + (prediction.extraPoints || 0);
     return {
       text: `+${total}${prediction.bonus ? ' ⭐' : ''}`,
       color: prediction.bonus ? 'bg-yellow-500/20 text-yellow-400' : 'bg-emerald-500/20 text-emerald-400'
@@ -276,12 +276,12 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {prediction.points > 0 && (
+              {(prediction.points ?? 0) > 0 && (
                 <span className="px-3 py-1.5 bg-emerald-500/10 rounded-lg text-sm text-emerald-400 font-semibold">
                   +{prediction.points} pts
                 </span>
               )}
-              {prediction.extraPoints > 0 && (
+              {(prediction.extraPoints ?? 0) > 0 && (
                 <span className="px-3 py-1.5 bg-amber-500/10 rounded-lg text-sm text-amber-400 font-semibold">
                   +{prediction.extraPoints} extra
                 </span>
