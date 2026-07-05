@@ -765,6 +765,7 @@ router.post('/update-knockout-teams', adminAuth, async (req: Request, res: Respo
             awayTeam: match.awayTeam,
             awayFlag: match.awayFlag,
             startTime: match.startTime,
+            isKnockout: true,
             venueName: match.venueName,
             venueCity: match.venueCity,
             venueCountry: match.venueCountry,
