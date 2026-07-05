@@ -213,12 +213,14 @@ export function calculateKnockoutPoints(
     if (diff <= 1) extra += pts.totalCards;
   }
 
-  if (bets.extraTime && prediction.extraTime !== null && prediction.extraTime !== undefined && match.extraTime !== null) {
-    if (prediction.extraTime === match.extraTime) extra += pts.extraTime;
+  if (bets.extraTime && prediction.extraTime !== null && prediction.extraTime !== undefined) {
+    const actualExtraTime = match.extraTime ?? false;
+    if (prediction.extraTime === actualExtraTime) extra += pts.extraTime;
   }
 
-  if (bets.penaltyShootout && prediction.penaltyShootout !== null && prediction.penaltyShootout !== undefined && match.penaltyShootout !== null) {
-    if (prediction.penaltyShootout === match.penaltyShootout) extra += pts.penaltyShootout;
+  if (bets.penaltyShootout && prediction.penaltyShootout !== null && prediction.penaltyShootout !== undefined) {
+    const actualPenaltyShootout = match.penaltyShootout ?? false;
+    if (prediction.penaltyShootout === actualPenaltyShootout) extra += pts.penaltyShootout;
   }
 
   return extra;
