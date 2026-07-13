@@ -81,7 +81,7 @@ export function validatePredictionData(req: Request, res: Response, next: NextFu
     return;
   }
 
-  if (homeScore < 0 || homeScore > 20 || awayScore < 0 || awayScore > 20) {
+  if (homeScore < -1 || homeScore > 20 || awayScore < -1 || awayScore > 20) {
     res.status(400).json({ error: 'Scores must be between 0 and 20' });
     return;
   }

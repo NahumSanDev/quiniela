@@ -62,8 +62,8 @@ export function calculatePoints(
   let points = 0;
   let bonus = false;
 
-  // Completo scoring (3+1): applies when not simpleScore mode, or when both score+simpleScore enabled
-  if (!prediction.isSimpleScore || config?.score) {
+  // Completo scoring (3+1): applies when not simpleScore/winnerOnly mode, or when both score+simpleScore enabled
+  if (!prediction.isWinnerOnly && (!prediction.isSimpleScore || config?.score)) {
     const predictedWinner = getWinner(prediction.homeScore, prediction.awayScore);
     const actualWinner = getWinner(match.homeScore, match.awayScore);
 

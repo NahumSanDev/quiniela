@@ -27,8 +27,10 @@ interface MatchCardProps {
 
 export function MatchCard({ match, prediction, onPredict, enabledBets, pointValues }: MatchCardProps) {
   const pts = pointValues ?? defaultKnockoutBetRules();
-  const [homeScore, setHomeScore] = useState(prediction?.homeScore ?? '');
-  const [awayScore, setAwayScore] = useState(prediction?.awayScore ?? '');
+  const pHome = prediction?.homeScore;
+  const pAway = prediction?.awayScore;
+  const [homeScore, setHomeScore] = useState(pHome !== undefined && pHome >= 0 ? String(pHome) : '');
+  const [awayScore, setAwayScore] = useState(pAway !== undefined && pAway >= 0 ? String(pAway) : '');
   const [winner, setWinner] = useState<string | null>(prediction?.winner ?? null);
   const [totalGoals, setTotalGoals] = useState<number | null>(prediction?.totalGoals ?? null);
   const [bothTeamsScore, setBothTeamsScore] = useState<boolean | null>(prediction?.bothTeamsScore ?? null);
@@ -80,10 +82,14 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
   async function handleSubmit() {
     if (isLocked) return;
 
-    const home = parseInt(String(homeScore));
-    const away = parseInt(String(awayScore));
+    const hasWinner = winner !== null && enabledBets.winnerOnly;
+    const homeRaw = parseInt(String(homeScore));
+    const awayRaw = parseInt(String(awayScore));
+    const hasScores = !isNaN(homeRaw) && !isNaN(awayRaw) && homeRaw >= 0 && awayRaw >= 0;
+    const home = hasScores ? homeRaw : -1;
+    const away = hasScores ? awayRaw : -1;
 
-    if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return;
+    if (!hasScores && !hasWinner) return;
 
     const knockout: KnockoutData | undefined = match.isKnockout ? {
       totalGoals,
@@ -99,9 +105,8 @@ export function MatchCard({ match, prediction, onPredict, enabledBets, pointValu
       penaltyShootout,
     } : undefined;
 
-    const hasScores = !isNaN(home) && !isNaN(away) && home >= 0 && away >= 0;
     const submitIsSimpleScore = enabledBets.simpleScore && hasScores ? true : null;
-    const submitIsWinnerOnly = enabledBets.winnerOnly && winner ? true : null;
+    const submitIsWinnerOnly = hasWinner ? true : null;
     const submitWinner = submitIsWinnerOnly ? winner : null;
 
     setIsSubmitting(true);
