@@ -155,7 +155,7 @@ export default function Home() {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const matchesRes = await fetch(`${API_URL}/api/matches?limit=100`, { headers });
+      const matchesRes = await fetch(`${API_URL}/api/matches?limit=200`, { headers });
 
       if (matchesRes.ok) {
         const data = await matchesRes.json();
