@@ -98,6 +98,8 @@ model Match {
   totalCards        Int?
   extraTime         Boolean?
   penaltyShootout   Boolean?
+  regularTimeHomeScore Int?
+  regularTimeAwayScore Int?
   venueName         String?
   venueCity         String?
   venueCountry      String?

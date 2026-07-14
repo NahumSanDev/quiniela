@@ -204,6 +204,8 @@ export default function AdminPanel() {
       const fgMin = (document.getElementById(`fgmin-${id}`) as HTMLInputElement)?.value;
       const rc = (document.getElementById(`rc-${id}`) as HTMLInputElement)?.checked;
       const tc = (document.getElementById(`tc-${id}`) as HTMLInputElement)?.value;
+      const rtHome = (document.getElementById(`rthome-${id}`) as HTMLInputElement)?.value;
+      const rtAway = (document.getElementById(`rtaway-${id}`) as HTMLInputElement)?.value;
       const body: any = { homeScore, awayScore, status };
       if (htHome !== undefined) body.halfTimeHomeScore = htHome ? parseInt(htHome) : null;
       if (htAway !== undefined) body.halfTimeAwayScore = htAway ? parseInt(htAway) : null;
@@ -212,6 +214,8 @@ export default function AdminPanel() {
       if (fgMin !== undefined) body.firstGoalMinute = fgMin ? parseInt(fgMin) : null;
       if (rc !== undefined) body.redCard = rc;
       if (tc !== undefined) body.totalCards = tc ? parseInt(tc) : null;
+      if (rtHome !== undefined) body.regularTimeHomeScore = rtHome ? parseInt(rtHome) : null;
+      if (rtAway !== undefined) body.regularTimeAwayScore = rtAway ? parseInt(rtAway) : null;
       await fetch(`${API_URL}/api/admin/matches/${id}`, {
         method: 'PUT',
         headers: {
@@ -302,7 +306,9 @@ export default function AdminPanel() {
         redCard: formData.get('redCard') === 'on',
         totalCards: formData.get('totalCards') ? parseInt(formData.get('totalCards') as string) : null,
         extraTime: formData.get('extraTime') === 'on',
-        penaltyShootout: formData.get('penaltyShootout') === 'on'
+        penaltyShootout: formData.get('penaltyShootout') === 'on',
+        regularTimeHomeScore: formData.get('regularTimeHomeScore') ? parseInt(formData.get('regularTimeHomeScore') as string) : null,
+        regularTimeAwayScore: formData.get('regularTimeAwayScore') ? parseInt(formData.get('regularTimeAwayScore') as string) : null
       };
 
       const res = await fetch(`${API_URL}/api/admin/matches/${id}`, {
@@ -416,6 +422,16 @@ export default function AdminPanel() {
                   <div>
                     <label className="block text-white/60 text-sm mb-1">Medio Tiempo Visitante</label>
                     <input name="halfTimeAwayScore" type="number" defaultValue={(match as any)?.halfTimeAwayScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Tiempo Regular Local (90 min)</label>
+                    <input name="regularTimeHomeScore" type="number" defaultValue={(match as any)?.regularTimeHomeScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-sm mb-1">Tiempo Regular Visitante (90 min)</label>
+                    <input name="regularTimeAwayScore" type="number" defaultValue={(match as any)?.regularTimeAwayScore ?? ''} min="0" className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white outline-none focus:border-amber-500" />
                   </div>
                 </div>
                 <div className="mb-4">
@@ -694,6 +710,15 @@ export default function AdminPanel() {
                           id={`away-${match.id}`}
                         />
                       </div>
+
+                      {match.isKnockout && (
+                        <div className="flex items-center gap-2 text-xs text-white/40">
+                          <span>90':</span>
+                          <input type="number" id={`rthome-${match.id}`} defaultValue={(match as any)?.regularTimeHomeScore ?? ''} min="0" className="w-10 text-center bg-white/10 rounded-lg text-white" />
+                          <span>-</span>
+                          <input type="number" id={`rtaway-${match.id}`} defaultValue={(match as any)?.regularTimeAwayScore ?? ''} min="0" className="w-10 text-center bg-white/10 rounded-lg text-white" />
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-4">
                           <div className="text-white font-bold">{match.awayTeam}</div>

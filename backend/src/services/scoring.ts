@@ -52,7 +52,7 @@ interface ScoringResult {
 
 export function calculatePoints(
   prediction: { homeScore: number; awayScore: number; winner?: string | null; isWinnerOnly?: boolean | null; isSimpleScore?: boolean | null },
-  match: { homeScore: number | null; awayScore: number | null; homeTeam?: string | null; awayTeam?: string | null },
+  match: { homeScore: number | null; awayScore: number | null; homeTeam?: string | null; awayTeam?: string | null; regularTimeHomeScore?: number | null; regularTimeAwayScore?: number | null },
   config?: { score?: boolean | null; simpleScore?: boolean | null; winnerPoints?: number | null }
 ): ScoringResult {
   if (match.homeScore === null || match.awayScore === null) {
@@ -79,7 +79,9 @@ export function calculatePoints(
 
   // SimpleScore scoring (+1): applies when isSimpleScore is set
   if (prediction.isSimpleScore) {
-    if (prediction.homeScore === match.homeScore && prediction.awayScore === match.awayScore) {
+    const targetHome = match.regularTimeHomeScore ?? match.homeScore;
+    const targetAway = match.regularTimeAwayScore ?? match.awayScore;
+    if (targetHome !== null && targetAway !== null && prediction.homeScore === targetHome && prediction.awayScore === targetAway) {
       points += 1;
     }
   }
@@ -284,7 +286,7 @@ export async function processMatchResults(matchId: number): Promise<void> {
       const { points, bonus } = enabledBets.score || enabledBets.simpleScore || enabledBets.winnerOnly
         ? calculatePoints(
             { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winner: prediction.winner, isWinnerOnly: prediction.isWinnerOnly, isSimpleScore: prediction.isSimpleScore },
-            { homeScore: match.homeScore, awayScore: match.awayScore, homeTeam: match.homeTeam, awayTeam: match.awayTeam },
+            { homeScore: match.homeScore, awayScore: match.awayScore, homeTeam: match.homeTeam, awayTeam: match.awayTeam, regularTimeHomeScore: match.regularTimeHomeScore, regularTimeAwayScore: match.regularTimeAwayScore },
             { score: enabledBets.score, simpleScore: enabledBets.simpleScore, winnerPoints: rules?.winnerPoints ?? null }
           )
         : { points: 0, bonus: false };
